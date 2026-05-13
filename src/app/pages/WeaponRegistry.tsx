@@ -16,22 +16,24 @@ export function WeaponRegistry() {
   const weapons = [
     {
       id: "BRN-2025-001",
-      manufacturer: "Glock",
+      brand: "Glock",
       model: "Glock 17",
+      category: "B" as "A" | "B" | "C",
       caliber: "9mm",
       serialNumber: "ABC123456",
       registrationDate: "2025-03-15",
-      status: "aktywna",
+      status: "Registered",
       permitNumber: "POZ-2025-001",
     },
     {
       id: "BRN-2024-089",
-      manufacturer: "CZ",
+      brand: "CZ",
       model: "CZ 75 SP-01",
+      category: "B" as "A" | "B" | "C",
       caliber: "9mm",
       serialNumber: "XYZ789012",
       registrationDate: "2024-11-20",
-      status: "aktywna",
+      status: "Registered",
       permitNumber: "POZ-2024-045",
       lastInspection: "2025-01-10",
       seller: "Sklep Myśliwski DB",
@@ -45,19 +47,36 @@ export function WeaponRegistry() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "aktywna":
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Aktywna</Badge>;
-      case "wyrejestrowana":
-        return <Badge variant="secondary" className="rounded-full">Wyrejestrowana</Badge>;
+      case "Registered":
+        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Zarejestrowana</Badge>;
+      case "Transferred":
+        return <Badge variant="secondary" className="rounded-full px-2 py-0.5">Przeniesiona</Badge>;
+      case "Lost":
+        return <Badge variant="destructive" className="rounded-full px-2 py-0.5">Zgubiona</Badge>;
+      case "Archived":
+        return <Badge variant="secondary" className="rounded-full px-2 py-0.5">Zarchiwizowana</Badge>;
       default:
-        return <Badge className="rounded-full">{status}</Badge>;
+        return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
     }
+  };
+
+  const getCategoryBadge = (category: "A" | "B" | "C") => {
+    const config = {
+      A: { label: "Kat. A", color: "bg-red-100 text-red-800" },
+      B: { label: "Kat. B", color: "bg-blue-100 text-blue-800" },
+      C: { label: "Kat. C", color: "bg-green-100 text-green-800" },
+    };
+    return (
+      <Badge className={`${config[category].color} hover:${config[category].color} border-none px-2 py-0.5 rounded-full text-xs`}>
+        {config[category].label}
+      </Badge>
+    );
   };
 
   const filteredWeapons = weapons.filter((weapon) => {
     return (
       weapon.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      weapon.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      weapon.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       weapon.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
       weapon.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -129,10 +148,13 @@ export function WeaponRegistry() {
                         </div>
                         <div className="flex-1 space-y-2">
                           <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold text-base text-foreground mb-0.5">
-                                {weapon.manufacturer} {weapon.model}
-                              </h3>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-base text-foreground">
+                                  {weapon.brand} {weapon.model}
+                                </h3>
+                                {getCategoryBadge(weapon.category)}
+                              </div>
                               <p className="text-xs font-medium text-muted-foreground">
                                 Kaliber: {weapon.caliber}
                               </p>

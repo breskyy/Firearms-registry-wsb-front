@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { FileText, Shield, PlusCircle, AlertCircle, ChevronRight, CreditCard, Crosshair } from "lucide-react";
+import { FileText, Shield, PlusCircle, AlertCircle, ChevronRight, CreditCard, Crosshair, QrCode, ArrowRightLeft } from "lucide-react";
 
 export function CitizenDashboard() {
   const navigate = useNavigate();
@@ -76,40 +76,58 @@ export function CitizenDashboard() {
       {/* Quick Actions Grid */}
       <div>
         <h3 className="text-lg font-bold mb-3 px-1 text-foreground">Usługi</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/application/new")}>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/application/new-permit")}>
             <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
               <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <PlusCircle className="h-6 w-6" />
+                <Shield className="h-6 w-6" />
               </div>
-              <span className="text-xs font-semibold leading-tight">Nowy wniosek</span>
-            </CardContent>
-          </Card>
-          
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/applications")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <FileText className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Moje sprawy</span>
+              <span className="text-xs font-semibold leading-tight">Wniosek o pozwolenie</span>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/weapon/register")}>
+          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/application/new-promise")}>
             <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
               <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <Crosshair className="h-6 w-6" />
+                <CreditCard className="h-6 w-6" />
               </div>
-              <span className="text-xs font-semibold leading-tight">Rejestracja broni</span>
+              <span className="text-xs font-semibold leading-tight">Wniosek o promesę</span>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/promises")}>
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
+              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
+                <QrCode className="h-6 w-6" />
+              </div>
+              <span className="text-xs font-semibold leading-tight">Moje promesy</span>
             </CardContent>
           </Card>
 
           <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/weapons")}>
             <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
               <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <CreditCard className="h-6 w-6" />
+                <Crosshair className="h-6 w-6" />
               </div>
-              <span className="text-xs font-semibold leading-tight">Promesy</span>
+              <span className="text-xs font-semibold leading-tight">Rejestr broni</span>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/applications")}>
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
+              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
+                <FileText className="h-6 w-6" />
+              </div>
+              <span className="text-xs font-semibold leading-tight">Moje wnioski</span>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/transfers")}>
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
+              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
+                <ArrowRightLeft className="h-6 w-6" />
+              </div>
+              <span className="text-xs font-semibold leading-tight">Transfery</span>
             </CardContent>
           </Card>
         </div>

@@ -17,16 +17,13 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const initialFormData = {
-    promesaNumber: "",
-    pesel: "",
-    customerName: "",
-    manufacturer: "",
+    qrToken: "", // Z weryfikacji lub skanowania
+    brand: "",
     model: "",
+    category: "B" as "A" | "B" | "C",
     caliber: "",
     serialNumber: "",
     productionYear: "",
-    invoiceNumber: "",
-    saleDate: new Date().toISOString().split('T')[0],
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -34,7 +31,9 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
   // Reset form when drawer opens
   useEffect(() => {
     if (open) {
-      setFormData(initialFormData);
+      // Mock QR token - w prawdziwej aplikacji przychodzi z weryfikacji
+      const mockQRToken = "QR-MOCK-" + Math.random().toString(36).substring(2, 15).toUpperCase();
+      setFormData({ ...initialFormData, qrToken: mockQRToken });
       setErrors({});
     }
   }, [open]);
@@ -43,19 +42,13 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.promesaNumber) newErrors.promesaNumber = "Wymagane";
-    if (!formData.pesel) newErrors.pesel = "Wymagane";
-    else if (formData.pesel.length !== 11) newErrors.pesel = "PESEL musi mieć 11 cyfr";
-    if (!formData.customerName) newErrors.customerName = "Wymagane";
-    
-    if (!formData.manufacturer) newErrors.manufacturer = "Wymagane";
+    if (!formData.qrToken) newErrors.qrToken = "Zweryfikuj promesę przed rejestracją";
+    if (!formData.brand) newErrors.brand = "Wymagane";
     if (!formData.model) newErrors.model = "Wymagane";
+    if (!formData.category) newErrors.category = "Wymagane";
     if (!formData.caliber) newErrors.caliber = "Wymagane";
     if (!formData.serialNumber) newErrors.serialNumber = "Wymagane";
     if (!formData.productionYear) newErrors.productionYear = "Wymagane";
-    
-    if (!formData.invoiceNumber) newErrors.invoiceNumber = "Wymagane";
-    if (!formData.saleDate) newErrors.saleDate = "Wymagane";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -70,14 +63,15 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
       return;
     }
 
-    // Success
-    const generatedRegNum = "SPR-2026-" + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    
+    // Success - Mock register sale
+    const generatedRegNum = "REG-2026-" + Math.floor(Math.random() * 10000).toString().padStart(5, '0');
+    const firearmId = "FW-" + Math.random().toString(36).substring(2, 9).toUpperCase();
+
     onOpenChange(false);
-    
-    toast.success("Sprzedaż zgłoszona pomyślnie", {
-      description: `Nr zgłoszenia: ${generatedRegNum}. System zaktualizował e-Książkę Ewidencyjną.`,
-      duration: 5000,
+
+    toast.success("Broń zarejestrowana pomyślnie", {
+      description: `Nr rejestracji: ${generatedRegNum}. Broń przypisana do nabywcy. ID: ${firearmId}`,
+      duration: 6000,
       className: "border-emerald-200 bg-emerald-50 text-emerald-900"
     });
   };
@@ -95,61 +89,24 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative" id="drawer-scroll-area">
           <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-24">
             
-            {/* Sekcja Nabywcy */}
-            <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-muted/20">
-              <div className="h-1.5 bg-primary/30 w-full" />
-              <CardHeader className="pb-3 pt-5 px-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="bg-primary/10 p-2 rounded-xl text-primary shrink-0">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base">Dane nabywcy</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4 pb-5">
-                <div id="field-promesaNumber">
-                  <Label htmlFor="promesaNumber" className="font-semibold text-foreground text-sm">
-                    Numer promesy e-Broń <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="promesaNumber"
-                    value={formData.promesaNumber}
-                    onChange={(e) => setFormData({ ...formData, promesaNumber: e.target.value })}
-                    className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono uppercase bg-background"
-                    placeholder="PRO-2026-XXXXXX"
-                  />
-                  {errors.promesaNumber && <p className="text-red-500 text-xs mt-1 font-medium">{errors.promesaNumber}</p>}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div id="field-pesel">
-                    <Label htmlFor="pesel" className="font-semibold text-foreground text-sm">
-                      PESEL <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="pesel"
-                      type="number"
-                      value={formData.pesel}
-                      onChange={(e) => setFormData({ ...formData, pesel: e.target.value })}
-                      className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono bg-background"
-                      placeholder="11 cyfr"
-                      maxLength={11}
-                    />
-                    {errors.pesel && <p className="text-red-500 text-xs mt-1 font-medium">{errors.pesel}</p>}
-                  </div>
-                  
-                  <div id="field-customerName">
-                    <Label htmlFor="customerName" className="font-semibold text-foreground text-sm">
-                      Imię i nazwisko <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="customerName"
-                      value={formData.customerName}
-                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                      className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background"
-                      placeholder="Jan Kowalski"
-                    />
-                    {errors.customerName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.customerName}</p>}
+            {/* Hidden QR Token field */}
+            <input type="hidden" value={formData.qrToken} />
+
+            {/* Info card - QR Token */}
+            <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-blue-50/50">
+              <CardContent className="p-4">
+                <div className="flex gap-3">
+                  <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-900">
+                    <p className="font-semibold mb-1">Token promesy</p>
+                    <p className="text-blue-700 text-xs">
+                      {formData.qrToken ? (
+                        <span className="font-mono bg-white px-2 py-1 rounded">{formData.qrToken.substring(0, 20)}...</span>
+                      ) : (
+                        "Zweryfikuj promesę przed rejestracją sprzedaży"
+                      )}
+                    </p>
+                    {errors.qrToken && <p className="text-red-500 text-xs mt-1 font-medium">{errors.qrToken}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -168,18 +125,18 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
               </CardHeader>
               <CardContent className="space-y-4 px-4 pb-5">
                 <div className="grid grid-cols-2 gap-4">
-                  <div id="field-manufacturer">
-                    <Label htmlFor="manufacturer" className="font-semibold text-sm">
+                  <div id="field-brand">
+                    <Label htmlFor="brand" className="font-semibold text-sm">
                       Producent <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="manufacturer"
-                      value={formData.manufacturer}
-                      onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
+                      id="brand"
+                      value={formData.brand}
+                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                       className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background"
                       placeholder="Glock"
                     />
-                    {errors.manufacturer && <p className="text-red-500 text-xs mt-1 font-medium">{errors.manufacturer}</p>}
+                    {errors.brand && <p className="text-red-500 text-xs mt-1 font-medium">{errors.brand}</p>}
                   </div>
 
                   <div id="field-model">
@@ -197,8 +154,28 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div id="field-caliber">
+                <div className="grid grid-cols-3 gap-4">
+                  <div id="field-category">
+                    <Label htmlFor="category" className="font-semibold text-sm">
+                      Kategoria <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value: "A" | "B" | "C") => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger id="category" className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background">
+                        <SelectValue placeholder="Kat." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="A">Kat. A (zakazana)</SelectItem>
+                        <SelectItem value="B">Kat. B (pozwolenie)</SelectItem>
+                        <SelectItem value="C">Kat. C (zgłoszenie)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.category && <p className="text-red-500 text-xs mt-1 font-medium">{errors.category}</p>}
+                  </div>
+
+                  <div id="field-caliber" className="col-span-2">
                     <Label htmlFor="caliber" className="font-semibold text-sm">
                       Kaliber <span className="text-red-500">*</span>
                     </Label>
@@ -256,48 +233,6 @@ export function NewSaleDrawer({ open, onOpenChange }: NewSaleDrawerProps) {
               </CardContent>
             </Card>
 
-            {/* Sekcja Faktury/Paragonu */}
-            <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-muted/20">
-              <div className="h-1.5 bg-emerald-400/30 w-full" />
-              <CardHeader className="pb-3 pt-5 px-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
-                    <ShoppingBag className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base">Transakcja</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4 pb-5">
-                <div id="field-invoiceNumber">
-                  <Label htmlFor="invoiceNumber" className="font-semibold text-sm">
-                    Nr faktury / paragonu <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="invoiceNumber"
-                    value={formData.invoiceNumber}
-                    onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                    className="min-h-[52px] mt-1.5 rounded-xl text-base uppercase bg-background"
-                    placeholder="FV/2026/04/123"
-                  />
-                  {errors.invoiceNumber && <p className="text-red-500 text-xs mt-1 font-medium">{errors.invoiceNumber}</p>}
-                </div>
-
-                <div id="field-saleDate">
-                  <Label htmlFor="saleDate" className="font-semibold text-sm">
-                    Data zbycia <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="saleDate"
-                    type="date"
-                    value={formData.saleDate}
-                    onChange={(e) => setFormData({ ...formData, saleDate: e.target.value })}
-                    className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background"
-                    max={new Date().toISOString().split('T')[0]}
-                  />
-                  {errors.saleDate && <p className="text-red-500 text-xs mt-1 font-medium">{errors.saleDate}</p>}
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Niewidoczny przycisk submit do formularza - prawdziwy jest w footerze */}
             <button type="submit" id="hidden-submit" className="hidden">Submit</button>

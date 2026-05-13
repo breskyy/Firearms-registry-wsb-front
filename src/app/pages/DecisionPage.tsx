@@ -5,13 +5,13 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
-import { AlertCircle, CheckCircle, XCircle, FileWarning } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, FileWarning, Clock } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 
 export function DecisionPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [decision, setDecision] = useState<"approve" | "reject" | "supplement" | null>(null);
+  const [decision, setDecision] = useState<"mark-under-review" | "approve" | "reject" | "require-correction" | null>(null);
   const [justification, setJustification] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -31,7 +31,8 @@ export function DecisionPage() {
       newErrors.decision = "Musisz podjąć decyzję";
     }
 
-    if (!justification || justification.length < 20) {
+    // Mark-under-review doesn't require justification
+    if (decision !== "mark-under-review" && (!justification || justification.length < 20)) {
       newErrors.justification = "Uzasadnienie musi zawierać minimum 20 znaków";
     }
 
@@ -42,9 +43,10 @@ export function DecisionPage() {
 
     // In real app, submit to API
     const decisionMap = {
+      "mark-under-review": "oznaczony jako weryfikowany",
       approve: "zaakceptowany",
       reject: "odrzucony",
-      supplement: "skierowany do uzupełnienia braków"
+      "require-correction": "skierowany do uzupełnienia braków"
     };
     const decisionText = decisionMap[decision as keyof typeof decisionMap];
     alert(`Decyzja została zapisana. Wniosek został ${decisionText}.`);
@@ -108,9 +110,25 @@ export function DecisionPage() {
                 <div>
                   <RadioGroup
                     value={decision || ""}
-                    onValueChange={(value) => setDecision(value as "approve" | "reject" | "supplement")}
+                    onValueChange={(value) => setDecision(value as "mark-under-review" | "approve" | "reject" | "require-correction")}
                     className="grid gap-3"
                   >
+                    <Label
+                      htmlFor="mark-under-review"
+                      className={`flex items-start space-x-3 border rounded-xl p-4 cursor-pointer transition-colors ${decision === 'mark-under-review' ? 'bg-blue-50/50 border-blue-200' : 'border-border hover:bg-muted/50'}`}
+                    >
+                      <RadioGroupItem value="mark-under-review" id="mark-under-review" className="mt-1" />
+                      <div className="flex-1 flex items-start gap-3">
+                        <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-base text-foreground mb-0.5">Oznacz jako weryfikowany</p>
+                          <p className="text-sm text-muted-foreground">
+                            Rozpocznij weryfikację wniosku (zmiana statusu na "W weryfikacji")
+                          </p>
+                        </div>
+                      </div>
+                    </Label>
+
                     <Label
                       htmlFor="approve"
                       className={`flex items-start space-x-3 border rounded-xl p-4 cursor-pointer transition-colors ${decision === 'approve' ? 'bg-emerald-50/50 border-emerald-200' : 'border-border hover:bg-muted/50'}`}
@@ -128,10 +146,10 @@ export function DecisionPage() {
                     </Label>
 
                     <Label
-                      htmlFor="supplement"
-                      className={`flex items-start space-x-3 border rounded-xl p-4 cursor-pointer transition-colors ${decision === 'supplement' ? 'bg-orange-50/50 border-orange-200' : 'border-border hover:bg-muted/50'}`}
+                      htmlFor="require-correction"
+                      className={`flex items-start space-x-3 border rounded-xl p-4 cursor-pointer transition-colors ${decision === 'require-correction' ? 'bg-orange-50/50 border-orange-200' : 'border-border hover:bg-muted/50'}`}
                     >
-                      <RadioGroupItem value="supplement" id="supplement" className="mt-1" />
+                      <RadioGroupItem value="require-correction" id="require-correction" className="mt-1" />
                       <div className="flex-1 flex items-start gap-3">
                         <FileWarning className="h-5 w-5 text-orange-500 mt-0.5" />
                         <div>
@@ -171,17 +189,20 @@ export function DecisionPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="justification">
-                    Uzasadnienie decyzji / Treść wezwania <span className="text-red-600">*</span>
+                    {decision === "mark-under-review" ? "Notatka (opcjonalne)" : "Uzasadnienie decyzji / Treść wezwania"}{" "}
+                    {decision !== "mark-under-review" && <span className="text-red-600">*</span>}
                   </Label>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Podaj szczegóły swojej decyzji lub wskaż braki do uzupełnienia (minimum 20 znaków).
+                    {decision === "mark-under-review"
+                      ? "Możesz dodać notatkę do wniosku (opcjonalne)."
+                      : "Podaj szczegóły swojej decyzji lub wskaż braki do uzupełnienia (minimum 20 znaków)."}
                   </p>
                   <Textarea
                     id="justification"
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
                     className="min-h-[150px] rounded-xl"
-                    placeholder="Treść uzasadnienia..."
+                    placeholder={decision === "mark-under-review" ? "Notatka wewnętrzna..." : "Treść uzasadnienia..."}
                   />
                   <div className="flex justify-between items-center mt-1">
                     {errors.justification ? (
@@ -190,9 +211,11 @@ export function DecisionPage() {
                         <span>{errors.justification}</span>
                       </div>
                     ) : <span />}
-                    <span className="text-xs text-muted-foreground">
-                      Znaków: {justification.length} / 20
-                    </span>
+                    {decision !== "mark-under-review" && (
+                      <span className="text-xs text-muted-foreground">
+                        Znaków: {justification.length} / 20
+                      </span>
+                    )}
                   </div>
                 </div>
               </CardContent>
