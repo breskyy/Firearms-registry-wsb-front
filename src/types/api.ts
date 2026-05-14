@@ -85,83 +85,96 @@ export interface UserDto {
 }
 
 // ============================================================================
-// CITIZEN
+// CITIZEN PROFILE
 // ============================================================================
 
 export interface CitizenProfileDto {
   id: string;
-  email: string;
   firstName: string;
   lastName: string;
-  peselMasked: string; // ostatnie 4 cyfry
-  phone: string;
+  peselMasked: string;
   address: string;
-  city: string;
-  postalCode: string;
+  documentNumber: string;
+  weaponBookNumber: string;
+  createdAt: string;
 }
 
+// ============================================================================
 // PERMITS
+// ============================================================================
+
 export interface PermitDto {
   id: string;
   permitNumber: string;
   permitType: PermitType;
-  permitStatus: PermitStatus;
+  permitTypeName: string;
+  status: PermitStatus;
+  statusName: string;
   issueDate: string;
-  expiryDate: string | null;
+  expiryDate: string;
   maxFirearms: number;
   usedSlots: number;
   availableSlots: number;
-  medicalExamExpiryDate: string;
-  psychologicalExamExpiryDate: string;
   isValid: boolean;
+  medicalExamExpiryDate: string | null;
+  psychologicalExamExpiryDate: string | null;
 }
+
+// ============================================================================
+// PERMIT APPLICATIONS
+// ============================================================================
 
 export interface PermitApplicationDto {
   id: string;
-  applicationNumber: string;
   requestedPermitType: PermitType;
+  requestedPermitTypeName: string;
   reason: string;
+  medicalExamExpiryDate: string | null;
+  psychologicalExamExpiryDate: string | null;
   status: PermitApplicationStatus;
-  submittedDate: string;
-  reviewedDate: string | null;
+  statusName: string;
   rejectionReason: string | null;
   correctionNotes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  attachments: PermitApplicationAttachmentDto[];
+}
+
+export interface PermitApplicationAttachmentDto {
+  id: string;
+  attachmentType: string;
+  attachmentTypeName: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
 }
 
 export interface CreatePermitApplicationRequest {
   requestedPermitType: PermitType;
   reason: string;
+  medicalExamExpiryDate?: string;
+  psychologicalExamExpiryDate?: string;
 }
 
-// PROMISES
-export interface PromiseDto {
+export interface UpdatePermitApplicationCorrectionRequest extends CreatePermitApplicationRequest {}
+
+// ============================================================================
+// PROMISE APPLICATIONS
+// ============================================================================
+
+export interface PromiseApplicationDto {
   id: string;
-  promiseNumber: string;
-  qrToken: string;
-  promiseStatus: PromiseStatus;
-  paymentStatus: PaymentStatus;
   permitId: string;
   permitNumber: string;
   requestedWeaponType: string;
   requestedQuantity: number;
-  remainingQuantity: number;
-  issueDate: string;
-  expiryDate: string;
-  isValid: boolean;
-}
-
-export interface PromiseApplicationDto {
-  id: string;
-  applicationNumber: string;
-  permitId: string;
-  requestedWeaponType: string;
-  requestedQuantity: number;
   status: PromiseApplicationStatus;
-  paymentStatus: PaymentStatus;
-  submittedDate: string;
-  reviewedDate: string | null;
+  statusName: string;
   rejectionReason: string | null;
   correctionNotes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
 }
 
 export interface CreatePromiseApplicationRequest {
@@ -170,57 +183,81 @@ export interface CreatePromiseApplicationRequest {
   requestedQuantity: number;
 }
 
+export interface UpdatePromiseApplicationCorrectionRequest extends CreatePromiseApplicationRequest {}
+
+// ============================================================================
+// PROMISES
+// ============================================================================
+
+export interface PromiseDto {
+  id: string;
+  promiseNumber: string;
+  weaponType: string;
+  quantity: number;
+  usedQuantity: number;
+  remainingQuantity: number;
+  status: PromiseStatus;
+  statusName: string;
+  feeAmount: number;
+  paymentStatus: PaymentStatus;
+  paymentStatusName: string;
+  qrToken: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  isValid: boolean;
+}
+
+// ============================================================================
 // FIREARMS
+// ============================================================================
+
 export interface FirearmDto {
   id: string;
-  registrationNumber: string;
   brand: string;
   model: string;
   category: FirearmCategory;
+  categoryName: string;
   caliber: string;
   serialNumber: string;
-  productionYear: number;
-  registrationDate: string;
+  productionYear: number | null;
   status: FirearmStatus;
-  permitId: string;
-  permitNumber: string;
-  ownerId: string;
-  ownerName: string;
+  statusName: string;
+  registeredAt: string;
 }
 
-export interface FirearmDetailsDto extends FirearmDto {
+export interface FirearmDetailDto extends FirearmDto {
   ownershipHistory: OwnershipHistoryDto[];
 }
 
 export interface OwnershipHistoryDto {
-  ownerName: string;
-  ownerPesel: string; // maskowany dla Citizen, pełny dla WPA
-  acquiredDate: string;
-  transferType: TransferType | null;
+  id: string;
+  previousOwnerName: string | null;
+  newOwnerName: string;
+  transferType: TransferType;
+  transferTypeName: string;
+  transferDate: string;
+  notes: string | null;
 }
 
 export interface ReportLostRequest {
-  description: string;
+  description?: string;
 }
 
+// ============================================================================
 // TRANSFERS
+// ============================================================================
+
 export interface TransferRequestDto {
   id: string;
-  transferNumber: string;
   firearmId: string;
-  firearmBrand: string;
-  firearmModel: string;
-  firearmSerialNumber: string;
-  sellerId: string;
-  sellerName: string;
-  buyerId: string;
-  buyerName: string;
-  buyerPesel: string; // maskowany
+  firearmDescription: string;
+  buyerName: string | null;
   transferType: TransferType;
+  transferTypeName: string;
   status: TransferRequestStatus;
-  initiatedDate: string;
-  completedDate: string | null;
-  rejectionReason: string | null;
+  statusName: string;
+  transactionDate: string | null;
+  createdAt: string;
   isSeller: boolean;
   isBuyer: boolean;
 }
@@ -231,18 +268,20 @@ export interface CreateTransferRequestRequest {
   transferType: TransferType;
 }
 
-// MEDICAL ALERTS
-export interface MedicalAlertDto {
+// ============================================================================
+// MEDICAL ALERTS (Citizen view - computed from permits on frontend)
+// ============================================================================
+
+export interface CitizenMedicalAlertDto {
   id: string;
-  citizenId: string;
-  citizenName: string;
-  citizenPesel: string; // maskowany dla Citizen
-  permitId: string;
-  permitNumber: string;
-  medicalAlertType: MedicalAlertType;
-  expiryDate: string;
-  daysUntilExpiry: number;
+  permitId: string | null;
+  permitNumber: string | null;
+  alertType: MedicalAlertType;
+  alertTypeName: string;
+  message: string;
+  dueDate: string | null;
   isResolved: boolean;
+  createdAt: string;
 }
 
 // ============================================================================
@@ -259,7 +298,7 @@ export interface VerifyPermitResponse {
   message: string;
   citizenName: string;
   permitNumber: string;
-  permitType: PermitType;
+  permitType: string;
   availableSlots: number;
   weaponType: string;
   remainingPromiseQuantity: number;
@@ -288,29 +327,64 @@ export interface RegisterSaleResponse {
 // WPA
 // ============================================================================
 
-// WPA Citizen
 export interface WpaCitizenDto {
   id: string;
-  email: string;
+  userId: string;
   firstName: string;
   lastName: string;
-  pesel: string; // PEŁNY dla WPA!
-  phone: string;
+  pesel: string;
   address: string;
-  city: string;
-  postalCode: string;
+  documentNumber: string;
+  weaponBookNumber: string;
+  createdAt: string;
+  permits: PermitDto[];
   totalFirearms: number;
   activeAlerts: number;
-  permits: PermitDto[];
 }
 
-// WPA Permit Applications
-export interface WpaPermitApplicationDto extends PermitApplicationDto {
+export interface WpaFirearmSearchResult {
+  id: string;
+  brand: string;
+  model: string;
+  category: string;
+  caliber: string;
+  serialNumber: string;
+  status: string;
+  ownerName: string;
+  ownerPesel: string;
+  permitNumber: string;
+  permitType: string;
+  registeredAt: string;
+}
+
+export interface WpaPermitApplicationDto {
+  id: string;
   citizenId: string;
   citizenName: string;
-  citizenPesel: string; // PEŁNY
-  reviewedByOfficerId: string | null;
+  citizenPesel: string;
+  requestedPermitType: PermitType;
+  requestedPermitTypeName: string;
+  reason: string;
+  medicalExamExpiryDate: string | null;
+  psychologicalExamExpiryDate: string | null;
+  status: PermitApplicationStatus;
+  statusName: string;
+  rejectionReason: string | null;
+  correctionNotes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
   reviewedByOfficerName: string | null;
+  attachments: WpaPermitApplicationAttachmentDto[];
+}
+
+export interface WpaPermitApplicationAttachmentDto {
+  id: string;
+  attachmentType: string;
+  attachmentTypeName: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
 }
 
 export interface ApprovePermitApplicationRequest {
@@ -320,50 +394,57 @@ export interface ApprovePermitApplicationRequest {
 }
 
 export interface RejectApplicationRequest {
-  reason: string;
+  reason?: string;
 }
 
 export interface RequireCorrectionRequest {
-  reason: string;
+  reason?: string;
 }
 
-// WPA Promise Applications
-export interface WpaPromiseApplicationDto extends PromiseApplicationDto {
+export interface WpaPromiseApplicationDto {
+  id: string;
   citizenId: string;
   citizenName: string;
-  citizenPesel: string; // PEŁNY
-  permitType: PermitType;
-  reviewedByOfficerId: string | null;
+  citizenPesel: string;
+  permitId: string;
+  permitNumber: string;
+  permitType: string;
+  requestedWeaponType: string;
+  requestedQuantity: number;
+  status: PromiseApplicationStatus;
+  statusName: string;
+  rejectionReason: string | null;
+  correctionNotes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
   reviewedByOfficerName: string | null;
 }
 
-// WPA Firearms Search
-export interface WpaFirearmSearchResult {
+export interface WpaMedicalAlertDto {
   id: string;
-  registrationNumber: string;
-  brand: string;
-  model: string;
-  category: FirearmCategory;
-  caliber: string;
-  serialNumber: string;
-  status: FirearmStatus;
-  ownerName: string;
-  ownerPesel: string; // PEŁNY
-  permitNumber: string;
-  permitType: PermitType;
+  citizenId: string;
+  citizenName: string;
+  citizenPesel: string;
+  permitId: string | null;
+  permitNumber: string | null;
+  alertType: MedicalAlertType;
+  alertTypeName: string;
+  message: string;
+  dueDate: string | null;
+  isResolved: boolean;
+  createdAt: string;
 }
 
-// WPA Permit Management
 export interface SuspendPermitRequest {
-  reason: string;
+  reason?: string;
 }
 
 export interface RevokePermitRequest {
-  reason: string;
+  reason?: string;
 }
 
 export interface RestorePermitRequest {
-  reason: string;
+  reason?: string;
 }
 
 export interface UpdateMedicalExamsRequest {

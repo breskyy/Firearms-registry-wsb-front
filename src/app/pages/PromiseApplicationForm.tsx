@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -8,9 +8,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { AlertCircle, Shield, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
+import { citizenService } from "../../services/citizenService";
+import type { PermitDto } from "../../types/api";
+
+const PERMIT_TYPE_LABELS: Record<string, string> = {
+  Sport: "Sportowe",
+  Hunting: "Łowieckie",
+  Collection: "Kolekcjonerskie",
+  Protection: "Ochrony osobistej",
+  Other: "Inne",
+};
+
+const PERMIT_TYPE_LABELS_BY_VALUE: Record<number, string> = {
+  0: "Sportowe",
+  1: "Kolekcjonerskie",
+  2: "Ochrony osobistej",
+  3: "Ĺowieckie",
+  4: "Inne",
+};
+
+function getPermitTypeLabel(permit: PermitDto) {
+  if (permit.permitTypeName) return PERMIT_TYPE_LABELS[permit.permitTypeName] ?? permit.permitTypeName;
+  const permitType = permit.permitType as unknown;
+  if (typeof permitType === "number") return PERMIT_TYPE_LABELS_BY_VALUE[permitType] ?? String(permitType);
+  if (typeof permitType === "string") return PERMIT_TYPE_LABELS[permitType] ?? permitType;
+  return "Nieznane";
+}
 
 export function PromiseApplicationForm() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [permitsLoading, setPermitsLoading] = useState(true);
+  const [permits, setPermits] = useState<PermitDto[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     permitId: "",
@@ -18,216 +47,215 @@ export function PromiseApplicationForm() {
     requestedQuantity: 1,
   });
 
-  // Mock data - lista pozwoleń użytkownika
-  const userPermits = [
-    {
-      id: "permit-001",
-      permitNumber: "POZ-2025-001234",
-      permitType: "Sport",
-      availableSlots: 3,
-      maxFirearms: 5,
-      isValid: true,
-    },
-    {
-      id: "permit-002",
-      permitNumber: "POZ-2024-005678",
-      permitType: "Hunting",
-      availableSlots: 1,
-      maxFirearms: 2,
-      isValid: true,
-    },
-  ];
+  useEffect(() => {
+    citizenService
+      .getPermits()
+      .then((r) => setPermits(r.filter((p) => p.statusName === "Active" && p.availableSlots > 0)))
+      .catch(() => {})
+      .finally(() => setPermitsLoading(false));
+  }, []);
 
-  const selectedPermit = userPermits.find((p) => p.id === formData.permitId);
+  const selectedPermit = permits.find((p) => p.id === formData.permitId) ?? null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.permitId) e.permitId = "Wybierz pozwolenie";
+    if (!formData.requestedWeaponType || formData.requestedWeaponType.length < 5)
+      e.requestedWeaponType = "Typ broni musi mieć minimum 5 znaków";
+    if (formData.requestedQuantity < 1) e.requestedQuantity = "Ilość musi być większa niż 0";
+    if (selectedPermit && formData.requestedQuantity > selectedPermit.availableSlots)
+      e.requestedQuantity = `Maksymalna ilość dla tego pozwolenia: ${selectedPermit.availableSlots}`;
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.permitId) {
-      newErrors.permitId = "Wybierz pozwolenie";
-    }
-    if (!formData.requestedWeaponType || formData.requestedWeaponType.length < 5) {
-      newErrors.requestedWeaponType = "Typ broni musi zawierać minimum 5 znaków";
-    }
-    if (!formData.requestedQuantity || formData.requestedQuantity < 1) {
-      newErrors.requestedQuantity = "Ilość musi być większa niż 0";
-    }
-
+    const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Mock - symulacja wysłania
-    const applicationNumber = `WNI-PROM-2026-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
+    setLoading(true);
+    try {
+      await citizenService.createPromiseApplication({
+        permitId: formData.permitId,
+        requestedWeaponType: formData.requestedWeaponType,
+        requestedQuantity: formData.requestedQuantity,
+      });
 
-    toast.success("Wniosek o e-Promesę złożony pomyślnie", {
-      description: `Nr wniosku: ${applicationNumber}. Status: Oczekuje na opłatę.`,
-      duration: 5000,
-    });
-
-    navigate("/citizen");
+      toast.success("Wniosek o e-Promesę złożony", {
+        description: "Wniosek przekazany do WPA. Śledź status w zakładce Moje wnioski.",
+        duration: 5000,
+      });
+      navigate("/applications");
+    } catch (err: any) {
+      toast.error("Błąd podczas składania wniosku", {
+        description: err?.message ?? "Spróbuj ponownie",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">
-          Wniosek o e-Promesę
-        </h1>
-        <p className="text-muted-foreground">
-          Złóż wniosek o promesę na zakup konkretnej broni palnej
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Wniosek o e-Promesę</h1>
+        <p className="text-muted-foreground">Złóż wniosek o promesę na zakup broni palnej</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card className="rounded-2xl border-none shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Wybierz pozwolenie</CardTitle>
-            <CardDescription>
-              Promesa jest wydawana w ramach posiadanego pozwolenia na broń
-            </CardDescription>
+            <CardDescription>Promesa jest wydawana w ramach aktywnego pozwolenia na broń</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="permitId">
-                Pozwolenie <span className="text-red-600">*</span>
-              </Label>
-              <Select
-                value={formData.permitId}
-                onValueChange={(value) => setFormData({ ...formData, permitId: value })}
-              >
-                <SelectTrigger id="permitId" className="min-h-[44px] mt-2 rounded-xl">
-                  <SelectValue placeholder="Wybierz pozwolenie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {userPermits.map((permit) => (
-                    <SelectItem key={permit.id} value={permit.id} disabled={!permit.isValid || permit.availableSlots === 0}>
-                      <div className="flex flex-col py-1">
-                        <span className="font-semibold">
-                          {permit.permitType} • {permit.permitNumber}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Wolne sloty: {permit.availableSlots} / {permit.maxFirearms}
-                          {permit.availableSlots === 0 && " (Brak wolnych miejsc)"}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.permitId && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{errors.permitId}</span>
+            {permitsLoading ? (
+              <div className="h-12 rounded-xl bg-muted animate-pulse" />
+            ) : permits.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Shield className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Brak aktywnych pozwoleń z wolnymi slotami</p>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="mt-2"
+                  onClick={() => navigate("/application/new-permit")}
+                >
+                  Złóż wniosek o pozwolenie
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="permitId">Pozwolenie <span className="text-red-600">*</span></Label>
+                  <Select
+                    value={formData.permitId}
+                    onValueChange={(v) => setFormData({ ...formData, permitId: v })}
+                  >
+                    <SelectTrigger id="permitId" className="min-h-[44px] mt-2 rounded-xl">
+                      <SelectValue placeholder="Wybierz pozwolenie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {permits.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          <div className="flex flex-col py-1">
+                            <span className="font-semibold">
+                              {getPermitTypeLabel(p)} • {p.permitNumber}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Wolne sloty: {p.availableSlots} / {p.maxFirearms}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.permitId && (
+                    <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
+                      <AlertCircle className="h-4 w-4" />{errors.permitId}
+                    </p>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {selectedPermit && (
-              <Card className="bg-muted/30 border-none rounded-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary/10 p-2 rounded-xl shrink-0">
-                      <Shield className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-sm">Pozwolenie {selectedPermit.permitType}</h3>
-                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full text-xs">
-                          Aktywne
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                        <div>
-                          <span className="block">Numer:</span>
-                          <span className="font-mono text-foreground">{selectedPermit.permitNumber}</span>
+                {selectedPermit && (
+                  <Card className="bg-muted/30 border-none rounded-xl">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-xl shrink-0">
+                          <Shield className="h-5 w-5 text-primary" />
                         </div>
-                        <div>
-                          <span className="block">Dostępne miejsca:</span>
-                          <span className="font-semibold text-foreground">
-                            {selectedPermit.availableSlots} / {selectedPermit.maxFirearms}
-                          </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-sm">
+                              {getPermitTypeLabel(selectedPermit)}
+                            </h3>
+                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full text-xs">
+                              Aktywne
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                            <div>
+                              <span className="block">Numer:</span>
+                              <span className="font-mono text-foreground">{selectedPermit.permitNumber}</span>
+                            </div>
+                            <div>
+                              <span className="block">Dostępne miejsca:</span>
+                              <span className="font-semibold text-foreground">
+                                {selectedPermit.availableSlots} / {selectedPermit.maxFirearms}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Dane broni</CardTitle>
-            <CardDescription>
-              Opisz typ broni, którą planujesz kupić
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="requestedWeaponType">
-                Typ broni <span className="text-red-600">*</span>
-              </Label>
-              <p className="text-xs text-muted-foreground mt-1 mb-2">
-                Np. "Pistolet sportowy Glock 17, kaliber 9mm" (max 100 znaków)
-              </p>
-              <Input
-                id="requestedWeaponType"
-                value={formData.requestedWeaponType}
-                onChange={(e) => setFormData({ ...formData, requestedWeaponType: e.target.value })}
-                className="min-h-[44px] rounded-xl"
-                placeholder="Pistolet sportowy Glock 17, 9mm"
-                maxLength={100}
-              />
-              <div className="flex justify-between items-center mt-2">
-                {errors.requestedWeaponType ? (
-                  <div className="flex items-center gap-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.requestedWeaponType}</span>
-                  </div>
-                ) : (
-                  <span />
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {formData.requestedWeaponType.length} / 100
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="requestedQuantity">
-                Ilość <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="requestedQuantity"
-                type="number"
-                value={formData.requestedQuantity}
-                onChange={(e) => setFormData({ ...formData, requestedQuantity: Number(e.target.value) })}
-                className="min-h-[44px] mt-2 rounded-xl"
-                min={1}
-                max={selectedPermit?.availableSlots || 1}
-              />
-              {errors.requestedQuantity && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{errors.requestedQuantity}</span>
+        {permits.length > 0 && (
+          <Card className="rounded-2xl border-none shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Dane broni</CardTitle>
+              <CardDescription>Opisz typ broni, którą planujesz kupić</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="requestedWeaponType">Typ broni <span className="text-red-600">*</span></Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-2">
+                  Np. &quot;Pistolet sportowy Glock 17, kaliber 9mm&quot; (max 100 znaków)
+                </p>
+                <Input
+                  id="requestedWeaponType"
+                  value={formData.requestedWeaponType}
+                  onChange={(e) => setFormData({ ...formData, requestedWeaponType: e.target.value })}
+                  className="min-h-[44px] rounded-xl"
+                  placeholder="Pistolet sportowy Glock 17, 9mm"
+                  maxLength={100}
+                />
+                <div className="flex justify-between mt-1">
+                  {errors.requestedWeaponType ? (
+                    <p className="flex items-center gap-1 text-sm text-red-600">
+                      <AlertCircle className="h-4 w-4" />{errors.requestedWeaponType}
+                    </p>
+                  ) : <span />}
+                  <span className="text-xs text-muted-foreground">{formData.requestedWeaponType.length} / 100</span>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+
+              <div>
+                <Label htmlFor="requestedQuantity">Ilość <span className="text-red-600">*</span></Label>
+                <Input
+                  id="requestedQuantity"
+                  type="number"
+                  value={formData.requestedQuantity}
+                  onChange={(e) => setFormData({ ...formData, requestedQuantity: Number(e.target.value) })}
+                  className="min-h-[44px] mt-2 rounded-xl"
+                  min={1}
+                  max={selectedPermit?.availableSlots ?? 10}
+                />
+                {errors.requestedQuantity && (
+                  <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
+                    <AlertCircle className="h-4 w-4" />{errors.requestedQuantity}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="rounded-2xl border-none shadow-sm bg-blue-50/50">
           <CardContent className="p-4">
             <div className="flex gap-3">
               <CheckCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-900 space-y-2">
-                <p className="font-semibold">Co dalej?</p>
-                <ul className="text-blue-700 space-y-1 text-sm list-disc list-inside">
-                  <li>Po złożeniu wniosku opłać promesę (mockowane)</li>
+              <div className="text-sm text-blue-900">
+                <p className="font-semibold mb-1">Co dalej?</p>
+                <ul className="text-blue-700 space-y-1 text-xs list-disc list-inside">
                   <li>WPA rozpatrzy wniosek w ciągu 14 dni</li>
                   <li>Po zatwierdzeniu otrzymasz promesę z kodem QR</li>
                   <li>Promesa będzie ważna przez 6 miesięcy</li>
@@ -239,16 +267,11 @@ export function PromiseApplicationForm() {
         </Card>
 
         <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/citizen")}
-            className="min-h-[44px] flex-1 rounded-xl"
-          >
+          <Button type="button" variant="outline" onClick={() => navigate(-1)} className="min-h-[44px] flex-1 rounded-xl">
             Anuluj
           </Button>
-          <Button type="submit" className="min-h-[44px] flex-1 rounded-xl">
-            Złóż wniosek
+          <Button type="submit" disabled={loading || permits.length === 0} className="min-h-[44px] flex-1 rounded-xl">
+            {loading ? "Składanie..." : "Złóż wniosek"}
           </Button>
         </div>
       </form>

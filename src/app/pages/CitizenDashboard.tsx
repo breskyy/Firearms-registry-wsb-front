@@ -1,191 +1,347 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { FileText, Shield, PlusCircle, AlertCircle, ChevronRight, CreditCard, Crosshair, QrCode, ArrowRightLeft } from "lucide-react";
+import { FileText, Shield, AlertCircle, ChevronRight, Crosshair, QrCode, ArrowRightLeft, Clock, CreditCard } from "lucide-react";
+import { citizenService } from "../../services/citizenService";
+import type { CitizenProfileDto, PermitDto, PermitApplicationDto, PromiseApplicationDto } from "../../types/api";
+
+type RecentEntry =
+  | { kind: "permit"; data: PermitApplicationDto }
+  | { kind: "promise"; data: PromiseApplicationDto };
+
+const STATUS_BADGE: Record<string, JSX.Element> = {
+  Submitted: <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-2 py-0.5 rounded-full">Złożony</Badge>,
+  Paid: <Badge variant="secondary" className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200 border-none px-2 py-0.5 rounded-full">Opłacony</Badge>,
+  UnderReview: <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-2 py-0.5 rounded-full">W weryfikacji</Badge>,
+  Approved: <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Zaakceptowany</Badge>,
+  Rejected: <Badge variant="destructive" className="rounded-full px-2 py-0.5">Odrzucony</Badge>,
+  RequiresCorrection: <Badge variant="secondary" className="bg-orange-100 text-orange-800 hover:bg-orange-200 border-none px-2 py-0.5 rounded-full">Wymaga uzupełnienia</Badge>,
+};
+
+function getPermitTypeLabel(app: PermitApplicationDto) {
+  const typeName = app.requestedPermitTypeName || String(app.requestedPermitType);
+  return PERMIT_TYPE_LABELS[typeName] ?? typeName;
+}
+
+const PERMIT_TYPE_LABELS: Record<string, string> = {
+  "0": "Sportowe",
+  "1": "Kolekcjonerskie",
+  "2": "Ochrony osobistej",
+  "3": "Łowieckie",
+  "4": "Inne",
+  Sport: "Sportowe",
+  Hunting: "Łowieckie",
+  Collection: "Kolekcjonerskie",
+  Protection: "Ochrony osobistej",
+  Other: "Inne",
+};
 
 export function CitizenDashboard() {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<CitizenProfileDto | null>(null);
+  const [permits, setPermits] = useState<PermitDto[]>([]);
+  const [recentApps, setRecentApps] = useState<RecentEntry[]>([]);
+  const [permitApps, setPermitApps] = useState<PermitApplicationDto[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data
-  const permitData = {
-    active: true,
-    number: "P-12345/2025",
-    type: "Sportowe",
-    validUntil: "Bezterminowo"
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [profileRes, permitsRes, permitAppsRes, promiseAppsRes] = await Promise.all([
+          citizenService.getProfile(),
+          citizenService.getPermits(),
+          citizenService.getPermitApplications(),
+          citizenService.getPromiseApplications(),
+        ]);
+        setProfile(profileRes);
+        setPermits(permitsRes);
+        setPermitApps(permitAppsRes);
+        const combined: RecentEntry[] = [
+          ...permitAppsRes.map<RecentEntry>((data) => ({ kind: "permit", data })),
+          ...promiseAppsRes.map<RecentEntry>((data) => ({ kind: "promise", data })),
+        ];
+        combined.sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
+        setRecentApps(combined.slice(0, 3));
+      } catch {
+        // silent fail — empty states will show
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const sortedPermits = [...permits].sort((a, b) => {
+    if (a.statusName === "Active" && b.statusName !== "Active") return -1;
+    if (a.statusName !== "Active" && b.statusName === "Active") return 1;
+    return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime();
+  });
+  const permitCardThemes: Record<string, string> = {
+    Sport: "bg-gradient-to-br from-[#0069e8] via-[#008cf0] to-[#00a6e8] text-white",
+    Collection: "bg-gradient-to-br from-[#009f7a] via-[#00a878] to-[#1fbe87] text-white",
+    Protection: "bg-gradient-to-br from-[#7442d8] via-[#7a35b0] to-[#923f9b] text-white",
+    Hunting: "bg-gradient-to-br from-[#f97316] via-[#fb7d16] to-[#f5aa35] text-white",
+    Other: "bg-gradient-to-br from-slate-700 via-slate-800 to-slate-950 text-white",
   };
+  const activePermitApplication = [...permitApps]
+    .filter((app) => !["Approved", "Rejected"].includes(app.statusName))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+  const correctionApps = permitApps.filter(
+    (app) => app.statusName === "RequiresCorrection" && app.id !== activePermitApplication?.id
+  );
 
-  const recentApplications = [
-    {
-      id: "WNI-2026-001234",
-      type: "Wniosek o pozwolenie na broń",
-      status: "w trakcie",
-      date: "10 kwi 2026",
-    },
-  ];
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "w trakcie":
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-2 py-0.5 rounded-full">W weryfikacji</Badge>;
-      case "zaakceptowany":
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Zaakceptowany</Badge>;
-      case "odrzucony":
-        return <Badge variant="destructive" className="rounded-full px-2 py-0.5">Odrzucony</Badge>;
-      default:
-        return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-    }
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6 pt-2">
+        <div className="px-1">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-2" />
+          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="h-40 rounded-3xl bg-muted animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pt-2">
       {/* Header */}
       <div className="px-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Cześć, Jan</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Cześć, {profile?.firstName ?? ""}
+        </h1>
         <p className="text-muted-foreground mt-1">Twój panel zarządzania bronią</p>
       </div>
 
-      {/* Main Permit Card (mObywatel style) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[#003b6b] p-6 text-white shadow-md cursor-pointer transition-transform active:scale-[0.98]" onClick={() => navigate("/weapons")}>
-        <div className="absolute -right-6 -top-6 opacity-10">
-          <Crosshair className="h-40 w-40" />
-        </div>
-        <div className="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-white/80 text-sm font-medium mb-1">e-Pozwolenie</p>
-              <h2 className="text-2xl font-bold">{permitData.type}</h2>
-            </div>
-            <div className="bg-white/20 p-2 rounded-2xl backdrop-blur-sm">
-              <Shield className="h-6 w-6 text-white" />
-            </div>
+      {/* Permit cards */}
+      {sortedPermits.length > 0 ? (
+        <div>
+          <div className="flex items-end justify-between mb-3 px-1">
+            <h3 className="text-lg font-bold text-foreground">Moje pozwolenia</h3>
+            <span className="text-sm text-muted-foreground">{sortedPermits.length} razem</span>
           </div>
-          <div className="mt-6 flex justify-between items-end">
-            <div>
-              <p className="text-white/80 text-xs mb-0.5">Numer dokumentu</p>
-              <p className="font-mono text-lg tracking-wider">{permitData.number}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-white/80 text-xs mb-0.5">Ważność</p>
-              <p className="font-medium text-sm">{permitData.validUntil}</p>
-            </div>
+          <div className="relative">
+            {sortedPermits.map((permit, index) => (
+              <div
+                key={permit.id}
+                className={`relative overflow-hidden rounded-2xl p-4 min-h-[164px] shadow-[0_-4px_10px_rgba(15,23,42,0.08),0_10px_22px_rgba(15,23,42,0.14)] ring-1 ring-white/15 cursor-pointer transition-transform hover:-translate-y-1 active:scale-[0.99] ${
+                  permit.statusName === "Active"
+                    ? permitCardThemes[permit.permitTypeName] ?? permitCardThemes.Other
+                    : "bg-muted text-foreground"
+                }`}
+                style={{
+                  marginTop: index === 0 ? 0 : -86,
+                  zIndex: index + 1,
+                }}
+                onClick={() => navigate(`/permits/${permit.id}`)}
+              >
+                {index > 0 && (
+                  <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-white/18 to-transparent" />
+                )}
+                <div className="absolute inset-0 opacity-[0.08]">
+                  <div className="h-full w-full bg-[repeating-linear-gradient(135deg,white_0px,white_1px,transparent_1px,transparent_7px)]" />
+                </div>
+                <div className="absolute -right-5 -top-6 opacity-15">
+                  <Crosshair className="h-28 w-28" />
+                </div>
+                <div className="relative z-10 h-full min-h-[132px] flex flex-col justify-between">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className={permit.statusName === "Active" ? "text-white/85 text-sm font-semibold mb-1" : "text-muted-foreground text-sm font-semibold mb-1"}>
+                        e-Pozwolenie
+                      </p>
+                      <h2 className="text-lg font-bold truncate">
+                        {PERMIT_TYPE_LABELS[permit.permitTypeName] ?? permit.permitTypeName}
+                      </h2>
+                      <p className={permit.statusName === "Active" ? "text-white/80 text-xs font-mono mt-1 truncate" : "text-muted-foreground text-xs font-mono mt-1 truncate"}>
+                        {permit.permitNumber}
+                      </p>
+                    </div>
+                    <div className={permit.statusName === "Active" ? "bg-white/20 p-2 rounded-xl backdrop-blur-sm shrink-0" : "bg-background/80 p-2 rounded-xl shrink-0"}>
+                      <Shield className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto_auto] items-end gap-3 pt-8">
+                    <div className="min-w-0">
+                      <p className={permit.statusName === "Active" ? "text-white/80 text-xs mb-0.5" : "text-muted-foreground text-xs mb-0.5"}>
+                        Ważne do
+                      </p>
+                      <p className="text-sm font-semibold truncate">{formatDate(permit.expiryDate)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={permit.statusName === "Active" ? "text-white/80 text-xs mb-0.5" : "text-muted-foreground text-xs mb-0.5"}>
+                        Miejsca
+                      </p>
+                      <p className="font-medium text-sm">{permit.usedSlots} / {permit.maxFirearms}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 opacity-70 mb-1" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      ) : activePermitApplication ? (
+        <div
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-white to-amber-50 p-5 shadow-sm border border-blue-100 cursor-pointer transition-transform active:scale-[0.98]"
+          onClick={() => navigate(
+            activePermitApplication.statusName === "RequiresCorrection"
+              ? `/applications/${activePermitApplication.id}/correction?type=permit`
+              : "/applications"
+          )}
+        >
+          <div className="absolute -right-6 -top-6 text-blue-100">
+            <FileText className="h-28 w-28" />
+          </div>
+          <div className="relative z-10 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl shrink-0">
+                {activePermitApplication.statusName === "RequiresCorrection" ? (
+                  <AlertCircle className="h-6 w-6" />
+                ) : (
+                  <Clock className="h-6 w-6" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-blue-950 mb-1">
+                  Wniosek o pozwolenie jest już złożony
+                </p>
+                <h2 className="text-lg font-bold text-foreground truncate">
+                  {getPermitTypeLabel(activePermitApplication)}
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {STATUS_BADGE[activePermitApplication.statusName] ?? (
+                    <Badge className="rounded-full px-2 py-0.5">{activePermitApplication.statusName}</Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    Złożono {formatDate(activePermitApplication.createdAt)}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-3 leading-snug">
+                  {activePermitApplication.statusName === "RequiresCorrection"
+                    ? "WPA poprosiło o uzupełnienie danych. Kliknij, żeby poprawić wniosek."
+                    : "Nie musisz składać kolejnego wniosku. Status sprawdzisz w swoich sprawach."}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-4" />
+          </div>
+        </div>
+      ) : (
+        <div
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-muted to-muted/50 p-6 shadow-md cursor-pointer transition-transform active:scale-[0.98]"
+          onClick={() => navigate("/application/new")}
+        >
+          <div className="flex flex-col items-center justify-center min-h-[140px] gap-3 text-muted-foreground">
+            <Shield className="h-12 w-12 opacity-40" />
+            <p className="text-sm font-medium">Brak aktywnego pozwolenia</p>
+            <Button size="sm" className="rounded-xl">Nowy wniosek</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Alert for corrections needed */}
+      {correctionApps.map((app) => (
+        <Card
+          key={app.id}
+          className="rounded-2xl border-none shadow-sm bg-orange-50/50 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => navigate("/applications")}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-full text-orange-600">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-orange-900">Uzupełnij braki</p>
+                <p className="text-xs text-orange-700">
+                  Wniosek o pozwolenie ({getPermitTypeLabel(app)}) wymaga uwagi
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="rounded-full text-orange-700 h-8 w-8 hover:bg-orange-100">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
 
       {/* Quick Actions Grid */}
       <div>
         <h3 className="text-lg font-bold mb-3 px-1 text-foreground">Usługi</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/application/new-permit")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <Shield className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Wniosek o pozwolenie</span>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/application/new-promise")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <CreditCard className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Wniosek o promesę</span>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/promises")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <QrCode className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Moje promesy</span>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/weapons")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <Crosshair className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Rejestr broni</span>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/applications")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <FileText className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Moje wnioski</span>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={() => navigate("/transfers")}>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-              <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
-                <ArrowRightLeft className="h-6 w-6" />
-              </div>
-              <span className="text-xs font-semibold leading-tight">Transfery</span>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Required Actions Alert (if any) */}
-      <Card className="rounded-2xl border-none shadow-sm bg-orange-50/50 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate("/applications/WNI-2026-001234")}>
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-100 p-2 rounded-full text-orange-600">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-orange-900">Uzupełnij braki</p>
-              <p className="text-xs text-orange-700">Wniosek WNI-2026-001234 wymaga uwagi</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" className="rounded-full text-orange-700 h-8 w-8 hover:bg-orange-100">
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Recent Applications List */}
-      <div>
-        <div className="flex justify-between items-end mb-3 px-1">
-          <h3 className="text-lg font-bold text-foreground">Ostatnie wnioski</h3>
-          <Button variant="link" className="text-primary text-sm h-auto p-0 font-medium" onClick={() => navigate("/applications")}>
-            Wszystkie
-          </Button>
-        </div>
-        
-        <div className="space-y-3">
-          {recentApplications.map((app) => (
-            <Card 
-              key={app.id}
-              className="rounded-2xl border-none shadow-sm hover:bg-muted/30 transition-colors cursor-pointer active:scale-[0.99]"
-              onClick={() => navigate(`/applications/${app.id}`)}
+          {[
+            { label: "Nowy wniosek", icon: FileText, path: "/application/new" },
+            { label: "Moje promesy", icon: QrCode, path: "/promises" },
+            { label: "Rejestr broni", icon: Crosshair, path: "/weapons" },
+            { label: "Moje wnioski", icon: FileText, path: "/applications" },
+            { label: "Transfery", icon: ArrowRightLeft, path: "/transfers" },
+            { label: "Badania", icon: AlertCircle, path: "/medical-alerts" },
+          ].map(({ label, icon: Icon, path }) => (
+            <Card
+              key={path}
+              className="rounded-2xl border-none shadow-sm hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]"
+              onClick={() => navigate(path)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="bg-muted p-3 rounded-2xl text-muted-foreground">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm truncate text-foreground">{app.type}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">{app.date} • {app.id}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {getStatusBadge(app.status)}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
+                <div className="bg-blue-50 p-3 rounded-full text-primary mb-1">
+                  <Icon className="h-6 w-6" />
                 </div>
+                <span className="text-xs font-semibold leading-tight">{label}</span>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
+
+      {/* Recent Permit Applications */}
+      {recentApps.length > 0 && (
+        <div>
+          <div className="flex justify-between items-end mb-3 px-1">
+            <h3 className="text-lg font-bold text-foreground">Ostatnie wnioski</h3>
+            <Button variant="link" className="text-primary text-sm h-auto p-0 font-medium" onClick={() => navigate("/applications")}>
+              Wszystkie
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {recentApps.map((entry) => {
+              const isPermit = entry.kind === "permit";
+              const title = isPermit
+                ? `Wniosek o pozwolenie — ${getPermitTypeLabel(entry.data)}`
+                : `Wniosek o e-Promesę — ${entry.data.requestedWeaponType}`;
+              const Icon = isPermit ? FileText : CreditCard;
+              return (
+                <Card
+                  key={entry.data.id}
+                  className="rounded-2xl border-none shadow-sm hover:bg-muted/30 transition-colors cursor-pointer active:scale-[0.99]"
+                  onClick={() => navigate("/applications")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-2xl ${isPermit ? "bg-muted text-muted-foreground" : "bg-blue-50 text-primary"}`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm truncate text-foreground">{title}</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">{formatDate(entry.data.createdAt)}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {STATUS_BADGE[entry.data.statusName] ?? <Badge className="rounded-full px-2 py-0.5">{entry.data.statusName}</Badge>}
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

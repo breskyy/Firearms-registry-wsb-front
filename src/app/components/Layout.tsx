@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { Button } from "./ui/button";
-import { Menu, LogOut, ChevronLeft, Home, FileText, Shield, User, PlusCircle, CheckSquare, Search } from "lucide-react";
+import { Menu, LogOut, ChevronLeft, Home, FileText, Shield, User, PlusCircle, CheckSquare, Search, FileCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function Layout() {
@@ -41,8 +41,8 @@ export function Layout() {
       case "shop":
         return [
           { label: "Pulpit", path: "/shop", icon: Home },
-          { label: "Weryfikuj", path: "/shop/verify", icon: Search },
-          { label: "Sprzedaż", path: "/applications", icon: FileText },
+          { label: "Sprawdź", path: "/shop/verify", icon: Search },
+          { label: "Sprzedaż", path: "/shop/sale", icon: FileCheck },
         ];
       default:
         return [];

@@ -5,247 +5,236 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
-import { AlertCircle, CheckCircle, Search, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { AlertCircle, CheckCircle, Search, FileText, XCircle, ArrowLeft, FileCheck, Info } from "lucide-react";
 import { Separator } from "../components/ui/separator";
+import { shopService, translateVerifyMessage } from "../../services/shopService";
+import type { VerifyPermitResponse } from "../../types/api";
 
 export function ShopVerification() {
   const navigate = useNavigate();
-  const [promesaNumber, setPromesaNumber] = useState("");
-  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [mode, setMode] = useState<"qr" | "number">("qr");
+  const [qrToken, setQrToken] = useState("");
+  const [promiseNumber, setPromiseNumber] = useState("");
+  const [result, setResult] = useState<VerifyPermitResponse | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setVerificationResult(null);
+    setResult(null);
 
-    if (!promesaNumber) {
-      setError("Wprowadź numer promesy");
+    const value = mode === "qr" ? qrToken : promiseNumber;
+    if (!value) {
+      setError(mode === "qr" ? "Wprowadź token QR" : "Wprowadź numer promesy");
       return;
     }
 
-    // Simulate API call - in real app this would verify against database
-    setTimeout(() => {
-      // Mock successful verification
-      setVerificationResult({
-        promesaNumber: promesaNumber,
-        status: "ważna",
-        validUntil: "2026-10-10",
-        customer: {
-          firstName: "Jan",
-          lastName: "Kowalski",
-          pesel: "***********",
-          idNumber: "ABC123456",
-        },
-        permitDetails: {
-          type: "Pozwolenie na broń sportową",
-          weaponType: "Pistolet",
-          caliber: "9mm",
-          issueDate: "2026-04-11",
-        },
-      });
-    }, 500);
+    setLoading(true);
+    try {
+      const r = await shopService.verifyPermit(
+        mode === "qr" ? { qrToken: value } : { promiseNumber: value }
+      );
+      setResult(r);
+    } catch (err: any) {
+      setError(err?.message ?? "Błąd weryfikacji");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReportSale = () => {
-    alert("Przekierowanie do formularza zgłoszenia sprzedaży...");
-    // In real app, navigate to sale report form
-  };
+  const canStartSale = result?.isValid && mode === "qr" && qrToken && result.medicalExamsValid && result.remainingPromiseQuantity > 0 && result.availableSlots > 0;
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="mb-2">Weryfikacja promesy</h1>
-        <p className="text-[#666666]">Sprawdź ważność promesy przed sprzedażą broni</p>
+    <div className="pt-2">
+      <div className="mb-6 px-1">
+        <Button variant="ghost" onClick={() => navigate("/shop")} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Powrót do panelu
+        </Button>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Sprawdź promesę</h1>
+        <p className="text-muted-foreground">Wglądowa weryfikacja — nie zapisuje sprzedaży. Aby zarejestrować transakcję wróć do panelu i wybierz &quot;Zarejestruj sprzedaż&quot;.</p>
       </div>
 
-      {/* Verification Form */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Weryfikuj promesę</CardTitle>
-          <CardDescription>Wprowadź numer promesy do weryfikacji</CardDescription>
+      <Card className="mb-6 rounded-2xl border-none shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Wyszukiwarka</CardTitle>
+          <CardDescription>Zeskanuj kod QR lub wprowadź numer promesy</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleVerify}>
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1">
-                <Label htmlFor="promesaNumber" className="mb-2 block">
-                  Numer promesy <span className="text-red-600">*</span>
-                </Label>
+          <Tabs value={mode} onValueChange={(v) => { setMode(v as "qr" | "number"); setResult(null); setError(""); }} className="space-y-4">
+            <TabsList className="grid grid-cols-2 rounded-xl">
+              <TabsTrigger value="qr">Token QR</TabsTrigger>
+              <TabsTrigger value="number">Numer promesy</TabsTrigger>
+            </TabsList>
+
+            <form onSubmit={handleVerify}>
+              <TabsContent value="qr" className="mt-0">
+                <Label htmlFor="qrToken" className="mb-2 block">Token z kodu QR <span className="text-red-600">*</span></Label>
                 <Input
-                  id="promesaNumber"
-                  value={promesaNumber}
-                  onChange={(e) => setPromesaNumber(e.target.value)}
-                  placeholder="PRO-2026-XXXXXX"
-                  className="min-h-[44px]"
+                  id="qrToken"
+                  value={qrToken}
+                  onChange={(e) => setQrToken(e.target.value)}
+                  placeholder="Wklej zeskanowany token..."
+                  className="min-h-[44px] rounded-xl font-mono"
                 />
-              </div>
-              <div className="flex items-end">
-                <Button type="submit" className="min-h-[44px] gap-2 w-full md:w-auto">
-                  <Search className="h-4 w-4" />
-                  Weryfikuj
-                </Button>
-              </div>
-            </div>
-            {error && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-red-600">
-                <AlertCircle className="h-4 w-4" />
-                <span>{error}</span>
-              </div>
-            )}
-          </form>
+                <p className="text-xs text-muted-foreground mt-1">QR jest wymagany do rejestracji sprzedaży.</p>
+              </TabsContent>
+
+              <TabsContent value="number" className="mt-0">
+                <Label htmlFor="promiseNumber" className="mb-2 block">Numer promesy <span className="text-red-600">*</span></Label>
+                <Input
+                  id="promiseNumber"
+                  value={promiseNumber}
+                  onChange={(e) => setPromiseNumber(e.target.value)}
+                  placeholder="PROM-YYYYMMDD-XXXXXXXX"
+                  className="min-h-[44px] rounded-xl"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Po numerze możesz tylko sprawdzić promesę — sprzedaż wymaga zeskanowania QR.</p>
+              </TabsContent>
+
+              <Button type="submit" disabled={loading} className="min-h-[44px] mt-4 w-full rounded-xl">
+                <Search className="h-4 w-4 mr-2" />
+                {loading ? "Sprawdzam..." : "Sprawdź"}
+              </Button>
+
+              {error && (
+                <div className="flex items-center gap-2 mt-3 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              )}
+            </form>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Verification Result */}
-      {verificationResult && (
-        <Card className="mb-6 border-green-600 border-2">
-          <CardHeader className="bg-green-50">
+      {result && !result.isValid && (
+        <Card className="mb-6 rounded-2xl border-none shadow-sm bg-muted/30">
+          <CardContent className="p-4">
+            <div className="flex gap-3">
+              <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground">Jak działa e-Promesa</p>
+                <p>Promesa zezwala na zakup <strong>określonej liczby egzemplarzy</strong> broni (np. 3 sztuki). Każda transakcja wykorzystuje 1 z dostępnych slotów.</p>
+                <p>Po sprzedaży wszystkich dozwolonych sztuk promesa otrzymuje status <code className="text-foreground">Used</code> i nie może być już użyta. Obywatel musi wtedy złożyć nowy wniosek o promesę.</p>
+                <p>Termin ważności promesy to 3 miesiące od jej wydania — po tym czasie status zmienia się na <code className="text-foreground">Expired</code>.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {result && (
+        <Card className={`mb-6 rounded-2xl border-2 shadow-sm ${result.isValid ? "border-emerald-300" : "border-red-300"}`}>
+          <CardHeader className={result.isValid ? "bg-emerald-50/50 rounded-t-2xl" : "bg-red-50/50 rounded-t-2xl"}>
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+              {result.isValid ? (
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              ) : (
+                <XCircle className="h-6 w-6 text-red-600" />
+              )}
               <div>
-                <CardTitle className="text-green-900">Promesa jest ważna</CardTitle>
-                <CardDescription className="text-green-700">
-                  Możesz dokonać sprzedaży broni
+                <CardTitle className={result.isValid ? "text-emerald-900" : "text-red-900"}>
+                  {result.isValid ? "Promesa ważna" : "Promesa nieważna"}
+                </CardTitle>
+                <CardDescription className={result.isValid ? "text-emerald-700" : "text-red-700"}>
+                  {translateVerifyMessage(result.message)}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            {/* Promesa Details */}
-            <div>
-              <h3 className="mb-3 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-[#005EA5]" />
-                Dane promesy
-              </h3>
-              <div className="bg-[#F5F5F5] p-4 rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#666666]">Numer promesy:</span>
-                  <span className="font-medium">{verificationResult.promesaNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#666666]">Status:</span>
-                  <Badge className="bg-green-600 hover:bg-green-700">
-                    {verificationResult.status}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#666666]">Ważna do:</span>
-                  <span className="font-medium">{verificationResult.validUntil}</span>
+
+          {result.isValid && (
+            <CardContent className="pt-6 space-y-6">
+              <div>
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Dane promesy
+                </h3>
+                <div className="bg-muted/30 p-4 rounded-xl space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Numer pozwolenia:</span>
+                    <span className="font-medium font-mono">{result.permitNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Typ pozwolenia:</span>
+                    <span className="font-medium">{result.permitType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dopuszczalna broń:</span>
+                    <span className="font-medium">{result.weaponType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pozostała ilość:</span>
+                    <Badge className={`${result.remainingPromiseQuantity > 0 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"} hover:bg-current border-none`}>
+                      {result.remainingPromiseQuantity}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dostępne sloty:</span>
+                    <span className={`font-medium ${result.availableSlots > 0 ? "text-emerald-700" : "text-red-700"}`}>{result.availableSlots}</span>
+                  </div>
+                  {result.promiseExpiryDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Wygasa:</span>
+                      <span className="font-medium">{new Date(result.promiseExpiryDate).toLocaleDateString("pl-PL")}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Badania:</span>
+                    {result.medicalExamsValid ? (
+                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none">Aktualne</Badge>
+                    ) : (
+                      <Badge variant="destructive">Nieaktualne</Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <Separator />
+              <Separator />
 
-            {/* Customer Details */}
-            <div>
-              <h3 className="mb-3">Dane nabywcy</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Imię i nazwisko</p>
-                  <p className="font-medium">
-                    {verificationResult.customer.firstName}{" "}
-                    {verificationResult.customer.lastName}
+              <div>
+                <h3 className="mb-3 font-semibold">Nabywca</h3>
+                <div className="bg-muted/30 p-4 rounded-xl">
+                  <p className="font-medium">{result.citizenName}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {canStartSale ? (
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h3 className="mb-2 text-blue-900 font-semibold">Można przystąpić do sprzedaży</h3>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Wszystkie wymagania są spełnione. Możesz teraz wprowadzić dane sprzedawanej broni.
                   </p>
+                  <Button onClick={() => navigate(`/shop/sale?qrToken=${encodeURIComponent(qrToken)}`)} className="min-h-[44px] w-full rounded-xl">
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Zarejestruj sprzedaż na tej promesie
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">PESEL</p>
-                  <p className="font-medium">{verificationResult.customer.pesel}</p>
-                  <p className="text-xs text-[#666666]">Dane ukryte</p>
+              ) : (
+                <div className="bg-amber-50 p-4 rounded-xl text-sm text-amber-900">
+                  {mode !== "qr" || !qrToken ? (
+                    <p>Aby zarejestrować sprzedaż wprowadź token QR (wymagane przez API). Numer promesy umożliwia jedynie wgląd.</p>
+                  ) : !result.medicalExamsValid ? (
+                    <p>Badania medyczne obywatela nie są aktualne — sprzedaż zostanie odrzucona przez system.</p>
+                  ) : result.remainingPromiseQuantity <= 0 ? (
+                    <p>Promesa jest w całości wykorzystana.</p>
+                  ) : result.availableSlots <= 0 ? (
+                    <p>Brak wolnych slotów w pozwoleniu nabywcy.</p>
+                  ) : (
+                    <p>Sprzedaż nie może być zarejestrowana.</p>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Numer dowodu</p>
-                  <p className="font-medium">{verificationResult.customer.idNumber}</p>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Permit Details */}
-            <div>
-              <h3 className="mb-3">Szczegóły pozwolenia</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Rodzaj pozwolenia</p>
-                  <p className="font-medium">{verificationResult.permitDetails.type}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Data wydania</p>
-                  <p className="font-medium">{verificationResult.permitDetails.issueDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Dopuszczalny rodzaj broni</p>
-                  <p className="font-medium">{verificationResult.permitDetails.weaponType}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#666666] mb-1">Kaliber</p>
-                  <p className="font-medium">{verificationResult.permitDetails.caliber}</p>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Actions */}
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="mb-2 text-blue-900">Następne kroki</h3>
-              <p className="text-sm text-blue-700 mb-4">
-                Po weryfikacji tożsamości nabywcy możesz dokonać sprzedaży. Pamiętaj o
-                obowiązku zgłoszenia sprzedaży do systemu w ciągu 3 dni roboczych.
-              </p>
-              <Button onClick={handleReportSale} className="min-h-[44px] w-full">
-                Zgłoś sprzedaż broni
-              </Button>
-            </div>
-          </CardContent>
+              )}
+            </CardContent>
+          )}
         </Card>
       )}
 
-      {/* Information Card */}
-      {!verificationResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Informacje</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-sm">
-              <div>
-                <h3 className="font-medium mb-2">Jak weryfikować promesę:</h3>
-                <ol className="space-y-2 text-[#666666] list-decimal list-inside">
-                  <li>Wprowadź numer promesy podany przez klienta</li>
-                  <li>System sprawdzi ważność i szczegóły pozwolenia</li>
-                  <li>Zweryfikuj tożsamość klienta (dowód osobisty)</li>
-                  <li>Sprawdź zgodność danych z systemem</li>
-                  <li>Po sprzedaży zgłoś transakcję w systemie</li>
-                </ol>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-medium mb-2">Ważne informacje:</h3>
-                <ul className="space-y-2 text-[#666666] list-disc list-inside">
-                  <li>Promesa jest ważna przez 6 miesięcy</li>
-                  <li>Sprzedaż musi być zgodna z danymi w promesie</li>
-                  <li>Zgłoszenie sprzedaży jest obowiązkowe</li>
-                  <li>Termin zgłoszenia: 3 dni robocze</li>
-                </ul>
-              </div>
-
-              <Separator />
-
-              <div className="bg-[#F5F5F5] p-3 rounded-lg">
-                <p className="text-[#666666] text-xs">
-                  Podstawa prawna: Ustawa o broni i amunicji z dnia 21 maja 1999 r.,
-                  Art. 10 ust. 3
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

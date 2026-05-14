@@ -6,6 +6,8 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { citizenService } from "../../../services/citizenService";
+import type { TransferType } from "../../../types/api";
 
 interface TransferDrawerProps {
   open: boolean;
@@ -16,70 +18,77 @@ interface TransferDrawerProps {
     model: string;
     serialNumber: string;
   };
+  onSuccess?: () => void;
 }
 
-export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo }: TransferDrawerProps) {
+export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onSuccess }: TransferDrawerProps) {
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     buyerPesel: "",
-    transferType: "Sale" as "Sale" | "Donation" | "Inheritance" | "AdministrativeCorrection",
+    transferType: "Sale" as TransferType,
   });
 
   useEffect(() => {
     if (open) {
-      setFormData({
-        buyerPesel: "",
-        transferType: "Sale",
-      });
+      setFormData({ buyerPesel: "", transferType: "Sale" });
       setErrors({});
     }
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.buyerPesel) e.buyerPesel = "Wymagane";
+    else if (formData.buyerPesel.length !== 11) e.buyerPesel = "PESEL musi mieć 11 cyfr";
+    else if (!/^\d+$/.test(formData.buyerPesel)) e.buyerPesel = "PESEL może zawierać tylko cyfry";
+    if (!formData.transferType) e.transferType = "Wybierz typ transferu";
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.buyerPesel) {
-      newErrors.buyerPesel = "Wymagane";
-    } else if (formData.buyerPesel.length !== 11) {
-      newErrors.buyerPesel = "PESEL musi mieć 11 cyfr";
-    }
-
-    if (!formData.transferType) {
-      newErrors.transferType = "Wybierz typ transferu";
-    }
-
+    const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+    if (!firearmId) return;
 
-    // Mock - symulacja utworzenia transferu
-    const transferNumber = `TRF-2026-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
+    setLoading(true);
+    try {
+      await citizenService.createTransferRequest({
+        firearmId,
+        buyerPesel: formData.buyerPesel,
+        transferType: formData.transferType,
+      });
 
-    onOpenChange(false);
-
-    toast.success("Transfer zainicjowany pomyślnie", {
-      description: `Nr transferu: ${transferNumber}. Kupujący otrzymał powiadomienie o oczekującym transferze.`,
-      duration: 5000,
-    });
+      onOpenChange(false);
+      toast.success("Transfer zainicjowany", {
+        description: "Kupujący otrzymał powiadomienie o oczekującym transferze.",
+        duration: 5000,
+      });
+      onSuccess?.();
+    } catch (err: any) {
+      toast.error("Błąd inicjowania transferu", { description: err?.message ?? "Spróbuj ponownie" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[92vh] flex flex-col px-0 rounded-t-3xl border-0 shadow-2xl">
         <DrawerHeader className="border-b px-4 py-4 shrink-0">
-          <DrawerTitle className="text-xl font-bold tracking-tight text-foreground">
-            Transfer broni
-          </DrawerTitle>
+          <DrawerTitle className="text-xl font-bold tracking-tight text-foreground">Transfer broni</DrawerTitle>
           <DrawerDescription className="text-sm">
-            {firearmInfo ? `${firearmInfo.brand} ${firearmInfo.model} (SN: ${firearmInfo.serialNumber})` : "Sprzedaż lub przekazanie broni innemu obywatelowi"}
+            {firearmInfo
+              ? `${firearmInfo.brand} ${firearmInfo.model} (SN: ${firearmInfo.serialNumber})`
+              : "Sprzedaż lub przekazanie broni innemu obywatelowi"}
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative p-4">
-          <form onSubmit={handleSubmit} className="space-y-5">
-
+          <form id="transfer-form" onSubmit={handleSubmit} className="space-y-5">
             <div className="bg-blue-50/50 rounded-xl p-4">
               <div className="flex gap-3">
                 <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
@@ -103,8 +112,9 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo }: T
               <Input
                 id="buyerPesel"
                 type="text"
+                inputMode="numeric"
                 value={formData.buyerPesel}
-                onChange={(e) => setFormData({ ...formData, buyerPesel: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, buyerPesel: e.target.value.replace(/\D/g, "") })}
                 className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono bg-background"
                 placeholder="12345678901"
                 maxLength={11}
@@ -112,9 +122,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo }: T
               {errors.buyerPesel && (
                 <p className="text-red-500 text-xs mt-1 font-medium">{errors.buyerPesel}</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Kupujący musi posiadać aktywne pozwolenie na broń
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Kupujący musi posiadać aktywne pozwolenie na broń</p>
             </div>
 
             <div>
@@ -123,7 +131,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo }: T
               </Label>
               <Select
                 value={formData.transferType}
-                onValueChange={(value: any) => setFormData({ ...formData, transferType: value })}
+                onValueChange={(v) => setFormData({ ...formData, transferType: v as TransferType })}
               >
                 <SelectTrigger id="transferType" className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background">
                   <SelectValue placeholder="Wybierz typ" />
@@ -139,19 +147,17 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo }: T
                 <p className="text-red-500 text-xs mt-1 font-medium">{errors.transferType}</p>
               )}
             </div>
-
-            <button type="submit" id="hidden-submit" className="hidden">Submit</button>
           </form>
         </div>
 
         <div className="p-4 border-t bg-background shrink-0 mt-auto">
           <Button
+            form="transfer-form"
+            type="submit"
+            disabled={loading}
             className="w-full min-h-[56px] rounded-2xl text-[17px] font-bold shadow-sm"
-            onClick={() => {
-              document.getElementById("hidden-submit")?.click();
-            }}
           >
-            Zainicjuj transfer
+            {loading ? "Inicjowanie..." : "Zainicjuj transfer"}
           </Button>
           <Button
             variant="ghost"

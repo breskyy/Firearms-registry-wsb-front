@@ -1,4 +1,4 @@
-import apiClient from './api';
+import api from './api';
 import type {
   WpaCitizenDto,
   WpaPermitApplicationDto,
@@ -7,7 +7,7 @@ import type {
   RejectApplicationRequest,
   RequireCorrectionRequest,
   WpaFirearmSearchResult,
-  MedicalAlertDto,
+  WpaMedicalAlertDto,
   SuspendPermitRequest,
   RevokePermitRequest,
   RestorePermitRequest,
@@ -16,156 +16,128 @@ import type {
   PaginationParams,
   PermitApplicationStatus,
   PromiseApplicationStatus,
+  PermitType,
 } from '../types/api';
 
-export const wpaService = {
-  // ============================================================================
-  // PERMIT APPLICATIONS
-  // ============================================================================
+const PERMIT_TYPE_VALUES: Record<string, number> = {
+  Sport: 0,
+  Collection: 1,
+  Protection: 2,
+  Hunting: 3,
+  Other: 4,
+};
 
-  async getPermitApplications(params?: PaginationParams & {
-    status?: PermitApplicationStatus;
-  }): Promise<PaginatedResult<WpaPermitApplicationDto>> {
-    const response = await apiClient.get<PaginatedResult<WpaPermitApplicationDto>>(
-      '/wpa/permit-applications',
-      { params }
-    );
-    return response.data;
+const PERMIT_APPLICATION_STATUS_VALUES: Record<string, number> = {
+  Submitted: 0,
+  UnderReview: 1,
+  RequiresCorrection: 2,
+  Approved: 3,
+  Rejected: 4,
+};
+
+const PROMISE_APPLICATION_STATUS_VALUES: Record<string, number> = {
+  Submitted: 0,
+  Paid: 1,
+  UnderReview: 2,
+  RequiresCorrection: 3,
+  Approved: 4,
+  Rejected: 5,
+};
+
+export const wpaService = {
+  // PERMIT APPLICATIONS
+  async getPermitApplications(params?: PaginationParams & { status?: PermitApplicationStatus }): Promise<PaginatedResult<WpaPermitApplicationDto>> {
+    const query: Record<string, unknown> = { ...params };
+    if (params?.status) query.status = PERMIT_APPLICATION_STATUS_VALUES[params.status];
+    return api.get<PaginatedResult<WpaPermitApplicationDto>>('/wpa/permit-applications', query);
   },
 
   async getPermitApplicationById(id: string): Promise<WpaPermitApplicationDto> {
-    const response = await apiClient.get<WpaPermitApplicationDto>(
-      `/wpa/permit-applications/${id}`
-    );
-    return response.data;
+    return api.get<WpaPermitApplicationDto>(`/wpa/permit-applications/${id}`);
   },
 
   async markPermitApplicationUnderReview(id: string): Promise<void> {
-    await apiClient.post(`/wpa/permit-applications/${id}/mark-under-review`);
+    return api.post<void>(`/wpa/permit-applications/${id}/mark-under-review`);
   },
 
-  async approvePermitApplication(
-    id: string,
-    data: ApprovePermitApplicationRequest
-  ): Promise<void> {
-    await apiClient.post(`/wpa/permit-applications/${id}/approve`, data);
+  async approvePermitApplication(id: string, data: ApprovePermitApplicationRequest): Promise<void> {
+    return api.post<void>(`/wpa/permit-applications/${id}/approve`, data);
   },
 
   async rejectPermitApplication(id: string, data: RejectApplicationRequest): Promise<void> {
-    await apiClient.post(`/wpa/permit-applications/${id}/reject`, data);
+    return api.post<void>(`/wpa/permit-applications/${id}/reject`, data);
   },
 
-  async requirePermitApplicationCorrection(
-    id: string,
-    data: RequireCorrectionRequest
-  ): Promise<void> {
-    await apiClient.post(`/wpa/permit-applications/${id}/require-correction`, data);
+  async requirePermitApplicationCorrection(id: string, data: RequireCorrectionRequest): Promise<void> {
+    return api.post<void>(`/wpa/permit-applications/${id}/require-correction`, data);
   },
 
-  // ============================================================================
+  async downloadPermitApplicationAttachment(applicationId: string, attachmentId: string): Promise<Blob> {
+    return api.getBlob(`/wpa/permit-applications/${applicationId}/attachments/${attachmentId}`);
+  },
+
   // PROMISE APPLICATIONS
-  // ============================================================================
-
-  async getPromiseApplications(params?: PaginationParams & {
-    status?: PromiseApplicationStatus;
-  }): Promise<PaginatedResult<WpaPromiseApplicationDto>> {
-    const response = await apiClient.get<PaginatedResult<WpaPromiseApplicationDto>>(
-      '/wpa/promise-applications',
-      { params }
-    );
-    return response.data;
+  async getPromiseApplications(params?: PaginationParams & { status?: PromiseApplicationStatus }): Promise<PaginatedResult<WpaPromiseApplicationDto>> {
+    const query: Record<string, unknown> = { ...params };
+    if (params?.status) query.status = PROMISE_APPLICATION_STATUS_VALUES[params.status];
+    return api.get<PaginatedResult<WpaPromiseApplicationDto>>('/wpa/promise-applications', query);
   },
 
   async getPromiseApplicationById(id: string): Promise<WpaPromiseApplicationDto> {
-    const response = await apiClient.get<WpaPromiseApplicationDto>(
-      `/wpa/promise-applications/${id}`
-    );
-    return response.data;
+    return api.get<WpaPromiseApplicationDto>(`/wpa/promise-applications/${id}`);
   },
 
   async markPromiseApplicationUnderReview(id: string): Promise<void> {
-    await apiClient.post(`/wpa/promise-applications/${id}/mark-under-review`);
+    return api.post<void>(`/wpa/promise-applications/${id}/mark-under-review`);
   },
 
   async approvePromiseApplication(id: string): Promise<void> {
-    await apiClient.post(`/wpa/promise-applications/${id}/approve`);
+    return api.post<void>(`/wpa/promise-applications/${id}/approve`);
   },
 
   async rejectPromiseApplication(id: string, data: RejectApplicationRequest): Promise<void> {
-    await apiClient.post(`/wpa/promise-applications/${id}/reject`, data);
+    return api.post<void>(`/wpa/promise-applications/${id}/reject`, data);
   },
 
-  async requirePromiseApplicationCorrection(
-    id: string,
-    data: RequireCorrectionRequest
-  ): Promise<void> {
-    await apiClient.post(`/wpa/promise-applications/${id}/require-correction`, data);
+  async requirePromiseApplicationCorrection(id: string, data: RequireCorrectionRequest): Promise<void> {
+    return api.post<void>(`/wpa/promise-applications/${id}/require-correction`, data);
   },
 
-  // ============================================================================
   // CITIZENS
-  // ============================================================================
-
   async getCitizens(params?: PaginationParams): Promise<PaginatedResult<WpaCitizenDto>> {
-    const response = await apiClient.get<PaginatedResult<WpaCitizenDto>>('/wpa/citizens', {
-      params,
-    });
-    return response.data;
+    return api.get<PaginatedResult<WpaCitizenDto>>('/wpa/citizens', params);
   },
 
   async getCitizenById(id: string): Promise<WpaCitizenDto> {
-    const response = await apiClient.get<WpaCitizenDto>(`/wpa/citizens/${id}`);
-    return response.data;
+    return api.get<WpaCitizenDto>(`/wpa/citizens/${id}`);
   },
 
-  // ============================================================================
   // FIREARMS SEARCH
-  // ============================================================================
-
-  async searchFirearms(params?: PaginationParams & {
-    serialNumber?: string;
-    pesel?: string;
-    permitNumber?: string;
-    permitType?: string;
-  }): Promise<PaginatedResult<WpaFirearmSearchResult>> {
-    const response = await apiClient.get<PaginatedResult<WpaFirearmSearchResult>>(
-      '/wpa/firearms',
-      { params }
-    );
-    return response.data;
+  async searchFirearms(params?: PaginationParams & { serialNumber?: string; pesel?: string; permitNumber?: string; permitType?: PermitType }): Promise<PaginatedResult<WpaFirearmSearchResult>> {
+    const query: Record<string, unknown> = { ...params };
+    if (params?.permitType) query.permitType = PERMIT_TYPE_VALUES[params.permitType];
+    return api.get<PaginatedResult<WpaFirearmSearchResult>>('/wpa/firearms', query);
   },
 
-  // ============================================================================
   // MEDICAL ALERTS
-  // ============================================================================
-
-  async getMedicalAlerts(params?: PaginationParams & {
-    resolved?: boolean;
-  }): Promise<PaginatedResult<MedicalAlertDto>> {
-    const response = await apiClient.get<PaginatedResult<MedicalAlertDto>>(
-      '/wpa/medical-alerts',
-      { params }
-    );
-    return response.data;
+  async getMedicalAlerts(params?: PaginationParams & { resolved?: boolean }): Promise<PaginatedResult<WpaMedicalAlertDto>> {
+    return api.get<PaginatedResult<WpaMedicalAlertDto>>('/wpa/medical-alerts', params);
   },
 
-  // ============================================================================
   // PERMIT MANAGEMENT
-  // ============================================================================
-
   async suspendPermit(id: string, data: SuspendPermitRequest): Promise<void> {
-    await apiClient.post(`/wpa/permits/${id}/suspend`, data);
+    return api.post<void>(`/wpa/permits/${id}/suspend`, data);
   },
 
   async revokePermit(id: string, data: RevokePermitRequest): Promise<void> {
-    await apiClient.post(`/wpa/permits/${id}/revoke`, data);
+    return api.post<void>(`/wpa/permits/${id}/revoke`, data);
   },
 
   async restorePermit(id: string, data: RestorePermitRequest): Promise<void> {
-    await apiClient.post(`/wpa/permits/${id}/restore`, data);
+    return api.post<void>(`/wpa/permits/${id}/restore`, data);
   },
 
   async updateMedicalExams(id: string, data: UpdateMedicalExamsRequest): Promise<void> {
-    await apiClient.patch(`/wpa/permits/${id}/medical-exams`, data);
+    return api.patch<void>(`/wpa/permits/${id}/medical-exams`, data);
   },
 };

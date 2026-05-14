@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -7,157 +7,92 @@ import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Search, User, Shield, ChevronRight, AlertTriangle } from "lucide-react";
+import { wpaService } from "../../services/wpaService";
+import type { WpaCitizenDto, WpaFirearmSearchResult, PermitType } from "../../types/api";
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "Registered":
+      return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Zarejestrowana</Badge>;
+    case "Transferred":
+      return <Badge variant="secondary" className="rounded-full px-2 py-0.5">Przeniesiona</Badge>;
+    case "Lost":
+      return <Badge variant="destructive" className="rounded-full px-2 py-0.5">Zgubiona</Badge>;
+    case "Archived":
+      return <Badge variant="secondary" className="rounded-full px-2 py-0.5">Zarchiwizowana</Badge>;
+    default:
+      return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
+  }
+}
+
+function getCategoryBadge(category: string) {
+  const config: Record<string, { label: string; color: string }> = {
+    A: { label: "Kat. A", color: "bg-red-100 text-red-800" },
+    B: { label: "Kat. B", color: "bg-blue-100 text-blue-800" },
+    C: { label: "Kat. C", color: "bg-green-100 text-green-800" },
+  };
+  const c = config[category] ?? { label: `Kat. ${category}`, color: "bg-muted text-muted-foreground" };
+  return (
+    <Badge className={`${c.color} hover:${c.color} border-none px-2 py-0.5 rounded-full text-xs`}>
+      {c.label}
+    </Badge>
+  );
+}
+
+function formatDate(s: string) {
+  return new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export function WPASearchPage() {
   const navigate = useNavigate();
 
-  // Citizens search state
+  const [citizens, setCitizens] = useState<WpaCitizenDto[]>([]);
+  const [citizensLoading, setCitizensLoading] = useState(true);
   const [citizenSearchTerm, setCitizenSearchTerm] = useState("");
 
-  // Firearms search state
+  const [firearms, setFirearms] = useState<WpaFirearmSearchResult[]>([]);
+  const [firearmsLoading, setFirearmsLoading] = useState(false);
   const [firearmSearchType, setFirearmSearchType] = useState<"serialNumber" | "pesel" | "permitNumber" | "permitType">("serialNumber");
   const [firearmSearchTerm, setFirearmSearchTerm] = useState("");
-  const [permitTypeFilter, setPermitTypeFilter] = useState("all");
+  const [permitTypeFilter, setPermitTypeFilter] = useState<PermitType | "all">("all");
 
-  // Mock data - Citizens
-  const citizens = [
-    {
-      id: "citizen-001",
-      name: "Jan Kowalski",
-      pesel: "90010112345",
-      totalFirearms: 2,
-      activeAlerts: 1,
-      permits: [
-        { permitType: "Sport", permitNumber: "POZ-2025-001", validUntil: "Bezterminowo" }
-      ]
-    },
-    {
-      id: "citizen-002",
-      name: "Anna Nowak",
-      pesel: "85032298765",
-      totalFirearms: 1,
-      activeAlerts: 0,
-      permits: [
-        { permitType: "Hunting", permitNumber: "POZ-2024-045", validUntil: "Bezterminowo" }
-      ]
-    },
-    {
-      id: "citizen-003",
-      name: "Piotr Wiśniewski",
-      pesel: "78121556789",
-      totalFirearms: 3,
-      activeAlerts: 2,
-      permits: [
-        { permitType: "Sport", permitNumber: "POZ-2023-012", validUntil: "Bezterminowo" },
-        { permitType: "Collection", permitNumber: "POZ-2024-078", validUntil: "Bezterminowo" }
-      ]
-    },
-  ];
+  useEffect(() => {
+    wpaService
+      .getCitizens({ page: 1, pageSize: 50 })
+      .then((r) => setCitizens(r.items))
+      .catch(() => {})
+      .finally(() => setCitizensLoading(false));
+  }, []);
 
-  // Mock data - Firearms
-  const firearms = [
-    {
-      id: "firearm-001",
-      ownerName: "Jan Kowalski",
-      ownerPesel: "90010112345",
-      permitNumber: "POZ-2025-001",
-      permitType: "Sport",
-      brand: "Glock",
-      model: "Glock 17",
-      category: "B" as "A" | "B" | "C",
-      caliber: "9mm",
-      serialNumber: "ABC123456",
-      status: "Registered",
-      registrationDate: "2025-03-15",
-    },
-    {
-      id: "firearm-002",
-      ownerName: "Anna Nowak",
-      ownerPesel: "85032298765",
-      permitNumber: "POZ-2024-045",
-      permitType: "Hunting",
-      brand: "CZ",
-      model: "CZ 75 SP-01",
-      category: "B" as "A" | "B" | "C",
-      caliber: "9mm",
-      serialNumber: "XYZ789012",
-      status: "Registered",
-      registrationDate: "2024-11-20",
-    },
-    {
-      id: "firearm-003",
-      ownerName: "Piotr Wiśniewski",
-      ownerPesel: "78121556789",
-      permitNumber: "POZ-2023-012",
-      permitType: "Sport",
-      brand: "Sig Sauer",
-      model: "P226",
-      category: "B" as "A" | "B" | "C",
-      caliber: ".40 S&W",
-      serialNumber: "SIG998877",
-      status: "Registered",
-      registrationDate: "2023-08-10",
-    },
-  ];
-
-  const filteredCitizens = citizens.filter((citizen) => {
-    const searchLower = citizenSearchTerm.toLowerCase();
-    return (
-      citizen.name.toLowerCase().includes(searchLower) ||
-      citizen.pesel.includes(searchLower) ||
-      citizen.permits.some(p => p.permitNumber.toLowerCase().includes(searchLower))
-    );
-  });
-
-  const filteredFirearms = firearms.filter((firearm) => {
-    const searchLower = firearmSearchTerm.toLowerCase();
-
-    let matchesSearch = false;
-    switch (firearmSearchType) {
-      case "serialNumber":
-        matchesSearch = firearm.serialNumber.toLowerCase().includes(searchLower);
-        break;
-      case "pesel":
-        matchesSearch = firearm.ownerPesel.includes(searchLower);
-        break;
-      case "permitNumber":
-        matchesSearch = firearm.permitNumber.toLowerCase().includes(searchLower);
-        break;
-      case "permitType":
-        matchesSearch = firearm.permitType.toLowerCase().includes(searchLower);
-        break;
-    }
-
-    const matchesPermitType = permitTypeFilter === "all" || firearm.permitType === permitTypeFilter;
-
-    return matchesSearch && matchesPermitType;
-  });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Registered":
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full">Zarejestrowana</Badge>;
-      case "Transferred":
-        return <Badge variant="secondary" className="rounded-full px-2 py-0.5">Przeniesiona</Badge>;
-      case "Lost":
-        return <Badge variant="destructive" className="rounded-full px-2 py-0.5">Zgubiona</Badge>;
-      default:
-        return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
+  const searchFirearms = async () => {
+    setFirearmsLoading(true);
+    try {
+      const params: Parameters<typeof wpaService.searchFirearms>[0] = { page: 1, pageSize: 50 };
+      if (firearmSearchTerm) {
+        if (firearmSearchType === "serialNumber") params!.serialNumber = firearmSearchTerm;
+        else if (firearmSearchType === "pesel") params!.pesel = firearmSearchTerm;
+        else if (firearmSearchType === "permitNumber") params!.permitNumber = firearmSearchTerm;
+        else if (firearmSearchType === "permitType") params!.permitType = firearmSearchTerm as PermitType;
+      }
+      if (permitTypeFilter !== "all") params!.permitType = permitTypeFilter;
+      const r = await wpaService.searchFirearms(params);
+      setFirearms(r.items);
+    } catch {
+      setFirearms([]);
+    } finally {
+      setFirearmsLoading(false);
     }
   };
 
-  const getCategoryBadge = (category: "A" | "B" | "C") => {
-    const config = {
-      A: { label: "Kat. A", color: "bg-red-100 text-red-800" },
-      B: { label: "Kat. B", color: "bg-blue-100 text-blue-800" },
-      C: { label: "Kat. C", color: "bg-green-100 text-green-800" },
-    };
+  const filteredCitizens = citizens.filter((c) => {
+    const search = citizenSearchTerm.toLowerCase();
+    if (!search) return true;
     return (
-      <Badge className={`${config[category].color} hover:${config[category].color} border-none px-2 py-0.5 rounded-full text-xs`}>
-        {config[category].label}
-      </Badge>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(search) ||
+      c.pesel.includes(search) ||
+      c.permits.some((p) => p.permitNumber.toLowerCase().includes(search))
     );
-  };
+  });
 
   return (
     <div className="pt-2">
@@ -174,28 +109,24 @@ export function WPASearchPage() {
           </TabsTrigger>
           <TabsTrigger value="firearms" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span>Broń ({filteredFirearms.length})</span>
+            <span>Broń ({firearms.length})</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Citizens Search Tab */}
+        {/* Citizens Tab */}
         <TabsContent value="citizens" className="mt-0 space-y-6">
           <Card className="rounded-2xl border-none shadow-sm">
             <CardContent className="p-4">
-              <div>
-                <label htmlFor="citizenSearch" className="text-sm font-medium mb-2 block">
-                  Wyszukaj obywatela
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="citizenSearch"
-                    value={citizenSearchTerm}
-                    onChange={(e) => setCitizenSearchTerm(e.target.value)}
-                    placeholder="Imię, nazwisko, PESEL, numer pozwolenia..."
-                    className="min-h-[44px] pl-10 rounded-xl"
-                  />
-                </div>
+              <label htmlFor="citizenSearch" className="text-sm font-medium mb-2 block">Wyszukaj obywatela</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="citizenSearch"
+                  value={citizenSearchTerm}
+                  onChange={(e) => setCitizenSearchTerm(e.target.value)}
+                  placeholder="Imię, nazwisko, PESEL, numer pozwolenia..."
+                  className="min-h-[44px] pl-10 rounded-xl"
+                />
               </div>
             </CardContent>
           </Card>
@@ -206,11 +137,15 @@ export function WPASearchPage() {
               <CardDescription>
                 {citizenSearchTerm
                   ? `Znaleziono ${filteredCitizens.length} wyników dla: "${citizenSearchTerm}"`
-                  : "Wprowadź dane do wyszukania"}
+                  : `Wszyscy obywatele w rejestrze (${filteredCitizens.length})`}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {filteredCitizens.length > 0 ? (
+              {citizensLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />)}
+                </div>
+              ) : filteredCitizens.length > 0 ? (
                 <div className="space-y-3">
                   {filteredCitizens.map((citizen) => (
                     <div
@@ -224,7 +159,7 @@ export function WPASearchPage() {
                             <User className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-semibold text-base text-foreground mb-1">{citizen.name}</h3>
+                            <h3 className="font-semibold text-base text-foreground mb-1">{citizen.firstName} {citizen.lastName}</h3>
                             <p className="text-sm text-muted-foreground mb-2">PESEL: {citizen.pesel}</p>
                             <div className="flex flex-wrap gap-2">
                               <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs">
@@ -238,7 +173,7 @@ export function WPASearchPage() {
                               )}
                               {citizen.permits.map((permit, idx) => (
                                 <Badge key={idx} variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
-                                  {permit.permitType}
+                                  {permit.permitTypeName}
                                 </Badge>
                               ))}
                             </div>
@@ -252,29 +187,21 @@ export function WPASearchPage() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <User className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p>
-                    {citizenSearchTerm
-                      ? "Nie znaleziono obywateli spełniających kryteria"
-                      : "Wprowadź kryteria wyszukiwania"}
-                  </p>
+                  <p>{citizenSearchTerm ? "Nie znaleziono obywateli spełniających kryteria" : "Brak obywateli w rejestrze"}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Firearms Search Tab */}
+        {/* Firearms Tab */}
         <TabsContent value="firearms" className="mt-0 space-y-6">
           <Card className="rounded-2xl border-none shadow-sm">
             <CardContent className="p-4 space-y-4">
               <div>
-                <label htmlFor="searchType" className="text-sm font-medium mb-2 block">
-                  Typ wyszukiwania
-                </label>
+                <label htmlFor="searchType" className="text-sm font-medium mb-2 block">Typ wyszukiwania</label>
                 <Select value={firearmSearchType} onValueChange={(v) => setFirearmSearchType(v as typeof firearmSearchType)}>
-                  <SelectTrigger id="searchType" className="min-h-[44px] rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger id="searchType" className="min-h-[44px] rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="serialNumber">Numer seryjny</SelectItem>
                     <SelectItem value="pesel">PESEL właściciela</SelectItem>
@@ -285,101 +212,96 @@ export function WPASearchPage() {
               </div>
 
               <div>
-                <label htmlFor="firearmSearch" className="text-sm font-medium mb-2 block">
-                  Wyszukaj broń
-                </label>
+                <label htmlFor="firearmSearch" className="text-sm font-medium mb-2 block">Fraza wyszukiwania</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="firearmSearch"
                     value={firearmSearchTerm}
                     onChange={(e) => setFirearmSearchTerm(e.target.value)}
-                    placeholder={`Wprowadź ${firearmSearchType === "serialNumber" ? "numer seryjny" : firearmSearchType === "pesel" ? "PESEL" : firearmSearchType === "permitNumber" ? "numer pozwolenia" : "typ pozwolenia"}...`}
+                    placeholder={firearmSearchType === "permitType" ? "Sport / Hunting / Collection / Protection / Other" : "Wprowadź wartość..."}
                     className="min-h-[44px] pl-10 rounded-xl"
+                    onKeyDown={(e) => e.key === "Enter" && searchFirearms()}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="permitTypeFilter" className="text-sm font-medium mb-2 block">
-                  Filtruj po typie pozwolenia
-                </label>
-                <Select value={permitTypeFilter} onValueChange={setPermitTypeFilter}>
-                  <SelectTrigger id="permitTypeFilter" className="min-h-[44px] rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
+                <label htmlFor="permitTypeFilter" className="text-sm font-medium mb-2 block">Dodatkowy filtr typu pozwolenia</label>
+                <Select value={permitTypeFilter} onValueChange={(v) => setPermitTypeFilter(v as typeof permitTypeFilter)}>
+                  <SelectTrigger id="permitTypeFilter" className="min-h-[44px] rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Wszystkie typy</SelectItem>
                     <SelectItem value="Sport">Sportowe</SelectItem>
                     <SelectItem value="Hunting">Łowieckie</SelectItem>
                     <SelectItem value="Collection">Kolekcjonerskie</SelectItem>
                     <SelectItem value="Protection">Ochrona</SelectItem>
+                    <SelectItem value="Other">Inne</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              <Button onClick={searchFirearms} disabled={firearmsLoading} className="w-full min-h-[44px] rounded-xl">
+                <Search className="h-4 w-4 mr-2" />
+                {firearmsLoading ? "Szukam..." : "Wyszukaj"}
+              </Button>
             </CardContent>
           </Card>
 
           <Card className="rounded-2xl border-none shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Wyniki wyszukiwania</CardTitle>
-              <CardDescription>
-                {firearmSearchTerm
-                  ? `Znaleziono ${filteredFirearms.length} wyników`
-                  : "Wprowadź dane do wyszukania"}
-              </CardDescription>
+              <CardTitle className="text-lg">Wyniki ({firearms.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredFirearms.length > 0 ? (
+              {firearmsLoading ? (
                 <div className="space-y-3">
-                  {filteredFirearms.map((firearm) => (
-                    <div
-                      key={firearm.id}
-                      className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors"
-                    >
+                  {[1, 2].map((i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
+                </div>
+              ) : firearms.length > 0 ? (
+                <div className="space-y-3">
+                  {firearms.map((f) => (
+                    <div key={f.id} className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors">
                       <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-xl mt-1">
                           <Shield className="h-6 w-6 text-primary" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-base text-foreground">
-                              {firearm.brand} {firearm.model}
-                            </h3>
-                            {getCategoryBadge(firearm.category)}
+                            <h3 className="font-semibold text-base text-foreground">{f.brand} {f.model}</h3>
+                            {getCategoryBadge(f.category)}
                           </div>
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
                             <div>
                               <span className="text-muted-foreground block text-xs">Właściciel</span>
-                              <span className="font-medium">{firearm.ownerName}</span>
+                              <span className="font-medium">{f.ownerName}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground block text-xs">PESEL</span>
-                              <span className="font-mono text-sm">{firearm.ownerPesel}</span>
+                              <span className="font-mono text-sm">{f.ownerPesel}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground block text-xs">Nr seryjny</span>
-                              <span className="font-mono text-sm">{firearm.serialNumber}</span>
+                              <span className="font-mono text-sm">{f.serialNumber}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground block text-xs">Kaliber</span>
-                              <span className="font-medium">{firearm.caliber}</span>
+                              <span className="font-medium">{f.caliber}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground block text-xs">Pozwolenie</span>
-                              <span className="font-medium">{firearm.permitNumber}</span>
+                              <span className="font-medium">{f.permitNumber}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground block text-xs">Data rejestracji</span>
-                              <span className="font-medium">{firearm.registrationDate}</span>
+                              <span className="font-medium">{formatDate(f.registeredAt)}</span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {getStatusBadge(firearm.status)}
+                            {getStatusBadge(f.status)}
                             <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
-                              {firearm.permitType}
+                              {f.permitType}
                             </Badge>
                           </div>
                         </div>
@@ -390,11 +312,7 @@ export function WPASearchPage() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Shield className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p>
-                    {firearmSearchTerm
-                      ? "Nie znaleziono broni spełniającej kryteria"
-                      : "Wprowadź kryteria wyszukiwania"}
-                  </p>
+                  <p>Wprowadź kryteria i kliknij &quot;Wyszukaj&quot;</p>
                 </div>
               )}
             </CardContent>

@@ -1,77 +1,20 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import type { ApiError } from '../types/api';
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
-// Token storage keys
 const TOKEN_KEY = 'auth_token';
 const TOKEN_EXPIRY_KEY = 'auth_token_expiry';
 
-// Create axios instance
-const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000,
-});
-
-// Request interceptor - add JWT token
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getToken();
-
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor - handle errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<ApiError>) => {
-    // Token expired or invalid
-    if (error.response?.status === 401) {
-      clearAuth();
-      // Redirect to login
-      if (window.location.pathname !== '/') {
-        window.location.href = '/';
-      }
-    }
-
-    // Extract error message
-    const apiError: ApiError = error.response?.data || {
-      message: 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.',
-    };
-
-    return Promise.reject(apiError);
-  }
-);
-
 // ============================================================================
-// AUTH HELPERS
+// TOKEN HELPERS
 // ============================================================================
 
 export function getToken(): string | null {
   const token = localStorage.getItem(TOKEN_KEY);
   const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-
-  if (!token || !expiry) {
-    return null;
-  }
-
-  // Check if token is expired
+  if (!token || !expiry) return null;
   if (new Date(expiry) < new Date()) {
     clearAuth();
     return null;
   }
-
   return token;
 }
 
@@ -83,7 +26,7 @@ export function setToken(token: string, expiresAt: string): void {
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_KEY);
-  localStorage.removeItem('userRole'); // Clear role too
+  localStorage.removeItem('userRole');
 }
 
 export function isAuthenticated(): boolean {
@@ -91,7 +34,113 @@ export function isAuthenticated(): boolean {
 }
 
 // ============================================================================
-// EXPORTS
+// FETCH WRAPPER
 // ============================================================================
 
-export default apiClient;
+function authHeaders(): HeadersInit {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+
+  };
+}
+
+function authHeadersWithoutContentType(): HeadersInit {
+  const token = getToken();
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (res.status === 401) {
+    clearAuth();
+    if (window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
+    throw { message: 'Sesja wygasła. Zaloguj się ponownie.' };
+  }
+
+  if (!res.ok) {
+    let errorBody: any = {};
+    try {
+      errorBody = await res.json();
+    } catch {
+      errorBody = { message: `Błąd ${res.status}` };
+    }
+    throw errorBody;
+  }
+
+  // 204 No Content
+  if (res.status === 204) return undefined as T;
+
+  return res.json() as Promise<T>;
+}
+
+const api = {
+  async get<T>(path: string, params?: Record<string, any>): Promise<T> {
+    const url = new URL(`${API_BASE_URL}${path}`);
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+      });
+    }
+    const res = await fetch(url.toString(), { headers: authHeaders() });
+    return handleResponse<T>(res);
+  },
+
+  async post<T>(path: string, body?: unknown): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    return handleResponse<T>(res);
+  },
+
+  async postForm<T>(path: string, formData: FormData): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: authHeadersWithoutContentType(),
+      body: formData,
+    });
+    return handleResponse<T>(res);
+  },
+
+  async getBlob(path: string): Promise<Blob> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      headers: authHeadersWithoutContentType(),
+    });
+    if (!res.ok) await handleResponse<never>(res);
+    return res.blob();
+  },
+
+  async patch<T>(path: string, body?: unknown): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    return handleResponse<T>(res);
+  },
+
+  async put<T>(path: string, body?: unknown): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    return handleResponse<T>(res);
+  },
+
+  async delete<T>(path: string): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    return handleResponse<T>(res);
+  },
+};
+
+export default api;
