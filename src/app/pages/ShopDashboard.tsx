@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Search, FileCheck, Info, ShieldAlert } from "lucide-react";
 
@@ -30,35 +29,36 @@ export function ShopDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2">
-            <Button
+            <button
+              type="button"
               onClick={() => navigate("/shop/verify")}
-              className="min-h-[80px] justify-start gap-3 rounded-xl bg-muted/30 text-foreground hover:bg-muted/50 border-none p-4"
-              variant="outline"
+              className="flex items-start gap-3 rounded-xl bg-muted/30 hover:bg-muted/50 p-4 text-left transition-colors min-h-[80px] active:scale-[0.99]"
             >
               <div className="bg-primary/10 p-2 rounded-xl text-primary shrink-0">
                 <Search className="h-5 w-5" />
               </div>
-              <div className="text-left flex-1">
-                <div className="font-semibold">Sprawdź promesę</div>
-                <div className="text-xs font-normal text-muted-foreground mt-0.5">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-foreground">Sprawdź promesę</div>
+                <div className="text-xs text-muted-foreground mt-0.5 leading-snug">
                   Sprawdź ważność po QR lub numerze. Nie zapisuje sprzedaży.
                 </div>
               </div>
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={() => navigate("/shop/sale")}
-              className="min-h-[80px] justify-start gap-3 rounded-xl border-none p-4"
+              className="flex items-start gap-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 p-4 text-left transition-colors min-h-[80px] active:scale-[0.99]"
             >
               <div className="bg-primary-foreground/15 p-2 rounded-xl shrink-0">
                 <FileCheck className="h-5 w-5" />
               </div>
-              <div className="text-left flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="font-semibold">Zarejestruj sprzedaż</div>
-                <div className="text-xs font-normal opacity-90 mt-0.5">
+                <div className="text-xs opacity-90 mt-0.5 leading-snug">
                   Pełna ścieżka: zeskanuj QR, sprawdź dane, wpisz broń, zapisz.
                 </div>
               </div>
-            </Button>
+            </button>
           </div>
         </CardContent>
       </Card>

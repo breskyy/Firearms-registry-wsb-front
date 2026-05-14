@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { AlertCircle, CheckCircle, Search, FileText, XCircle, ArrowLeft, FileCheck, Info } from "lucide-react";
+import { AlertCircle, CheckCircle, Search, FileText, XCircle, FileCheck, Info } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { shopService, translateVerifyMessage } from "../../services/shopService";
 import type { VerifyPermitResponse } from "../../types/api";
@@ -49,10 +49,6 @@ export function ShopVerification() {
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <Button variant="ghost" onClick={() => navigate("/shop")} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót do panelu
-        </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Sprawdź promesę</h1>
         <p className="text-muted-foreground">Wglądowa weryfikacja — nie zapisuje sprzedaży. Aby zarejestrować transakcję wróć do panelu i wybierz &quot;Zarejestruj sprzedaż&quot;.</p>
       </div>

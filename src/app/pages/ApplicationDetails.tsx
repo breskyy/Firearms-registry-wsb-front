@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
-import { User, Shield, AlertCircle, ArrowLeft } from "lucide-react";
+import { User, Shield, AlertCircle } from "lucide-react";
 import { wpaService } from "../../services/wpaService";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto } from "../../types/api";
 
@@ -77,10 +77,6 @@ export function ApplicationDetails() {
   if (!app) {
     return (
       <div className="pt-2">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót
-        </Button>
         <p className="text-muted-foreground">Nie znaleziono wniosku.</p>
       </div>
     );
@@ -95,10 +91,6 @@ export function ApplicationDetails() {
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót
-        </Button>
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex-1 pr-4">{title}</h1>
           <div className="mt-1">{getStatusBadge(app.statusName)}</div>

@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { ArrowLeft, User, Shield, AlertTriangle, CalendarCheck } from "lucide-react";
+import { User, Shield, AlertTriangle, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
 import type { WpaCitizenDto } from "../../types/api";
@@ -115,10 +115,6 @@ export function CitizenDetailsWPA() {
   if (!citizen) {
     return (
       <div className="pt-2">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót
-        </Button>
         <p className="text-muted-foreground">Nie znaleziono obywatela.</p>
       </div>
     );
@@ -127,10 +123,6 @@ export function CitizenDetailsWPA() {
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót do wyszukiwania
-        </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Szczegóły obywatela</h1>
         <p className="text-muted-foreground">Pełny profil i historia aktywności</p>
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, CalendarDays, ClipboardList, Shield, Stethoscope, UserCheck } from "lucide-react";
+import { CalendarDays, ClipboardList, Shield, Stethoscope, UserCheck } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -73,10 +73,6 @@ export function PermitDetails() {
   if (!permit) {
     return (
       <div className="pt-2">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrot
-        </Button>
         <Card className="rounded-2xl border-none shadow-sm">
           <CardContent className="p-6 text-center text-muted-foreground">
             Nie znaleziono pozwolenia.
@@ -95,10 +91,6 @@ export function PermitDetails() {
   return (
     <div className="pt-2 space-y-4">
       <div className="px-1">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-2 rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrot
-        </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Szczegoly pozwolenia</h1>
         <p className="text-muted-foreground mt-1">Dokument i limity przypisane do konta</p>
       </div>

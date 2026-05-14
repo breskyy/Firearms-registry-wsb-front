@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { AlertCircle, ShieldCheck, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { shopService, translateVerifyMessage } from "../../services/shopService";
 import type { FirearmCategory, VerifyPermitResponse } from "../../types/api";
@@ -102,10 +102,6 @@ export function ShopSalePage() {
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <Button variant="ghost" onClick={() => navigate("/shop")} className="mb-4 -ml-2 min-h-[44px] rounded-xl">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Powrót do panelu
-        </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Zarejestruj sprzedaż</h1>
         <p className="text-muted-foreground">Najpierw zweryfikuj promesę po QR, następnie uzupełnij dane broni.</p>
       </div>
