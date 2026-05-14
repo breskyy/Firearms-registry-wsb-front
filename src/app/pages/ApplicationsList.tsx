@@ -195,12 +195,12 @@ export function ApplicationsList() {
       </Card>
 
       <Tabs defaultValue="permits" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 rounded-2xl h-auto p-1 bg-muted/50">
-          <TabsTrigger value="permits" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger value="permits" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span>Pozwolenia ({filteredPermit.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="promises" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+          <TabsTrigger value="promises" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             <span>Promesy ({filteredPromise.length})</span>
           </TabsTrigger>
@@ -241,7 +241,7 @@ export function ApplicationsList() {
                         )}
                         {!isOfficer && app.statusName === "RequiresCorrection" && (
                           <Button
-                            className="mt-2 min-h-[40px] rounded-xl"
+                            className="mt-2 min-h-[44px] rounded-xl"
                             onClick={() => navigate(`/applications/${app.id}/correction?type=permit`)}
                           >
                             Uzupelnij wniosek
@@ -305,7 +305,7 @@ export function ApplicationsList() {
                         )}
                         {!isOfficer && app.statusName === "RequiresCorrection" && (
                           <Button
-                            className="mt-2 min-h-[40px] rounded-xl"
+                            className="mt-2 min-h-[44px] rounded-xl"
                             onClick={() => navigate(`/applications/${app.id}/correction?type=promise`)}
                           >
                             Uzupelnij wniosek

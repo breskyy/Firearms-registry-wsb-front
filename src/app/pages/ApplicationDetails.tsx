@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
-import { User, Shield, AlertCircle } from "lucide-react";
+import { User, Shield, AlertCircle, Clock } from "lucide-react";
 import { wpaService } from "../../services/wpaService";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto } from "../../types/api";
 
@@ -218,7 +218,12 @@ export function ApplicationDetails() {
         <div className="space-y-4">
           <Card className="rounded-2xl border-none shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Status</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-xl text-primary">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-lg">Status</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>

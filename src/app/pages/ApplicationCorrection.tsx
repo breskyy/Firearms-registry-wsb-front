@@ -200,7 +200,7 @@ export function ApplicationCorrection() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
+            {errors.form && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.form}</p>}
 
             {type === "permit" ? (
               <>
@@ -210,7 +210,7 @@ export function ApplicationCorrection() {
                     value={permitForm.requestedPermitType}
                     onValueChange={(value) => setPermitForm({ ...permitForm, requestedPermitType: value })}
                   >
-                    <SelectTrigger id="requestedPermitType" className="min-h-[44px] mt-2 rounded-xl">
+                    <SelectTrigger id="requestedPermitType" className="mt-2">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,7 +228,7 @@ export function ApplicationCorrection() {
                     onChange={(e) => setPermitForm({ ...permitForm, reason: e.target.value })}
                     className="min-h-[140px] mt-2 rounded-xl"
                   />
-                  {errors.reason && <p className="text-sm text-red-600 mt-1">{errors.reason}</p>}
+                  {errors.reason && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.reason}</p>}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
@@ -238,7 +238,7 @@ export function ApplicationCorrection() {
                       type="file"
                       accept="application/pdf,image/jpeg,image/png"
                       onChange={(e) => setPermitForm({ ...permitForm, medicalCertificate: e.target.files?.[0] ?? null })}
-                      className="min-h-[44px] mt-2 rounded-xl"
+                      className="mt-2"
                     />
                     {permitForm.medicalCertificate && <p className="text-xs text-muted-foreground mt-1 truncate">{permitForm.medicalCertificate.name}</p>}
                   </div>
@@ -249,7 +249,7 @@ export function ApplicationCorrection() {
                       type="file"
                       accept="application/pdf,image/jpeg,image/png"
                       onChange={(e) => setPermitForm({ ...permitForm, psychologicalCertificate: e.target.files?.[0] ?? null })}
-                      className="min-h-[44px] mt-2 rounded-xl"
+                      className="mt-2"
                     />
                     {permitForm.psychologicalCertificate && <p className="text-xs text-muted-foreground mt-1 truncate">{permitForm.psychologicalCertificate.name}</p>}
                   </div>
@@ -266,7 +266,7 @@ export function ApplicationCorrection() {
                     value={promiseForm.permitId}
                     onValueChange={(value) => setPromiseForm({ ...promiseForm, permitId: value })}
                   >
-                    <SelectTrigger id="permitId" className="min-h-[44px] mt-2 rounded-xl">
+                    <SelectTrigger id="permitId" className="mt-2">
                       <SelectValue placeholder="Wybierz pozwolenie" />
                     </SelectTrigger>
                     <SelectContent>
@@ -277,7 +277,7 @@ export function ApplicationCorrection() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.permitId && <p className="text-sm text-red-600 mt-1">{errors.permitId}</p>}
+                  {errors.permitId && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.permitId}</p>}
                 </div>
                 <div>
                   <Label htmlFor="requestedWeaponType">Typ broni</Label>
@@ -285,10 +285,10 @@ export function ApplicationCorrection() {
                     id="requestedWeaponType"
                     value={promiseForm.requestedWeaponType}
                     onChange={(e) => setPromiseForm({ ...promiseForm, requestedWeaponType: e.target.value })}
-                    className="min-h-[44px] mt-2 rounded-xl"
+                    className="mt-2"
                     maxLength={100}
                   />
-                  {errors.requestedWeaponType && <p className="text-sm text-red-600 mt-1">{errors.requestedWeaponType}</p>}
+                  {errors.requestedWeaponType && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedWeaponType}</p>}
                 </div>
                 <div>
                   <Label htmlFor="requestedQuantity">Ilosc</Label>
@@ -298,9 +298,9 @@ export function ApplicationCorrection() {
                     min={1}
                     value={promiseForm.requestedQuantity}
                     onChange={(e) => setPromiseForm({ ...promiseForm, requestedQuantity: Number(e.target.value) })}
-                    className="min-h-[44px] mt-2 rounded-xl"
+                    className="mt-2"
                   />
-                  {errors.requestedQuantity && <p className="text-sm text-red-600 mt-1">{errors.requestedQuantity}</p>}
+                  {errors.requestedQuantity && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedQuantity}</p>}
                 </div>
               </>
             )}

@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { AlertCircle, ShieldCheck, CheckCircle, XCircle } from "lucide-react";
+import { AlertCircle, ShieldCheck, CheckCircle, XCircle, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { shopService, translateVerifyMessage } from "../../services/shopService";
 import type { FirearmCategory, VerifyPermitResponse } from "../../types/api";
@@ -108,22 +108,27 @@ export function ShopSalePage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* QR Token verification */}
-        <Card className="rounded-2xl border-none shadow-sm bg-blue-50/50">
+        <Card className="rounded-2xl border-none shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">1. Weryfikacja promesy</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/10 p-2 rounded-xl text-primary">
+                <QrCode className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-lg">1. Weryfikacja promesy</CardTitle>
+            </div>
             <CardDescription>Wprowadź token QR z aplikacji obywatela i sprawdź ważność.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
               <Label htmlFor="qrToken" className="font-semibold text-sm">
-                Token QR <span className="text-red-500">*</span>
+                Token QR <span className="text-red-600">*</span>
               </Label>
               <div className="flex gap-2 mt-1.5">
                 <Input
                   id="qrToken"
                   value={formData.qrToken}
                   onChange={(e) => setFormData({ ...formData, qrToken: e.target.value })}
-                  className="min-h-[52px] rounded-xl text-base bg-background font-mono"
+                  className="min-h-[52px]"
                   placeholder="Wklej zeskanowany token..."
                 />
                 <Button
@@ -135,7 +140,7 @@ export function ShopSalePage() {
                   {verifying ? "..." : "Sprawdź"}
                 </Button>
               </div>
-              {errors.qrToken && <p className="text-red-500 text-xs mt-1 font-medium">{errors.qrToken}</p>}
+              {errors.qrToken && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.qrToken}</p>}
             </div>
 
             {verification && (
@@ -173,7 +178,7 @@ export function ShopSalePage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="brand" className="font-semibold text-sm">Producent <span className="text-red-500">*</span></Label>
+                <Label htmlFor="brand" className="font-semibold text-sm">Producent <span className="text-red-600">*</span></Label>
                 <Input
                   id="brand"
                   value={formData.brand}
@@ -181,11 +186,11 @@ export function ShopSalePage() {
                   className="min-h-[52px] mt-1.5 rounded-xl text-base"
                   placeholder="Glock"
                 />
-                {errors.brand && <p className="text-red-500 text-xs mt-1 font-medium">{errors.brand}</p>}
+                {errors.brand && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.brand}</p>}
               </div>
 
               <div>
-                <Label htmlFor="model" className="font-semibold text-sm">Model <span className="text-red-500">*</span></Label>
+                <Label htmlFor="model" className="font-semibold text-sm">Model <span className="text-red-600">*</span></Label>
                 <Input
                   id="model"
                   value={formData.model}
@@ -193,13 +198,13 @@ export function ShopSalePage() {
                   className="min-h-[52px] mt-1.5 rounded-xl text-base"
                   placeholder="17 Gen 5"
                 />
-                {errors.model && <p className="text-red-500 text-xs mt-1 font-medium">{errors.model}</p>}
+                {errors.model && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.model}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="category" className="font-semibold text-sm">Kategoria <span className="text-red-500">*</span></Label>
+                <Label htmlFor="category" className="font-semibold text-sm">Kategoria <span className="text-red-600">*</span></Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value as FirearmCategory })}
@@ -213,11 +218,11 @@ export function ShopSalePage() {
                     <SelectItem value="C">Kat. C</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.category && <p className="text-red-500 text-xs mt-1 font-medium">{errors.category}</p>}
+                {errors.category && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.category}</p>}
               </div>
 
               <div className="sm:col-span-2">
-                <Label htmlFor="caliber" className="font-semibold text-sm">Kaliber <span className="text-red-500">*</span></Label>
+                <Label htmlFor="caliber" className="font-semibold text-sm">Kaliber <span className="text-red-600">*</span></Label>
                 <Input
                   id="caliber"
                   value={formData.caliber}
@@ -225,25 +230,25 @@ export function ShopSalePage() {
                   className="min-h-[52px] mt-1.5 rounded-xl text-base"
                   placeholder="9x19mm"
                 />
-                {errors.caliber && <p className="text-red-500 text-xs mt-1 font-medium">{errors.caliber}</p>}
+                {errors.caliber && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.caliber}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="serialNumber" className="font-semibold text-sm">Nr seryjny <span className="text-red-500">*</span></Label>
+                <Label htmlFor="serialNumber" className="font-semibold text-sm">Nr seryjny <span className="text-red-600">*</span></Label>
                 <Input
                   id="serialNumber"
                   value={formData.serialNumber}
                   onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                  className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono uppercase"
+                  className="min-h-[52px] mt-1.5 uppercase"
                   placeholder="SN-123456"
                 />
-                {errors.serialNumber && <p className="text-red-500 text-xs mt-1 font-medium">{errors.serialNumber}</p>}
+                {errors.serialNumber && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.serialNumber}</p>}
               </div>
 
               <div>
-                <Label htmlFor="productionYear" className="font-semibold text-sm">Rok produkcji <span className="text-red-500">*</span></Label>
+                <Label htmlFor="productionYear" className="font-semibold text-sm">Rok produkcji <span className="text-red-600">*</span></Label>
                 <Input
                   id="productionYear"
                   type="number"
@@ -254,7 +259,7 @@ export function ShopSalePage() {
                   min="1900"
                   max={new Date().getFullYear()}
                 />
-                {errors.productionYear && <p className="text-red-500 text-xs mt-1 font-medium">{errors.productionYear}</p>}
+                {errors.productionYear && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.productionYear}</p>}
               </div>
             </div>
           </CardContent>
@@ -267,7 +272,7 @@ export function ShopSalePage() {
           </div>
         )}
 
-        <Button type="submit" disabled={submitting} className="w-full min-h-[56px] rounded-2xl text-[17px] font-bold shadow-sm">
+        <Button type="submit" disabled={submitting} className="w-full min-h-[52px] rounded-xl text-base font-semibold">
           {submitting ? "Rejestrowanie..." : "Zatwierdź i zgłoś sprzedaż"}
         </Button>
       </form>

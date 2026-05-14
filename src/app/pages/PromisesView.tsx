@@ -170,7 +170,7 @@ export function PromisesView() {
                         <Button
                           variant={selectedId === promise.id ? "default" : "outline"}
                           size="sm"
-                          className="rounded-xl h-auto px-4 py-2"
+                          className="rounded-xl px-4"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedId(selectedId === promise.id ? null : promise.id);

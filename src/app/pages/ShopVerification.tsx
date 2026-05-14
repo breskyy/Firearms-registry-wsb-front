@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { AlertCircle, CheckCircle, Search, FileText, XCircle, FileCheck, Info } from "lucide-react";
+import { AlertCircle, CheckCircle, Search, FileText, XCircle, FileCheck, Info, QrCode, Hash } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { shopService, translateVerifyMessage } from "../../services/shopService";
 import type { VerifyPermitResponse } from "../../types/api";
@@ -53,19 +53,19 @@ export function ShopVerification() {
         <p className="text-muted-foreground">Wglądowa weryfikacja — nie zapisuje sprzedaży. Aby zarejestrować transakcję wróć do panelu i wybierz &quot;Zarejestruj sprzedaż&quot;.</p>
       </div>
 
-      <Card className="mb-6 rounded-2xl border-none shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Wyszukiwarka</CardTitle>
-          <CardDescription>Zeskanuj kod QR lub wprowadź numer promesy</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={mode} onValueChange={(v) => { setMode(v as "qr" | "number"); setResult(null); setError(""); }} className="space-y-4">
-            <TabsList className="grid grid-cols-2 rounded-xl">
-              <TabsTrigger value="qr">Token QR</TabsTrigger>
-              <TabsTrigger value="number">Numer promesy</TabsTrigger>
-            </TabsList>
+      <Tabs value={mode} onValueChange={(v) => { setMode(v as "qr" | "number"); setResult(null); setError(""); }} className="mb-6 space-y-4">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger value="qr" className="flex items-center gap-2">
+            <QrCode className="h-4 w-4" />Token QR
+          </TabsTrigger>
+          <TabsTrigger value="number" className="flex items-center gap-2">
+            <Hash className="h-4 w-4" />Numer promesy
+          </TabsTrigger>
+        </TabsList>
 
-            <form onSubmit={handleVerify}>
+        <Card className="rounded-2xl border-none shadow-sm">
+          <CardContent className="pt-5">
+            <form onSubmit={handleVerify} className="space-y-3">
               <TabsContent value="qr" className="mt-0">
                 <Label htmlFor="qrToken" className="mb-2 block">Token z kodu QR <span className="text-red-600">*</span></Label>
                 <Input
@@ -73,7 +73,7 @@ export function ShopVerification() {
                   value={qrToken}
                   onChange={(e) => setQrToken(e.target.value)}
                   placeholder="Wklej zeskanowany token..."
-                  className="min-h-[44px] rounded-xl font-mono"
+                  className=""
                 />
                 <p className="text-xs text-muted-foreground mt-1">QR jest wymagany do rejestracji sprzedaży.</p>
               </TabsContent>
@@ -90,24 +90,24 @@ export function ShopVerification() {
                 <p className="text-xs text-muted-foreground mt-1">Po numerze możesz tylko sprawdzić promesę — sprzedaż wymaga zeskanowania QR.</p>
               </TabsContent>
 
-              <Button type="submit" disabled={loading} className="min-h-[44px] mt-4 w-full rounded-xl">
+              <Button type="submit" disabled={loading} className="w-full min-h-[52px] rounded-xl text-base font-semibold">
                 <Search className="h-4 w-4 mr-2" />
                 {loading ? "Sprawdzam..." : "Sprawdź"}
               </Button>
 
               {error && (
-                <div className="flex items-center gap-2 mt-3 text-sm text-red-600">
+                <div className="flex items-center gap-2 text-sm text-red-600">
                   <AlertCircle className="h-4 w-4" />
                   <span>{error}</span>
                 </div>
               )}
             </form>
-          </Tabs>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Tabs>
 
       {result && !result.isValid && (
-        <Card className="mb-6 rounded-2xl border-none shadow-sm bg-muted/30">
+        <Card className="mb-6 rounded-2xl border-none shadow-sm">
           <CardContent className="p-4">
             <div className="flex gap-3">
               <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />

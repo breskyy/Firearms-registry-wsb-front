@@ -227,20 +227,20 @@ export function OfficerDashboard() {
 
       {/* Pending Work Tabs */}
       <Tabs defaultValue="permits" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl h-auto p-1 bg-muted/50">
-          <TabsTrigger value="permits" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="permits" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Pozwolenia</span>
             <span className="sm:hidden">Pozw.</span>
             <span className="ml-1">({pendingPermits.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="promises" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+          <TabsTrigger value="promises" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">Promesy</span>
             <span className="sm:hidden">Prom.</span>
             <span className="ml-1">({pendingPromises.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+          <TabsTrigger value="alerts" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <span className="hidden sm:inline">Alerty</span>
             <span className="sm:hidden">Alert.</span>

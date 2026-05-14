@@ -315,7 +315,7 @@ export function CitizenDetailsWPA() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-orange-900 mb-3">Obywatel ma aktywne alerty medyczne wymagające uwagi.</p>
-                <Button variant="outline" size="sm" className="w-full min-h-[40px] rounded-lg" onClick={() => navigate("/applications")}>
+                <Button variant="outline" size="sm" className="w-full min-h-[44px] rounded-xl" onClick={() => navigate("/applications")}>
                   Zobacz wszystkie alerty
                 </Button>
               </CardContent>

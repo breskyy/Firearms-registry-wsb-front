@@ -366,7 +366,7 @@ export function DecisionPage() {
             )}
 
             {permitApp && canApprove && (
-              <Card className="rounded-2xl border-none shadow-sm bg-emerald-50/30">
+              <Card className="rounded-2xl border-none shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Ważność badań po weryfikacji</CardTitle>
                   <CardDescription>
@@ -382,9 +382,9 @@ export function DecisionPage() {
                         type="date"
                         value={medicalExpiry}
                         onChange={(e) => setMedicalExpiry(e.target.value)}
-                        className="min-h-[44px] mt-1.5 rounded-xl bg-background"
+                        className="mt-1.5"
                       />
-                      {errors.medicalExpiry && <p className="text-xs text-red-600 mt-1">{errors.medicalExpiry}</p>}
+                      {errors.medicalExpiry && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.medicalExpiry}</p>}
                     </div>
                     <div>
                       <Label htmlFor="psyExp">Bad. psychologiczne ważne do <span className="text-red-600">*</span></Label>
@@ -393,9 +393,9 @@ export function DecisionPage() {
                         type="date"
                         value={psychologicalExpiry}
                         onChange={(e) => setPsychologicalExpiry(e.target.value)}
-                        className="min-h-[44px] mt-1.5 rounded-xl bg-background"
+                        className="mt-1.5"
                       />
-                      {errors.psychologicalExpiry && <p className="text-xs text-red-600 mt-1">{errors.psychologicalExpiry}</p>}
+                      {errors.psychologicalExpiry && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.psychologicalExpiry}</p>}
                     </div>
                   </div>
                 </CardContent>
@@ -464,10 +464,9 @@ export function DecisionPage() {
                     </div>
                   )}
                   {errors.decision && (
-                    <div className="flex items-center gap-2 mt-3 text-sm text-red-600">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>{errors.decision}</span>
-                    </div>
+                    <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <AlertCircle className="h-4 w-4 shrink-0" />{errors.decision}
+                    </p>
                   )}
                 </div>
 
@@ -488,7 +487,7 @@ export function DecisionPage() {
                           className="min-h-[44px] mt-1.5 rounded-xl"
                         />
                         {errors.maxFirearms && (
-                          <p className="text-xs text-red-600 mt-1">{errors.maxFirearms}</p>
+                          <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.maxFirearms}</p>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -520,10 +519,9 @@ export function DecisionPage() {
                       />
                       <div className="flex justify-between items-center mt-1">
                         {errors.justification ? (
-                          <div className="flex items-center gap-2 text-sm text-red-600">
-                            <AlertCircle className="h-4 w-4" />
-                            <span>{errors.justification}</span>
-                          </div>
+                          <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <AlertCircle className="h-4 w-4 shrink-0" />{errors.justification}
+                          </p>
                         ) : <span />}
                         {decision !== "mark-under-review" && (
                           <span className="text-xs text-muted-foreground">Znaków: {justification.length} / 20</span>

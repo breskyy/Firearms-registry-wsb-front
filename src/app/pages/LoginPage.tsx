@@ -70,13 +70,13 @@ export function LoginPage() {
           </p>
         </div>
 
-        <Card className="mb-6 rounded-3xl border-none shadow-md overflow-hidden">
-          <div className="bg-primary p-6 text-center text-white">
-            <h2 className="text-xl font-semibold mb-1">Zaloguj się</h2>
-            <p className="text-white/80 text-sm">Uzyskaj dostęp do swoich danych</p>
-          </div>
-          <CardContent className="p-6">
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">
+          <Card className="rounded-3xl border-none shadow-md overflow-hidden">
+            <div className="bg-primary p-6 text-center text-white">
+              <h2 className="text-xl font-semibold mb-1">Zaloguj się</h2>
+              <p className="text-white/80 text-sm">Uzyskaj dostęp do swoich danych</p>
+            </div>
+            <CardContent className="p-6 space-y-4">
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -102,21 +102,20 @@ export function LoginPage() {
                 />
               </div>
               {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
+                <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />{error}
+                </p>
               )}
-              <Button
-                type="submit"
-                className="w-full min-h-[48px] text-base rounded-xl font-semibold"
-                disabled={loading}
-              >
-                {loading ? "Logowanie..." : "Zaloguj się"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          <Button
+            type="submit"
+            className="w-full min-h-[52px] text-base rounded-xl font-semibold"
+            disabled={loading}
+          >
+            {loading ? "Logowanie..." : "Zaloguj się"}
+          </Button>
+        </form>
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-muted-foreground mb-4 text-center uppercase tracking-wider">

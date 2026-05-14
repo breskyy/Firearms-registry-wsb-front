@@ -62,20 +62,20 @@ export function ApplicationTypeSelect() {
         ))}
       </div>
 
-      <Card className="rounded-2xl border-none shadow-sm bg-muted/30">
-        <CardContent className="p-4 flex items-start gap-3">
-          <div className="bg-background p-2 rounded-xl text-muted-foreground">
-            <FileText className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Masz już rozpoczętą sprawę?</p>
-            <button
-              type="button"
-              onClick={() => navigate("/applications")}
-              className="text-sm text-primary font-medium mt-1"
-            >
-              Przejdź do listy wniosków
-            </button>
+      <Card
+        className="rounded-2xl border-none shadow-sm hover:bg-muted/30 transition-colors cursor-pointer active:scale-[0.99]"
+        onClick={() => navigate("/applications")}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-2 rounded-xl text-primary shrink-0">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-base text-foreground">Masz już rozpoczętą sprawę?</p>
+              <p className="text-sm text-muted-foreground leading-snug">Przejdź do listy wniosków</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
           </div>
         </CardContent>
       </Card>

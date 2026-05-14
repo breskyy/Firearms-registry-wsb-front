@@ -112,7 +112,7 @@ export function PermitApplicationForm() {
                 value={formData.requestedPermitType}
                 onValueChange={(v) => setFormData({ ...formData, requestedPermitType: v })}
               >
-                <SelectTrigger id="requestedPermitType" className="min-h-[44px] mt-2 rounded-xl">
+                <SelectTrigger id="requestedPermitType" className="mt-2">
                   <SelectValue placeholder="Wybierz rodzaj pozwolenia" />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,8 +124,8 @@ export function PermitApplicationForm() {
                 </SelectContent>
               </Select>
               {errors.requestedPermitType && (
-                <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />{errors.requestedPermitType}
+                <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedPermitType}
                 </p>
               )}
             </div>
@@ -142,8 +142,8 @@ export function PermitApplicationForm() {
               />
               <div className="flex justify-between mt-1">
                 {errors.reason ? (
-                  <p className="flex items-center gap-1 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />{errors.reason}
+                  <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />{errors.reason}
                   </p>
                 ) : <span />}
                 <span className="text-xs text-muted-foreground">{formData.reason.length} / 20+</span>
@@ -172,8 +172,8 @@ export function PermitApplicationForm() {
               />
               {fileName(formData.medicalCertificate)}
               {errors.medicalCertificate && (
-                <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />{errors.medicalCertificate}
+                <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />{errors.medicalCertificate}
                 </p>
               )}
             </div>
@@ -190,8 +190,8 @@ export function PermitApplicationForm() {
               />
               {fileName(formData.psychologicalCertificate)}
               {errors.psychologicalCertificate && (
-                <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />{errors.psychologicalCertificate}
+                <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />{errors.psychologicalCertificate}
                 </p>
               )}
             </div>

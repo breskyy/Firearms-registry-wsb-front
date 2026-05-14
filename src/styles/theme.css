@@ -11,13 +11,13 @@
   --secondary: #e2e8f0;
   --secondary-foreground: #0f172a;
   --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted-foreground: #475569;
   --accent: #e2e8f0;
   --accent-foreground: #0f172a;
-  --destructive: #ef4444;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
-  --input: transparent;
+  --input: #e2e8f0;
   --input-background: #ffffff;
   --switch-background: #cbd5e1;
   --font-weight-medium: 500;
@@ -138,5 +138,21 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  /* Explicit placeholder color — browser default renders at ~54% opacity
+     which fails WCAG AA on this background. #64748b on white = 4.75:1 (passes AA). */
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748b;
+    opacity: 1;
+  }
+
+  /* Sonner toast description — override internal Radix gray variable that
+     Sonner uses for description text, which can be near-invisible when the
+     OS is in dark mode and the app has no ThemeProvider. */
+  [data-sonner-toast] [data-description] {
+    color: var(--muted-foreground);
+    opacity: 1;
   }
 }

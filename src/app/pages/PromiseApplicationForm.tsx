@@ -135,7 +135,7 @@ export function PromiseApplicationForm() {
                     value={formData.permitId}
                     onValueChange={(v) => setFormData({ ...formData, permitId: v })}
                   >
-                    <SelectTrigger id="permitId" className="min-h-[44px] mt-2 rounded-xl">
+                    <SelectTrigger id="permitId" className="mt-2">
                       <SelectValue placeholder="Wybierz pozwolenie" />
                     </SelectTrigger>
                     <SelectContent>
@@ -154,8 +154,8 @@ export function PromiseApplicationForm() {
                     </SelectContent>
                   </Select>
                   {errors.permitId && (
-                    <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
-                      <AlertCircle className="h-4 w-4" />{errors.permitId}
+                    <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <AlertCircle className="h-4 w-4 shrink-0" />{errors.permitId}
                     </p>
                   )}
                 </div>
@@ -220,8 +220,8 @@ export function PromiseApplicationForm() {
                 />
                 <div className="flex justify-between mt-1">
                   {errors.requestedWeaponType ? (
-                    <p className="flex items-center gap-1 text-sm text-red-600">
-                      <AlertCircle className="h-4 w-4" />{errors.requestedWeaponType}
+                    <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedWeaponType}
                     </p>
                   ) : <span />}
                   <span className="text-xs text-muted-foreground">{formData.requestedWeaponType.length} / 100</span>
@@ -235,13 +235,13 @@ export function PromiseApplicationForm() {
                   type="number"
                   value={formData.requestedQuantity}
                   onChange={(e) => setFormData({ ...formData, requestedQuantity: Number(e.target.value) })}
-                  className="min-h-[44px] mt-2 rounded-xl"
+                  className="mt-2"
                   min={1}
                   max={selectedPermit?.availableSlots ?? 10}
                 />
                 {errors.requestedQuantity && (
-                  <p className="flex items-center gap-1 mt-1.5 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />{errors.requestedQuantity}
+                  <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedQuantity}
                   </p>
                 )}
               </div>

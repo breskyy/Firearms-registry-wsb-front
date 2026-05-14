@@ -13,7 +13,7 @@ import {
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Shield, Search, ChevronDown, ChevronUp, AlertTriangle, ArrowRightLeft } from "lucide-react";
+import { Shield, Search, ChevronDown, ChevronUp, AlertTriangle, ArrowRightLeft, AlertCircle } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
@@ -389,9 +389,9 @@ export function WeaponRegistry() {
                 value={transferForm.buyerPesel}
                 onChange={(e) => setTransferForm({ ...transferForm, buyerPesel: e.target.value.replace(/\D/g, "") })}
                 placeholder="11-cyfrowy PESEL"
-                className="mt-1.5 rounded-xl font-mono"
+                className="mt-1.5"
               />
-              {transferErrors.buyerPesel && <p className="text-xs text-red-600 mt-1">{transferErrors.buyerPesel}</p>}
+              {transferErrors.buyerPesel && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{transferErrors.buyerPesel}</p>}
             </div>
             <div>
               <Label htmlFor="transferType">Rodzaj transferu <span className="text-red-600">*</span></Label>

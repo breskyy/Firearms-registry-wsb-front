@@ -100,8 +100,8 @@ export function ApplicationForm() {
                 </SelectContent>
               </Select>
               {errors.permitType && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.permitType}</span>
                 </div>
               )}
@@ -128,8 +128,8 @@ export function ApplicationForm() {
                   placeholder="Wprowadź imię"
                 />
                 {errors.firstName && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.firstName}</span>
                   </div>
                 )}
@@ -147,8 +147,8 @@ export function ApplicationForm() {
                   placeholder="Wprowadź nazwisko"
                 />
                 {errors.lastName && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.lastName}</span>
                   </div>
                 )}
@@ -170,8 +170,8 @@ export function ApplicationForm() {
                 />
                 <p className="text-xs text-[#666666] mt-1">Dane wrażliwe - będą zabezpieczone</p>
                 {errors.pesel && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.pesel}</span>
                   </div>
                 )}
@@ -189,8 +189,8 @@ export function ApplicationForm() {
                   placeholder="ABC123456"
                 />
                 {errors.idNumber && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.idNumber}</span>
                   </div>
                 )}
@@ -216,8 +216,8 @@ export function ApplicationForm() {
                 placeholder="ul. Przykładowa 123/45"
               />
               {errors.address && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.address}</span>
                 </div>
               )}
@@ -236,8 +236,8 @@ export function ApplicationForm() {
                   placeholder="Warszawa"
                 />
                 {errors.city && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.city}</span>
                   </div>
                 )}
@@ -255,8 +255,8 @@ export function ApplicationForm() {
                   placeholder="00-000"
                 />
                 {errors.postalCode && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.postalCode}</span>
                   </div>
                 )}
@@ -283,8 +283,8 @@ export function ApplicationForm() {
                 placeholder="+48 123 456 789"
               />
               {errors.phone && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.phone}</span>
                 </div>
               )}
@@ -303,8 +303,8 @@ export function ApplicationForm() {
                 placeholder="przyklad@email.pl"
               />
               {errors.email && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.email}</span>
                 </div>
               )}
@@ -336,8 +336,8 @@ export function ApplicationForm() {
                 </SelectContent>
               </Select>
               {errors.weaponType && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.weaponType}</span>
                 </div>
               )}
@@ -355,8 +355,8 @@ export function ApplicationForm() {
                 placeholder="Opisz cel, w jakim chcesz posiadać broń"
               />
               {errors.purpose && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.purpose}</span>
                 </div>
               )}
@@ -384,8 +384,8 @@ export function ApplicationForm() {
                 className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {errors.medicalCertificate && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.medicalCertificate}</span>
                 </div>
               )}
@@ -405,8 +405,8 @@ export function ApplicationForm() {
                 className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {errors.psychologicalTest && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.psychologicalTest}</span>
                 </div>
               )}
@@ -426,8 +426,8 @@ export function ApplicationForm() {
                 className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {errors.training && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errors.training}</span>
                 </div>
               )}
@@ -447,8 +447,8 @@ export function ApplicationForm() {
                   Wyrażam zgodę na przetwarzanie moich danych osobowych w celu rozpatrzenia wniosku zgodnie z RODO <span className="text-red-600">*</span>
                 </Label>
                 {errors.consent && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errors.consent}</span>
                   </div>
                 )}

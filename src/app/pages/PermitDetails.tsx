@@ -193,7 +193,7 @@ export function PermitDetails() {
         </CardContent>
       </Card>
 
-      <Button className="w-full min-h-[48px] rounded-xl" onClick={() => navigate("/application/new-promise")}>
+      <Button className="w-full min-h-[52px] rounded-xl" onClick={() => navigate("/application/new-promise")}>
         <UserCheck className="h-4 w-4 mr-2" />
         Zloz wniosek o promese
       </Button>

@@ -6,9 +6,12 @@ import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Search, User, Shield, ChevronRight, AlertTriangle } from "lucide-react";
+import { Search, User, Shield, ChevronRight, AlertTriangle, ChevronLeft } from "lucide-react";
 import { wpaService } from "../../services/wpaService";
 import type { WpaCitizenDto, WpaFirearmSearchResult, PermitType } from "../../types/api";
+
+const CITIZENS_PAGE_SIZE = 20;
+const FIREARMS_PAGE_SIZE = 20;
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -43,31 +46,97 @@ function formatDate(s: string) {
   return new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function PaginationControls({
+  page,
+  totalPages,
+  totalCount,
+  pageSize,
+  onPrev,
+  onNext,
+  loading,
+}: {
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  onPrev: () => void;
+  onNext: () => void;
+  loading: boolean;
+}) {
+  if (totalPages <= 1) return null;
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalCount);
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border">
+      <span className="text-sm text-muted-foreground">
+        {from}–{to} z {totalCount}
+      </span>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrev}
+          disabled={page <= 1 || loading}
+          className="rounded-lg h-8 px-3"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm font-medium min-w-[60px] text-center">
+          {page} / {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNext}
+          disabled={page >= totalPages || loading}
+          className="rounded-lg h-8 px-3"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function WPASearchPage() {
   const navigate = useNavigate();
 
   const [citizens, setCitizens] = useState<WpaCitizenDto[]>([]);
   const [citizensLoading, setCitizensLoading] = useState(true);
-  const [citizenSearchTerm, setCitizenSearchTerm] = useState("");
+  const [citizensPage, setCitizensPage] = useState(1);
+  const [citizensTotalCount, setCitizensTotalCount] = useState(0);
+  const [citizensTotalPages, setCitizensTotalPages] = useState(0);
 
   const [firearms, setFirearms] = useState<WpaFirearmSearchResult[]>([]);
   const [firearmsLoading, setFirearmsLoading] = useState(false);
+  const [firearmsPage, setFirearmsPage] = useState(1);
+  const [firearmsTotalCount, setFirearmsTotalCount] = useState(0);
+  const [firearmsTotalPages, setFirearmsTotalPages] = useState(0);
   const [firearmSearchType, setFirearmSearchType] = useState<"serialNumber" | "pesel" | "permitNumber" | "permitType">("serialNumber");
   const [firearmSearchTerm, setFirearmSearchTerm] = useState("");
   const [permitTypeFilter, setPermitTypeFilter] = useState<PermitType | "all">("all");
 
-  useEffect(() => {
+  const fetchCitizens = (page: number) => {
+    setCitizensLoading(true);
     wpaService
-      .getCitizens({ page: 1, pageSize: 50 })
-      .then((r) => setCitizens(r.items))
+      .getCitizens({ page, pageSize: CITIZENS_PAGE_SIZE })
+      .then((r) => {
+        setCitizens(r.items);
+        setCitizensTotalCount(r.totalCount);
+        setCitizensTotalPages(r.totalPages);
+      })
       .catch(() => {})
       .finally(() => setCitizensLoading(false));
-  }, []);
+  };
 
-  const searchFirearms = async () => {
+  useEffect(() => {
+    fetchCitizens(citizensPage);
+  }, [citizensPage]);
+
+  const doFirearmSearch = async (page: number) => {
     setFirearmsLoading(true);
     try {
-      const params: Parameters<typeof wpaService.searchFirearms>[0] = { page: 1, pageSize: 50 };
+      const params: Parameters<typeof wpaService.searchFirearms>[0] = { page, pageSize: FIREARMS_PAGE_SIZE };
       if (firearmSearchTerm) {
         if (firearmSearchType === "serialNumber") params!.serialNumber = firearmSearchTerm;
         else if (firearmSearchType === "pesel") params!.pesel = firearmSearchTerm;
@@ -77,22 +146,19 @@ export function WPASearchPage() {
       if (permitTypeFilter !== "all") params!.permitType = permitTypeFilter;
       const r = await wpaService.searchFirearms(params);
       setFirearms(r.items);
+      setFirearmsTotalCount(r.totalCount);
+      setFirearmsTotalPages(r.totalPages);
+      setFirearmsPage(page);
     } catch {
       setFirearms([]);
+      setFirearmsTotalCount(0);
+      setFirearmsTotalPages(0);
     } finally {
       setFirearmsLoading(false);
     }
   };
 
-  const filteredCitizens = citizens.filter((c) => {
-    const search = citizenSearchTerm.toLowerCase();
-    if (!search) return true;
-    return (
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(search) ||
-      c.pesel.includes(search) ||
-      c.permits.some((p) => p.permitNumber.toLowerCase().includes(search))
-    );
-  });
+  const searchFirearms = () => doFirearmSearch(1);
 
   return (
     <div className="pt-2">
@@ -102,42 +168,26 @@ export function WPASearchPage() {
       </div>
 
       <Tabs defaultValue="citizens" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 rounded-2xl h-auto p-1 bg-muted/50">
-          <TabsTrigger value="citizens" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger value="citizens" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            <span>Obywatele ({filteredCitizens.length})</span>
+            <span>Obywatele{citizensTotalCount > 0 ? ` (${citizensTotalCount})` : ""}</span>
           </TabsTrigger>
-          <TabsTrigger value="firearms" className="rounded-xl min-h-[44px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+          <TabsTrigger value="firearms" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span>Broń ({firearms.length})</span>
+            <span>Broń{firearmsTotalCount > 0 ? ` (${firearmsTotalCount})` : ""}</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Citizens Tab */}
         <TabsContent value="citizens" className="mt-0 space-y-6">
           <Card className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-4">
-              <label htmlFor="citizenSearch" className="text-sm font-medium mb-2 block">Wyszukaj obywatela</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="citizenSearch"
-                  value={citizenSearchTerm}
-                  onChange={(e) => setCitizenSearchTerm(e.target.value)}
-                  placeholder="Imię, nazwisko, PESEL, numer pozwolenia..."
-                  className="min-h-[44px] pl-10 rounded-xl"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-none shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Wyniki wyszukiwania</CardTitle>
+              <CardTitle className="text-lg">Wszyscy obywatele</CardTitle>
               <CardDescription>
-                {citizenSearchTerm
-                  ? `Znaleziono ${filteredCitizens.length} wyników dla: "${citizenSearchTerm}"`
-                  : `Wszyscy obywatele w rejestrze (${filteredCitizens.length})`}
+                {citizensTotalCount > 0
+                  ? `${citizensTotalCount} obywateli w rejestrze`
+                  : "Ładowanie danych rejestru..."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -145,49 +195,60 @@ export function WPASearchPage() {
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />)}
                 </div>
-              ) : filteredCitizens.length > 0 ? (
-                <div className="space-y-3">
-                  {filteredCitizens.map((citizen) => (
-                    <div
-                      key={citizen.id}
-                      className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.99]"
-                      onClick={() => navigate(`/wpa/citizens/${citizen.id}`)}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="bg-primary/10 p-3 rounded-xl">
-                            <User className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-base text-foreground mb-1">{citizen.firstName} {citizen.lastName}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">PESEL: {citizen.pesel}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs">
-                                {citizen.totalFirearms} {citizen.totalFirearms === 1 ? "egzemplarz" : "egzemplarze"}
-                              </Badge>
-                              {citizen.activeAlerts > 0 && (
-                                <Badge variant="destructive" className="rounded-full px-2 py-0.5 text-xs flex items-center gap-1">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  {citizen.activeAlerts} {citizen.activeAlerts === 1 ? "alert" : "alerty"}
+              ) : citizens.length > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {citizens.map((citizen) => (
+                      <div
+                        key={citizen.id}
+                        className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.99]"
+                        onClick={() => navigate(`/wpa/citizens/${citizen.id}`)}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="bg-primary/10 p-3 rounded-xl">
+                              <User className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-base text-foreground mb-1">{citizen.firstName} {citizen.lastName}</h3>
+                              <p className="text-sm text-muted-foreground mb-2">PESEL: {citizen.pesel}</p>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs">
+                                  {citizen.totalFirearms} {citizen.totalFirearms === 1 ? "egzemplarz" : "egzemplarze"}
                                 </Badge>
-                              )}
-                              {citizen.permits.map((permit, idx) => (
-                                <Badge key={idx} variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
-                                  {permit.permitTypeName}
-                                </Badge>
-                              ))}
+                                {citizen.activeAlerts > 0 && (
+                                  <Badge variant="destructive" className="rounded-full px-2 py-0.5 text-xs flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {citizen.activeAlerts} {citizen.activeAlerts === 1 ? "alert" : "alerty"}
+                                  </Badge>
+                                )}
+                                {citizen.permits.map((permit, idx) => (
+                                  <Badge key={idx} variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
+                                    {permit.permitTypeName}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
                           </div>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <PaginationControls
+                    page={citizensPage}
+                    totalPages={citizensTotalPages}
+                    totalCount={citizensTotalCount}
+                    pageSize={CITIZENS_PAGE_SIZE}
+                    onPrev={() => setCitizensPage((p) => p - 1)}
+                    onNext={() => setCitizensPage((p) => p + 1)}
+                    loading={citizensLoading}
+                  />
+                </>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <User className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p>{citizenSearchTerm ? "Nie znaleziono obywateli spełniających kryteria" : "Brak obywateli w rejestrze"}</p>
+                  <p>Brak obywateli w rejestrze</p>
                 </div>
               )}
             </CardContent>
@@ -201,7 +262,7 @@ export function WPASearchPage() {
               <div>
                 <label htmlFor="searchType" className="text-sm font-medium mb-2 block">Typ wyszukiwania</label>
                 <Select value={firearmSearchType} onValueChange={(v) => setFirearmSearchType(v as typeof firearmSearchType)}>
-                  <SelectTrigger id="searchType" className="min-h-[44px] rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="searchType" className=""><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="serialNumber">Numer seryjny</SelectItem>
                     <SelectItem value="pesel">PESEL właściciela</SelectItem>
@@ -229,7 +290,7 @@ export function WPASearchPage() {
               <div>
                 <label htmlFor="permitTypeFilter" className="text-sm font-medium mb-2 block">Dodatkowy filtr typu pozwolenia</label>
                 <Select value={permitTypeFilter} onValueChange={(v) => setPermitTypeFilter(v as typeof permitTypeFilter)}>
-                  <SelectTrigger id="permitTypeFilter" className="min-h-[44px] rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="permitTypeFilter" className=""><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Wszystkie typy</SelectItem>
                     <SelectItem value="Sport">Sportowe</SelectItem>
@@ -250,7 +311,9 @@ export function WPASearchPage() {
 
           <Card className="rounded-2xl border-none shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Wyniki ({firearms.length})</CardTitle>
+              <CardTitle className="text-lg">
+                Wyniki{firearmsTotalCount > 0 ? ` (${firearmsTotalCount})` : ""}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {firearmsLoading ? (
@@ -258,57 +321,68 @@ export function WPASearchPage() {
                   {[1, 2].map((i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
                 </div>
               ) : firearms.length > 0 ? (
-                <div className="space-y-3">
-                  {firearms.map((f) => (
-                    <div key={f.id} className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start gap-4">
-                        <div className="bg-primary/10 p-3 rounded-xl mt-1">
-                          <Shield className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-base text-foreground">{f.brand} {f.model}</h3>
-                            {getCategoryBadge(f.category)}
+                <>
+                  <div className="space-y-3">
+                    {firearms.map((f) => (
+                      <div key={f.id} className="bg-muted/30 rounded-2xl p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-primary/10 p-3 rounded-xl mt-1">
+                            <Shield className="h-6 w-6 text-primary" />
                           </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-base text-foreground">{f.brand} {f.model}</h3>
+                              {getCategoryBadge(f.category)}
+                            </div>
 
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
-                            <div>
-                              <span className="text-muted-foreground block text-xs">Właściciel</span>
-                              <span className="font-medium">{f.ownerName}</span>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
+                              <div>
+                                <span className="text-muted-foreground block text-xs">Właściciel</span>
+                                <span className="font-medium">{f.ownerName}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground block text-xs">PESEL</span>
+                                <span className="font-mono text-sm">{f.ownerPesel}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground block text-xs">Nr seryjny</span>
+                                <span className="font-mono text-sm">{f.serialNumber}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground block text-xs">Kaliber</span>
+                                <span className="font-medium">{f.caliber}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground block text-xs">Pozwolenie</span>
+                                <span className="font-medium">{f.permitNumber}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground block text-xs">Data rejestracji</span>
+                                <span className="font-medium">{formatDate(f.registeredAt)}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs">PESEL</span>
-                              <span className="font-mono text-sm">{f.ownerPesel}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs">Nr seryjny</span>
-                              <span className="font-mono text-sm">{f.serialNumber}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs">Kaliber</span>
-                              <span className="font-medium">{f.caliber}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs">Pozwolenie</span>
-                              <span className="font-medium">{f.permitNumber}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs">Data rejestracji</span>
-                              <span className="font-medium">{formatDate(f.registeredAt)}</span>
-                            </div>
-                          </div>
 
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(f.status)}
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
-                              {f.permitType}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(f.status)}
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none rounded-full px-2 py-0.5 text-xs">
+                                {f.permitType}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <PaginationControls
+                    page={firearmsPage}
+                    totalPages={firearmsTotalPages}
+                    totalCount={firearmsTotalCount}
+                    pageSize={FIREARMS_PAGE_SIZE}
+                    onPrev={() => doFirearmSearch(firearmsPage - 1)}
+                    onNext={() => doFirearmSearch(firearmsPage + 1)}
+                    loading={firearmsLoading}
+                  />
+                </>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Shield className="h-16 w-16 mx-auto mb-4 opacity-30" />
