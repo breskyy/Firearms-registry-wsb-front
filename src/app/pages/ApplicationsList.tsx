@@ -261,7 +261,7 @@ export function ApplicationsList() {
                   <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="mb-3">Brak wniosków o pozwolenie</p>
                   {!isOfficer && (
-                    <Button className="rounded-xl" onClick={() => navigate("/application/new-permit")}>
+                    <Button className="rounded-xl" onClick={() => navigate("/applications/new/permit")}>
                       Złóż wniosek
                     </Button>
                   )}
@@ -325,7 +325,7 @@ export function ApplicationsList() {
                   <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="mb-3">Brak wniosków o promesę</p>
                   {!isOfficer && (
-                    <Button className="rounded-xl" onClick={() => navigate("/application/new-promise")}>
+                    <Button className="rounded-xl" onClick={() => navigate("/applications/new/promise")}>
                       Złóż wniosek o promesę
                     </Button>
                   )}

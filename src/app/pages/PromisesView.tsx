@@ -112,7 +112,7 @@ export function PromisesView() {
           <CardContent className="p-12 text-center">
             <QrCode className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
             <p className="text-muted-foreground mb-4">Nie masz żadnych promes</p>
-            <Button onClick={() => navigate("/application/new-promise")} className="min-h-[44px] rounded-xl">
+            <Button onClick={() => navigate("/applications/new/promise")} className="min-h-[44px] rounded-xl">
               Złóż wniosek o promesę
             </Button>
           </CardContent>

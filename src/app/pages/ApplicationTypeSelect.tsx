@@ -10,7 +10,7 @@ export function ApplicationTypeSelect() {
     {
       title: "Pozwolenie na broń",
       description: "Złóż wniosek o nowe pozwolenie na broń.",
-      path: "/application/new-permit",
+      path: "/applications/new/permit",
       icon: Shield,
       badge: "Pozwolenie",
       tone: "bg-blue-50 text-blue-700",
@@ -18,7 +18,7 @@ export function ApplicationTypeSelect() {
     {
       title: "e-Promesa",
       description: "Złóż wniosek o promesę na zakup broni.",
-      path: "/application/new-promise",
+      path: "/applications/new/promise",
       icon: CreditCard,
       badge: "Zakup broni",
       tone: "bg-emerald-50 text-emerald-700",

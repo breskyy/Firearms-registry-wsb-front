@@ -1,5 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { Layout } from "./components/Layout";
+import { RedirectTo } from "./components/RedirectTo";
+import { ApplicationsLayout } from "./layouts/ApplicationsLayout";
 import { LoginPage } from "./pages/LoginPage";
 import { CitizenDashboard } from "./pages/CitizenDashboard";
 import { OfficerDashboard } from "./pages/OfficerDashboard";
@@ -34,15 +36,26 @@ export const router = createBrowserRouter([
       { path: "shop/verify", Component: ShopVerification },
       { path: "shop/sale", Component: ShopSalePage },
 
+      // Legacy URLs
+      { path: "application/new-permit", Component: () => <RedirectTo to="/applications/new/permit" /> },
+      { path: "application/new-promise", Component: () => <RedirectTo to="/applications/new/promise" /> },
+      { path: "application/new/permit", Component: () => <RedirectTo to="/applications/new/permit" /> },
+      { path: "application/new/promise", Component: () => <RedirectTo to="/applications/new/promise" /> },
+      { path: "applications/new", Component: () => <RedirectTo to="/application/new" /> },
+
       { path: "application/new", Component: ApplicationTypeSelect },
 
-      // New forms - separate permit and promise applications
-      { path: "application/new-permit", Component: PermitApplicationForm },
-      { path: "application/new-promise", Component: PromiseApplicationForm },
-
-      { path: "applications", Component: ApplicationsList },
-      { path: "applications/:id", Component: ApplicationDetails },
-      { path: "applications/:id/correction", Component: ApplicationCorrection },
+      {
+        path: "applications",
+        Component: ApplicationsLayout,
+        children: [
+          { index: true, Component: ApplicationsList },
+          { path: "new/permit", Component: PermitApplicationForm },
+          { path: "new/promise", Component: PromiseApplicationForm },
+          { path: ":id/correction", Component: ApplicationCorrection },
+          { path: ":id", Component: ApplicationDetails },
+        ],
+      },
       { path: "promises", Component: PromisesView },
       { path: "permits/:id", Component: PermitDetails },
       { path: "transfers", Component: TransfersList },

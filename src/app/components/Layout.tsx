@@ -17,6 +17,19 @@ export function Layout() {
 
   const userRole = getUserRole();
 
+  const isNavItemActive = (itemPath: string) => {
+    const path = location.pathname;
+    if (itemPath === "/applications") {
+      return path === "/applications" || path.startsWith("/applications/");
+    }
+    if (itemPath === "/application/new") {
+      return path === "/application/new";
+    }
+    return path === itemPath;
+  };
+
+  const isDashboardPath = ["/citizen", "/officer", "/shop"].includes(location.pathname);
+
   const handleLogout = () => {
     localStorage.removeItem("userRole");
     navigate("/");
@@ -59,7 +72,7 @@ export function Layout() {
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Back button logic */}
-              {!["/citizen", "/officer", "/shop"].includes(location.pathname) && (
+              {!isDashboardPath && (
                 <Button 
                   variant="ghost" 
                   size="icon"
@@ -83,9 +96,9 @@ export function Layout() {
                     <Button
                       key={item.path}
                       onClick={() => navigate(item.path)}
-                      variant={location.pathname === item.path ? "default" : "ghost"}
+                      variant={isNavItemActive(item.path) ? "default" : "ghost"}
                       className={`h-10 px-4 rounded-xl font-medium ${
-                        location.pathname === item.path ? "bg-primary text-primary-foreground shadow-sm" : ""
+                        isNavItemActive(item.path) ? "bg-primary text-primary-foreground shadow-sm" : ""
                       }`}
                     >
                       <Icon className="h-4 w-4 mr-2" />
@@ -120,12 +133,12 @@ export function Layout() {
           <div className="flex justify-around items-center h-16">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = isNavItemActive(item.path);
               return (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex flex-col items-center justify-center w-full h-full gap-1 min-h-[44px] transition-colors ${
+                  className={`flex flex-col items-center justify-center w-full h-full gap-1 min-h-[44px] transition-colors cursor-pointer hover:text-foreground ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 >

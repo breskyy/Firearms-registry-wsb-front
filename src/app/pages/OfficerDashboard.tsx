@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { FileText, Clock, CheckCircle, XCircle, Shield, CreditCard, AlertTriangle, Search } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Shield, CreditCard, AlertTriangle, Search, type LucideIcon } from "lucide-react";
 import { wpaService } from "../../services/wpaService";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, WpaMedicalAlertDto } from "../../types/api";
 
@@ -54,6 +54,36 @@ function getAlertBadge(type: string) {
 
 function formatDate(s: string) {
   return new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  iconBgClassName,
+  iconClassName,
+}: {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  iconBgClassName: string;
+  iconClassName: string;
+}) {
+  return (
+    <Card className="rounded-2xl border-none shadow-sm">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`shrink-0 rounded-md p-1 ${iconBgClassName}`}>
+            <Icon className={`h-3.5 w-3.5 ${iconClassName}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] leading-tight text-muted-foreground truncate">{label}</p>
+            <p className="text-lg font-bold leading-none tabular-nums">{value}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function OfficerDashboard() {
@@ -106,7 +136,7 @@ export function OfficerDashboard() {
           <div className="h-4 w-64 bg-muted animate-pulse rounded" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />)}
+          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-14 rounded-2xl bg-muted animate-pulse" />)}
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
@@ -124,75 +154,41 @@ export function OfficerDashboard() {
 
       {/* Statistics */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-5 mb-6">
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Pozwolenia</p>
-                <p className="text-2xl font-bold">{pendingPermits.length}</p>
-              </div>
-              <div className="bg-blue-50 p-2 rounded-full">
-                <Shield className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Promesy</p>
-                <p className="text-2xl font-bold">{pendingPromises.length}</p>
-              </div>
-              <div className="bg-blue-50 p-2 rounded-full">
-                <CreditCard className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Alerty medyczne</p>
-                <p className="text-2xl font-bold">{alerts.length}</p>
-              </div>
-              <div className="bg-orange-50 p-2 rounded-full">
-                <AlertTriangle className="h-5 w-5 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Zatwierdzone</p>
-                <p className="text-2xl font-bold">{approvedToday}</p>
-              </div>
-              <div className="bg-emerald-50 p-2 rounded-full">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Odrzucone</p>
-                <p className="text-2xl font-bold">{rejectedToday}</p>
-              </div>
-              <div className="bg-red-50 p-2 rounded-full">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Pozwolenia"
+          value={pendingPermits.length}
+          icon={Shield}
+          iconBgClassName="bg-blue-50"
+          iconClassName="text-primary"
+        />
+        <StatCard
+          label="Promesy"
+          value={pendingPromises.length}
+          icon={CreditCard}
+          iconBgClassName="bg-blue-50"
+          iconClassName="text-primary"
+        />
+        <StatCard
+          label="Alerty medyczne"
+          value={alerts.length}
+          icon={AlertTriangle}
+          iconBgClassName="bg-orange-50"
+          iconClassName="text-orange-600"
+        />
+        <StatCard
+          label="Zatwierdzone"
+          value={approvedToday}
+          icon={CheckCircle}
+          iconBgClassName="bg-emerald-50"
+          iconClassName="text-emerald-600"
+        />
+        <StatCard
+          label="Odrzucone"
+          value={rejectedToday}
+          icon={XCircle}
+          iconBgClassName="bg-red-50"
+          iconClassName="text-red-600"
+        />
       </div>
 
       {/* Quick Actions */}

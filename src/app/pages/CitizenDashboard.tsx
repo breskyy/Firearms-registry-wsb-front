@@ -233,12 +233,17 @@ export function CitizenDashboard() {
         </div>
       ) : (
         <div
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-muted to-muted/50 p-6 shadow-md cursor-pointer transition-transform active:scale-[0.98]"
+          className="relative overflow-hidden rounded-3xl bg-card border border-border p-6 shadow-md cursor-pointer transition-transform active:scale-[0.98]"
           onClick={() => navigate("/application/new")}
         >
-          <div className="flex flex-col items-center justify-center min-h-[140px] gap-3 text-muted-foreground">
-            <Shield className="h-12 w-12 opacity-40" />
-            <p className="text-sm font-medium">Brak aktywnego pozwolenia</p>
+          <div className="absolute -right-6 -top-6 text-muted-foreground/10 pointer-events-none">
+            <Shield className="h-28 w-28" />
+          </div>
+          <div className="relative z-10 flex flex-col items-center justify-center min-h-[140px] gap-3">
+            <div className="bg-blue-50 text-primary p-3 rounded-2xl">
+              <Shield className="h-8 w-8" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Brak aktywnego pozwolenia</p>
             <Button size="sm" className="rounded-xl">Nowy wniosek</Button>
           </div>
         </div>

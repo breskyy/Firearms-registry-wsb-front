@@ -122,7 +122,7 @@ export function PromiseApplicationForm() {
                   type="button"
                   variant="link"
                   className="mt-2"
-                  onClick={() => navigate("/application/new-permit")}
+                  onClick={() => navigate("/applications/new/permit")}
                 >
                   Złóż wniosek o pozwolenie
                 </Button>
