@@ -97,7 +97,7 @@ export function PromisesView() {
                 <CardContent className={CITIZEN_LIST_CARD_CONTENT_CLASS}>
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-base text-foreground mb-2">{promise.weaponType}</h3>
+                      <h3 className="font-semibold text-sm text-foreground mb-2">{promise.weaponType}</h3>
                       <DateStatusMeta
                         className="mb-3"
                         emphasizeDate

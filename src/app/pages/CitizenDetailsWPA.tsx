@@ -16,6 +16,7 @@ import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { WpaFirearmSearchCard } from "../components/wpa/WpaFirearmSearchCard";
 import { getFirearmCategoryBadge } from "../utils/firearmUi";
 import { formatPermitCount, getPermitDisplayTypeLabel } from "../utils/permitLabels";
+import { PAGE_STAT_VALUE_CLASS } from "../utils/citizenCardUi";
 import { cn } from "../components/ui/utils";
 
 function getPermitStatusBadge(status: string) {
@@ -304,11 +305,11 @@ export function CitizenDetailsWPA() {
         <div className="mt-4 flex gap-3">
           <div className="flex-1 bg-muted/30 rounded-xl p-3">
             <p className="text-xs text-muted-foreground mb-1">Egzemplarze broni</p>
-            <p className="text-2xl font-bold">{firearmCount}</p>
+            <p className={PAGE_STAT_VALUE_CLASS}>{firearmCount}</p>
           </div>
           <div className="flex-1 bg-muted/30 rounded-xl p-3">
             <p className="text-xs text-muted-foreground mb-1">Aktywne alerty medyczne</p>
-            <p className={cn("text-2xl font-bold", citizen.activeAlerts > 0 && "text-orange-600")}>
+            <p className={cn(PAGE_STAT_VALUE_CLASS, citizen.activeAlerts > 0 && "text-orange-600")}>
               {citizen.activeAlerts}
             </p>
           </div>

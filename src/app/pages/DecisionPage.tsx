@@ -241,7 +241,7 @@ export function DecisionPage() {
       />
 
       <div className="grid gap-2.5 md:gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-w-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-2.5 md:gap-4">
             {!isReadOnly && (
               <ReviewCollapsibleCard
@@ -299,7 +299,7 @@ export function DecisionPage() {
                     >
                       <Clock className="h-4 w-4 md:h-5 md:w-5 text-blue-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Oznacz jako weryfikowany</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Oznacz jako weryfikowany</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Zmiana statusu na &quot;W weryfikacji&quot;</p>
                       </div>
                     </button>
@@ -318,7 +318,7 @@ export function DecisionPage() {
                     >
                       <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-emerald-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Zatwierdź wniosek</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Zatwierdź wniosek</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">{type === "permit" ? "Wygeneruj pozwolenie na broń" : "Wygeneruj aktywną promesę"}</p>
                       </div>
                     </button>
@@ -337,7 +337,7 @@ export function DecisionPage() {
                     >
                       <FileWarning className="h-4 w-4 md:h-5 md:w-5 text-orange-500 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Wezwij do uzupełnienia</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Wezwij do uzupełnienia</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Wniosek posiada braki formalne lub dokumentacyjne</p>
                       </div>
                     </button>
@@ -356,7 +356,7 @@ export function DecisionPage() {
                     >
                       <XCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Odrzuć wniosek</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Odrzuć wniosek</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Wydaj negatywną decyzję z uzasadnieniem</p>
                       </div>
                     </button>
@@ -505,25 +505,25 @@ export function DecisionPage() {
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Typ</p>
-                        <p className="font-medium text-sm md:text-base">
+                        <p className="font-medium text-sm">
                           {PERMIT_TYPE_LABELS[linkedPermit.permitTypeName] ?? linkedPermit.permitTypeName}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Status</p>
-                        <p className={`font-medium text-sm md:text-base ${linkedPermit.statusName === "Active" ? "text-emerald-700" : "text-red-600"}`}>
+                        <p className={`font-medium text-sm ${linkedPermit.statusName === "Active" ? "text-emerald-700" : "text-red-600"}`}>
                           {getPermitStatusMeta(linkedPermit.statusName)?.label ?? UNKNOWN_STATUS_LABEL}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Wolne miejsca w pozwoleniu</p>
-                        <p className={`font-medium text-sm md:text-base ${linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <p className={`font-medium text-sm ${linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}`}>
                           {linkedPermit.availableSlots} z {linkedPermit.maxFirearms}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Ważne do</p>
-                        <p className="font-medium text-sm md:text-base">{new Date(linkedPermit.expiryDate).toLocaleDateString("pl-PL")}</p>
+                        <p className="font-medium text-sm">{new Date(linkedPermit.expiryDate).toLocaleDateString("pl-PL")}</p>
                       </div>
                     </div>
 
@@ -540,14 +540,14 @@ export function DecisionPage() {
                           <>
                             <div className={`rounded-lg md:rounded-xl p-2.5 md:p-3 ${medValid ? "bg-emerald-50" : "bg-red-50"}`}>
                               <p className="text-[11px] md:text-xs text-muted-foreground">Bad. lekarskie ważne do</p>
-                              <p className={`font-semibold text-sm md:text-base ${medValid ? "text-emerald-900" : "text-red-900"}`}>
+                              <p className={`font-semibold text-sm ${medValid ? "text-emerald-900" : "text-red-900"}`}>
                                 {med ? med.toLocaleDateString("pl-PL") : "Brak danych"}
                                 {!medValid && med && " (wygasło)"}
                               </p>
                             </div>
                             <div className={`rounded-lg md:rounded-xl p-2.5 md:p-3 ${psyValid ? "bg-emerald-50" : "bg-red-50"}`}>
                               <p className="text-[11px] md:text-xs text-muted-foreground">Bad. psychologiczne ważne do</p>
-                              <p className={`font-semibold text-sm md:text-base ${psyValid ? "text-emerald-900" : "text-red-900"}`}>
+                              <p className={`font-semibold text-sm ${psyValid ? "text-emerald-900" : "text-red-900"}`}>
                                 {psy ? psy.toLocaleDateString("pl-PL") : "Brak danych"}
                                 {!psyValid && psy && " (wygasło)"}
                               </p>
@@ -573,7 +573,7 @@ export function DecisionPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[52px] w-full rounded-xl text-sm md:text-base font-semibold"
+                className="min-h-[52px] w-full rounded-xl text-sm font-semibold"
               >
                 {submitting ? "Zapisywanie..." : "Zatwierdź i wyślij"}
               </Button>

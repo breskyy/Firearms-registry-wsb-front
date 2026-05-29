@@ -309,7 +309,7 @@ export function ApplicationCorrection() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={submitting || !app} className="w-full min-h-[52px] rounded-xl text-base font-semibold">
+        <Button type="submit" disabled={submitting || !app} className="w-full min-h-[52px] rounded-xl font-semibold">
           {submitting ? "Wysyłanie..." : "Wyślij uzupełnienie"}
         </Button>
       </form>

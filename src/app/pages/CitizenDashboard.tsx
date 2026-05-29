@@ -12,7 +12,11 @@ import type { CitizenMedicalAlertDto, CitizenProfileDto, PermitDto, PermitApplic
 import { mapPermitExamEntries, worstExamStatus } from "../../lib/permitExams";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
-import { CITIZEN_NAV_ICON_TONE, CITIZEN_PERMIT_STACK_CARD_INTERACTION } from "../utils/citizenCardUi";
+import {
+  CITIZEN_NAV_ICON_TONE,
+  CITIZEN_PERMIT_STACK_CARD_INTERACTION,
+  PAGE_SECTION_TITLE_CLASS,
+} from "../utils/citizenCardUi";
 
 type RecentEntry =
   | { kind: "permit"; data: PermitApplicationDto }
@@ -128,7 +132,7 @@ export function CitizenDashboard() {
       {sortedPermits.length > 0 ? (
         <div>
           <div className="flex items-end justify-between mb-3 px-1">
-            <h3 className="text-lg font-bold text-foreground">Moje pozwolenia</h3>
+            <h3 className={PAGE_SECTION_TITLE_CLASS}>Moje pozwolenia</h3>
             <span className="text-sm text-muted-foreground">{sortedPermits.length} razem</span>
           </div>
           <div className="relative">
@@ -163,7 +167,7 @@ export function CitizenDashboard() {
                       <p className={permit.statusName === "Active" ? "text-white/85 text-sm font-semibold mb-1" : "text-muted-foreground text-sm font-semibold mb-1"}>
                         e-Pozwolenie
                       </p>
-                      <h2 className="text-lg font-bold truncate">
+                      <h2 className="text-sm md:text-lg font-bold truncate">
                         {PERMIT_TYPE_LABELS[permit.permitTypeName] ?? permit.permitTypeName}
                       </h2>
                       <p className={permit.statusName === "Active" ? "text-white/80 text-xs font-mono mt-1 truncate" : "text-muted-foreground text-xs font-mono mt-1 truncate"}>
@@ -219,7 +223,7 @@ export function CitizenDashboard() {
                 <p className="text-sm font-semibold text-blue-950 mb-1">
                   Wniosek o pozwolenie jest już złożony
                 </p>
-                <h2 className="text-lg font-bold text-foreground truncate">
+                <h2 className="text-sm md:text-lg font-bold text-foreground truncate">
                   {getPermitTypeLabel(activePermitApplication)}
                 </h2>
                 <DateStatusMeta className="mt-2" statusBadge={renderStatusBadge(activePermitApplication.statusName)}>
@@ -281,7 +285,7 @@ export function CitizenDashboard() {
 
       {/* Quick Actions Grid */}
       <div>
-        <h3 className="text-lg font-bold mb-3 px-1 text-foreground">Usługi</h3>
+        <h3 className={cn(PAGE_SECTION_TITLE_CLASS, "mb-3 px-1")}>Usługi</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { label: "Nowy wniosek", icon: FileText, path: "/application/new" },
@@ -315,7 +319,7 @@ export function CitizenDashboard() {
       {recentApps.length > 0 && (
         <div>
           <div className="flex justify-between items-baseline gap-3 mb-3 px-1">
-            <h3 className="text-lg font-bold text-foreground leading-tight">Ostatnie wnioski</h3>
+            <h3 className={PAGE_SECTION_TITLE_CLASS}>Ostatnie wnioski</h3>
             <Button
               variant="link"
               className="text-primary text-sm h-auto min-h-0 px-0 py-0 font-medium shrink-0"

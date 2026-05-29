@@ -67,10 +67,10 @@ function ApplicationHeaderInfo({
     : "text-[11px] md:text-xs text-muted-foreground leading-snug";
   const titleClass = compact
     ? "font-semibold text-[15px] text-foreground leading-snug tracking-tight"
-    : "font-bold text-base sm:text-lg text-foreground leading-tight";
+    : "font-bold text-sm sm:text-lg text-foreground leading-tight";
   const metaClass = compact
     ? "text-[11px] font-medium text-foreground leading-snug"
-    : "text-sm md:text-base font-medium text-foreground leading-snug";
+    : "text-sm font-medium text-foreground leading-snug";
 
   return (
     <div className="min-w-0 flex-1 space-y-1.5">

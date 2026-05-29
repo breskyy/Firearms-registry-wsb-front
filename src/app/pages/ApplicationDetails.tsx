@@ -176,7 +176,7 @@ export function ApplicationDetails() {
       )}
 
       <div className="grid gap-2.5 md:gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 flex flex-col gap-2.5 md:gap-4">
+        <div className="lg:col-span-2 min-w-0 flex flex-col gap-2.5 md:gap-4">
           {app.statusName === "Rejected" && app.rejectionReason && (
             <ReviewCollapsibleCard
               title="Powód odrzucenia"

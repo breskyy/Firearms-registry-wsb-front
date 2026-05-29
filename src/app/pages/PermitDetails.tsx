@@ -165,7 +165,7 @@ export function PermitDetails() {
               <p className={permit.statusName === "Active" ? "text-white/85 text-sm font-semibold mb-1" : "text-muted-foreground text-sm font-semibold mb-1"}>
                 e-Pozwolenie
               </p>
-              <h2 className="text-2xl font-bold">{permitType}</h2>
+              <h2 className="text-lg md:text-2xl font-bold">{permitType}</h2>
             </div>
             <div className={permit.statusName === "Active" ? "bg-white/20 p-2 rounded-2xl backdrop-blur-sm" : "bg-background/80 p-2 rounded-2xl"}>
               <Shield className="h-6 w-6" />
@@ -175,7 +175,7 @@ export function PermitDetails() {
             <p className={permit.statusName === "Active" ? "text-white/80 text-xs mb-1" : "text-muted-foreground text-xs mb-1"}>
               Numer dokumentu
             </p>
-            <p className="font-mono text-xl tracking-wider">{permit.permitNumber}</p>
+            <p className="font-mono text-sm md:text-xl tracking-wider">{permit.permitNumber}</p>
           </div>
         </div>
       </div>
@@ -195,15 +195,15 @@ export function PermitDetails() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-xl bg-muted/40 p-3">
               <p className="text-xs text-muted-foreground">Limit</p>
-              <p className="text-xl font-bold">{permit.maxFirearms}</p>
+              <p className="text-lg md:text-xl font-bold">{permit.maxFirearms}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-3">
               <p className="text-xs text-muted-foreground">Uzyte</p>
-              <p className="text-xl font-bold">{permit.usedSlots}</p>
+              <p className="text-lg md:text-xl font-bold">{permit.usedSlots}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-3">
               <p className="text-xs text-muted-foreground">Wolne</p>
-              <p className="text-xl font-bold">{availableSlots}</p>
+              <p className="text-lg md:text-xl font-bold">{availableSlots}</p>
             </div>
           </div>
         </div>
