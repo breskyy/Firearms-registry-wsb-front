@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { Loader2, FileWarning } from "lucide-react";
 import { wpaService } from "../../services/wpaService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 
 export function WpaAttachmentViewPage() {
   const { applicationId, attachmentId } = useParams<{
@@ -35,9 +36,9 @@ export function WpaAttachmentViewPage() {
         revokedUrl = url;
         setBlobUrl(url);
       })
-      .catch((err: { message?: string }) => {
+      .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err?.message ?? "Nie udało się pobrać pliku");
+        setError(getApiErrorMessage(err) || "Nie udało się pobrać pliku");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -96,7 +97,7 @@ export function WpaAttachmentViewPage() {
     <div className="min-h-screen flex flex-col items-center justify-center gap-2 text-muted-foreground p-6 text-center bg-background">
       <FileWarning className="h-8 w-8" />
       <p className="text-sm">
-        Format <code>{contentType}</code> nie obsługuje podglądu. Zamknij kartę i pobierz plik z aplikacji.
+        Format pliku nie obsługuje podglądu. Zamknij kartę i pobierz plik z aplikacji.
       </p>
     </div>
   );

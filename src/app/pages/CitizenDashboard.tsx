@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Shield, AlertCircle, Crosshair, QrCode, ArrowRightLeft, Clock, ChevronRight, FileText } from "lucide-react";
 import { CitizenMedicalNavIcon } from "../components/citizen/CitizenMedicalNavIcon";
 import { CitizenApplicationCard } from "../components/citizen/CitizenApplicationCard";
@@ -12,6 +11,7 @@ import { citizenService } from "../../services/citizenService";
 import type { CitizenMedicalAlertDto, CitizenProfileDto, PermitDto, PermitApplicationDto, PromiseApplicationDto } from "../../types/api";
 import { mapPermitExamEntries, worstExamStatus } from "../../lib/permitExams";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import { CITIZEN_NAV_ICON_TONE, CITIZEN_PERMIT_STACK_CARD_INTERACTION } from "../utils/citizenCardUi";
 
 type RecentEntry =
@@ -19,11 +19,7 @@ type RecentEntry =
   | { kind: "promise"; data: PromiseApplicationDto };
 
 function renderStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function getPermitTypeLabel(app: PermitApplicationDto) {
@@ -231,7 +227,7 @@ export function CitizenDashboard() {
                 </DateStatusMeta>
                 <p className="text-sm text-muted-foreground mt-3 leading-snug">
                   {activePermitApplication.statusName === "RequiresCorrection"
-                    ? "WPA poprosiło o uzupełnienie danych. Kliknij, żeby poprawić wniosek."
+                    ? "Urząd poprosił o uzupełnienie danych. Kliknij, żeby poprawić wniosek."
                     : "Nie musisz składać kolejnego wniosku. Status sprawdzisz w swoich sprawach."}
                 </p>
               </div>

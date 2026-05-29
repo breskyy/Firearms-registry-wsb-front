@@ -4,7 +4,7 @@ import type { ApplicationProcessStep } from "../../components/citizen/Applicatio
 export const PERMIT_APPLICATION_PROCESS_STEPS: ApplicationProcessStep[] = [
   {
     icon: Clock,
-    text: "WPA rozpatrzy wniosek w ciągu 30 dni roboczych",
+    text: "Urząd rozpatrzy wniosek w ciągu 30 dni roboczych",
   },
   {
     icon: HeartPulse,
@@ -19,7 +19,7 @@ export const PERMIT_APPLICATION_PROCESS_STEPS: ApplicationProcessStep[] = [
 export const PROMISE_APPLICATION_PROCESS_STEPS: ApplicationProcessStep[] = [
   {
     icon: Clock,
-    text: "WPA rozpatrzy wniosek w ciągu 14 dni roboczych",
+    text: "Urząd rozpatrzy wniosek w ciągu 14 dni roboczych",
   },
   {
     icon: QrCode,

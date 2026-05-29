@@ -124,7 +124,7 @@ export function ShopVerification() {
 
     const value = mode === "number" ? promiseNumber : qrToken;
     if (!value) {
-      setError(mode === "number" ? "Wprowadź numer promesy" : "Wprowadź token QR");
+      setError(mode === "number" ? "Wprowadź numer promesy" : "Wprowadź kod z QR");
       return;
     }
 
@@ -161,7 +161,7 @@ export function ShopVerification() {
         <p className="text-muted-foreground">
           {hasVerificationResult
             ? "Promesa zweryfikowana — możesz przejść do sprzedaży lub sprawdzić inną promesę."
-            : "Zeskanuj kod QR obywatela lub wpisz dane ręcznie. Sprzedaż wymaga poprawnej weryfikacji po tokenie QR."}
+            : "Zeskanuj kod QR obywatela lub wpisz dane ręcznie. Sprzedaż wymaga poprawnej weryfikacji kodu z QR."}
         </p>
       </div>
 
@@ -181,7 +181,7 @@ export function ShopVerification() {
           </TabsTrigger>
           <TabsTrigger value="qr" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <QrCode className="h-4 w-4 shrink-0" />
-            Token
+            Kod QR
           </TabsTrigger>
           <TabsTrigger value="number" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Hash className="h-4 w-4 shrink-0" />
@@ -207,13 +207,13 @@ export function ShopVerification() {
             <form onSubmit={handleVerify} className="space-y-3">
               <TabsContent value="qr" className="mt-0">
                 <Label htmlFor="qrToken" className="mb-2 block">
-                  Token z kodu QR <span className="text-red-600">*</span>
+                  Kod z QR <span className="text-red-600">*</span>
                 </Label>
                 <Input
                   id="qrToken"
                   value={qrToken}
                   onChange={(e) => setQrToken(e.target.value)}
-                  placeholder="Wklej zeskanowany token..."
+                  placeholder="Wklej zeskanowany kod z QR..."
                   className="min-h-[44px] rounded-xl font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">Token z kodu QR jest wymagany do rejestracji sprzedaży.</p>
@@ -276,15 +276,15 @@ export function ShopVerification() {
               <div className="text-sm text-muted-foreground space-y-2">
                 <p className="font-semibold text-foreground">Jak działa e-Promesa</p>
                 <p>
-                  Promesa zezwala na zakup <strong>określonej liczby egzemplarzy</strong> broni. Każda transakcja wykorzystuje 1
-                  slot.
+                  Promesa zezwala na zakup <strong>określonej liczby egzemplarzy</strong> broni. Każda transakcja wykorzystuje jedno
+                  miejsce w pozwoleniu.
                 </p>
                 <p>
-                  Po wykorzystaniu wszystkich sztuk promesa ma status <code className="text-foreground">Used</code> — potrzebny
+                  Po wykorzystaniu wszystkich sztuk promesa ma status „Wykorzystana” — potrzebny
                   jest nowy wniosek.
                 </p>
                 <p>
-                  Ważność promesy w systemie: 3 miesiące od wydania (status <code className="text-foreground">Expired</code> po
+                  Ważność promesy w systemie: 3 miesiące od wydania (status „Wygasła” po
                   terminie).
                 </p>
               </div>
@@ -342,7 +342,7 @@ export function ShopVerification() {
                     <span className="font-medium">{result.permitType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Dostępne sloty:</span>
+                    <span className="text-muted-foreground">Wolne miejsca w pozwoleniu:</span>
                     <span className={`font-medium ${result.availableSlots > 0 ? "text-emerald-700" : "text-red-700"}`}>
                       {result.availableSlots}
                     </span>
@@ -400,7 +400,7 @@ export function ShopVerification() {
                   ) : result.remainingPromiseQuantity <= 0 ? (
                     <p>Promesa jest w całości wykorzystana.</p>
                   ) : result.availableSlots <= 0 ? (
-                    <p>Brak wolnych slotów w pozwoleniu nabywcy.</p>
+                    <p>Brak wolnych miejsc w pozwoleniu nabywcy.</p>
                   ) : (
                     <p>Sprzedaż nie może być zarejestrowana.</p>
                   )}

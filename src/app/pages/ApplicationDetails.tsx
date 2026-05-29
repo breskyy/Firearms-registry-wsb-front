@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router";
-import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { User, Shield, AlertCircle, Clock, CreditCard, Paperclip } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -15,6 +14,7 @@ import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
 import { formatApplicationId } from "../../lib/registryNumbers";
 import { getPromiseQrMatchResult, getPromiseQrUnavailableMessage } from "../../lib/promiseQrAvailability";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import type {
   WpaPermitApplicationDto,
   WpaPromiseApplicationDto,
@@ -27,15 +27,7 @@ import type {
 import { getPermitApplicationTypeLabel } from "../utils/permitLabels";
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (meta) {
-    return (
-      <Badge variant={meta.variant} className={meta.badgeClassName}>
-        {meta.label}
-      </Badge>
-    );
-  }
-  return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function formatDate(s: string) {
@@ -188,7 +180,7 @@ export function ApplicationDetails() {
           {app.statusName === "Rejected" && app.rejectionReason && (
             <ReviewCollapsibleCard
               title="Powód odrzucenia"
-              description="Decyzja negatywna WPA"
+              description="Decyzja negatywna urzędu"
               icon={applicationSectionIcon(<AlertCircle />)}
               defaultOpen
               priority

@@ -6,7 +6,8 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { citizenService } from "../../../services/citizenService";
+import { citizenService, translateTransferError } from "../../../services/citizenService";
+import { getApiErrorMessage } from "../../../lib/apiErrors";
 import type { TransferType } from "../../../types/api";
 
 interface TransferDrawerProps {
@@ -69,7 +70,9 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
       });
       onSuccess?.();
     } catch (err: any) {
-      toast.error("Błąd inicjowania transferu", { description: err?.message ?? "Spróbuj ponownie" });
+      toast.error("Błąd inicjowania transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setLoading(false);
     }
@@ -99,7 +102,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                     <li>Kupujący otrzyma powiadomienie w aplikacji</li>
                     <li>Kupujący musi zaakceptować lub odrzucić transfer</li>
                     <li>Po akceptacji broń zmieni właściciela automatycznie</li>
-                    <li>Twój slot w pozwoleniu zostanie zwolniony</li>
+                    <li>Twoje miejsce w pozwoleniu zostanie zwolnione</li>
                   </ol>
                 </div>
               </div>

@@ -18,7 +18,7 @@ type ApplicationProcessNoticeProps = {
 /** „Co dalej?” — spójne z sekcjami wniosków citizen i krokami w ShopDashboard. */
 export function ApplicationProcessNotice({
   title = "Co dalej?",
-  subtitle = "Po wysłaniu wniosku do WPA",
+  subtitle = "Po wysłaniu wniosku do urzędu",
   steps,
 }: ApplicationProcessNoticeProps) {
   return (

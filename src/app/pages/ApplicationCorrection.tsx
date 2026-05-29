@@ -10,11 +10,12 @@ import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { citizenService } from "../../services/citizenService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { PermitApplicationDto, PermitDto, PermitType, PromiseApplicationDto } from "../../types/api";
 
 const PERMIT_TYPE_LABELS: Record<PermitType, string> = {
   Sport: "Sportowe",
-  Hunting: "Lowieckie",
+  Hunting: "Łowieckie",
   Collection: "Kolekcjonerskie",
   Protection: "Ochrony osobistej",
   Other: "Inne",
@@ -87,7 +88,7 @@ export function ApplicationCorrection() {
           }
         }
       } catch {
-        toast.error("Nie udalo sie pobrac wniosku");
+        toast.error("Nie udało się pobrać wniosku");
       } finally {
         setLoading(false);
       }
@@ -101,17 +102,17 @@ export function ApplicationCorrection() {
     const nextErrors: Record<string, string> = {};
     if (!app) nextErrors.form = "Nie znaleziono wniosku";
     if (app && app.statusName !== "RequiresCorrection") {
-      nextErrors.form = "Ten wniosek nie wymaga juz uzupelnienia";
+      nextErrors.form = "Ten wniosek nie wymaga już uzupełnienia";
     }
     if (type === "permit") {
-      if (permitForm.reason.length < 20) nextErrors.reason = "Uzasadnienie musi miec minimum 20 znakow";
+      if (permitForm.reason.length < 20) nextErrors.reason = "Uzasadnienie musi mieć minimum 20 znaków";
     } else {
       if (!promiseForm.permitId) nextErrors.permitId = "Wybierz pozwolenie";
-      if (promiseForm.requestedWeaponType.length < 5) nextErrors.requestedWeaponType = "Opis broni musi miec minimum 5 znakow";
-      if (promiseForm.requestedQuantity < 1) nextErrors.requestedQuantity = "Ilosc musi byc wieksza niz 0";
+      if (promiseForm.requestedWeaponType.length < 5) nextErrors.requestedWeaponType = "Opis broni musi mieć minimum 5 znaków";
+      if (promiseForm.requestedQuantity < 1) nextErrors.requestedQuantity = "Ilość musi być większa niż 0";
       const selectedPermit = permits.find((permit) => permit.id === promiseForm.permitId);
       if (selectedPermit && promiseForm.requestedQuantity > selectedPermit.availableSlots) {
-        nextErrors.requestedQuantity = `Maksymalna ilosc dla tego pozwolenia: ${selectedPermit.availableSlots}`;
+        nextErrors.requestedQuantity = `Maksymalna ilość dla tego pozwolenia: ${selectedPermit.availableSlots}`;
       }
     }
     return nextErrors;
@@ -144,13 +145,13 @@ export function ApplicationCorrection() {
       } else {
         await citizenService.updatePromiseApplicationCorrection(id, promiseForm);
       }
-      toast.success("Uzupelnienie wyslane", {
-        description: "Wniosek wrocil do WPA ze statusem zlozony.",
+      toast.success("Uzupełnienie wysłane", {
+        description: "Wniosek wrócił do urzędu ze statusem „Złożony”.",
       });
       navigate("/applications");
-    } catch (err: any) {
-      toast.error("Nie udalo sie wyslac uzupelnienia", {
-        description: err?.message ?? "Sprobuj ponownie",
+    } catch (err: unknown) {
+      toast.error("Nie udało się wysłać uzupełnienia", {
+        description: getApiErrorMessage(err),
       });
     } finally {
       setSubmitting(false);
@@ -169,8 +170,8 @@ export function ApplicationCorrection() {
   return (
     <div className="pt-2">
       <div className="mb-6 px-1">
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">Uzupelnij wniosek</h1>
-        <p className="text-muted-foreground">Popraw dane zgodnie z uwagami WPA i wyslij ponownie</p>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">Uzupełnij wniosek</h1>
+        <p className="text-muted-foreground">Popraw dane zgodnie z uwagami urzędu i wyślij ponownie</p>
       </div>
 
       {app?.correctionNotes && (
@@ -178,7 +179,7 @@ export function ApplicationCorrection() {
           <CardContent className="p-4 flex gap-3 text-orange-900">
             <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-sm mb-1">Uwagi WPA</p>
+              <p className="font-semibold text-sm mb-1">Uwagi urzędu</p>
               <p className="text-sm">{app.correctionNotes}</p>
             </div>
           </CardContent>
@@ -196,7 +197,7 @@ export function ApplicationCorrection() {
                 <CardTitle className="text-lg">
                   {type === "permit" ? "Wniosek o pozwolenie" : "Wniosek o e-Promese"}
                 </CardTitle>
-                <CardDescription>Po wyslaniu status zmieni sie na zlozony</CardDescription>
+                <CardDescription>Po wysłaniu status zmieni się na „Złożony”</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -256,7 +257,7 @@ export function ApplicationCorrection() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Jeśli WPA poprosiło tylko o zmianę uzasadnienia, pliki możesz zostawić puste. Jeśli brakuje zaświadczeń, dodaj nowe PDF/JPG/PNG.
+                  Jeśli urząd poprosił tylko o zmianę uzasadnienia, pliki możesz zostawić puste. Jeśli brakuje zaświadczeń, dodaj nowe pliki (PDF, JPG lub PNG).
                 </p>
               </>
             ) : (
@@ -273,7 +274,7 @@ export function ApplicationCorrection() {
                     <SelectContent>
                       {permits.map((permit) => (
                         <SelectItem key={permit.id} value={permit.id}>
-                          {permit.permitNumber} - wolne sloty: {permit.availableSlots}
+                          {permit.permitNumber} — wolne miejsca w pozwoleniu: {permit.availableSlots}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -292,7 +293,7 @@ export function ApplicationCorrection() {
                   {errors.requestedWeaponType && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.requestedWeaponType}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="requestedQuantity">Ilosc</Label>
+                  <Label htmlFor="requestedQuantity">Ilość</Label>
                   <Input
                     id="requestedQuantity"
                     type="number"
@@ -309,7 +310,7 @@ export function ApplicationCorrection() {
         </Card>
 
         <Button type="submit" disabled={submitting || !app} className="w-full min-h-[52px] rounded-xl text-base font-semibold">
-          {submitting ? "Wysylanie..." : "Wyslij uzupelnienie"}
+          {submitting ? "Wysyłanie..." : "Wyślij uzupełnienie"}
         </Button>
       </form>
     </div>

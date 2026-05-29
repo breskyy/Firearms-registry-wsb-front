@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Shield, CreditCard, ChevronDown } from "lucide-react";
 import { ApplicationDetailField } from "./ApplicationDetailField";
@@ -10,26 +9,18 @@ import { contentColumnClass } from "../../utils/layout";
 import type { PermitDto, WpaPermitApplicationDto, WpaPromiseApplicationDto } from "../../../types/api";
 import { formatApplicationId } from "../../../lib/registryNumbers";
 import { getPermitApplicationTypeLabel } from "../../utils/permitLabels";
+import { getApplicationStatusMeta, getPermitStatusMeta } from "../../../lib/statusUi";
+import { StatusBadge } from "../StatusBadge";
 
 export const WPA_REVIEW_BAR_PORTAL_ID = "wpa-review-bar-portal";
 
 function getStatusBadge(status: string) {
-  switch (status) {
-    case "Submitted":
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Złożony</Badge>;
-    case "Paid":
-      return <Badge variant="secondary" className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Opłacony</Badge>;
-    case "UnderReview":
-      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">W weryfikacji</Badge>;
-    case "Approved":
-      return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Zatwierdzony</Badge>;
-    case "Rejected":
-      return <Badge variant="destructive" className="rounded-full px-2 py-0.5 shrink-0 text-[10px] md:text-xs">Odrzucony</Badge>;
-    case "RequiresCorrection":
-      return <Badge variant="secondary" className="bg-orange-100 text-orange-800 hover:bg-orange-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Do uzupełnienia</Badge>;
-    default:
-      return <Badge className="rounded-full px-2 py-0.5 shrink-0 text-[10px] md:text-xs">{status}</Badge>;
-  }
+  return (
+    <StatusBadge
+      meta={getApplicationStatusMeta(status)}
+      className="shrink-0 text-[10px] md:text-xs"
+    />
+  );
 }
 
 function getAppTitle(
@@ -178,10 +169,12 @@ function ExpandedApplicationDetails({
           </div>
 
           {linkedPermit && (
-            <ApplicationDetailField label="Wolne sloty pozwolenia">
+            <ApplicationDetailField label="Wolne miejsca w pozwoleniu">
               <span className={linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}>
                 {linkedPermit.availableSlots} / {linkedPermit.maxFirearms}
-                {linkedPermit.statusName !== "Active" && " · pozwolenie nieaktywne"}
+                {linkedPermit.statusName !== "Active" && (
+                  <> · {getPermitStatusMeta(linkedPermit.statusName)?.label ?? "pozwolenie nieaktywne"}</>
+                )}
               </span>
             </ApplicationDetailField>
           )}

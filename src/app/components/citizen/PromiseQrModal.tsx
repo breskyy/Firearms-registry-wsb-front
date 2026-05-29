@@ -41,7 +41,7 @@ export function PromiseQrModal({ open, onOpenChange, promiseData }: PromiseQrMod
       } else if (!fallbackCopy(promiseData.qrToken!)) {
         throw new Error("copy-failed");
       }
-      toast.success("Token skopiowany do schowka");
+      toast.success("Kod skopiowany do schowka");
     } catch {
       toast.error("Nie udało się skopiować. Skopiuj ręcznie.");
     }
@@ -91,7 +91,7 @@ export function PromiseQrModal({ open, onOpenChange, promiseData }: PromiseQrMod
             </div>
 
             <div className="w-full">
-              <Label className="text-xs text-muted-foreground mb-2 block">Token (opcjonalne wpisanie ręczne)</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Kod z QR (do wpisania ręcznego w sklepie)</Label>
               <div className="flex gap-2">
                 <Input
                   value={promiseData.qrToken}

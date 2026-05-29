@@ -4,4 +4,4 @@ export function isSecureCameraContext(): boolean {
 }
 
 export const INSECURE_CONTEXT_MESSAGE =
-  "Kamera działa tylko po HTTPS. Zamiast adresu http://192.168… użyj tunelu (np. cloudflared) albo wpisz token w zakładce „Token”.";
+  "Aparat wymaga bezpiecznego połączenia (HTTPS). Wpisz kod promesy ręcznie w zakładce „Kod QR”.";

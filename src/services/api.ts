@@ -69,8 +69,7 @@ async function request(input: RequestInfo | URL, init?: RequestInit): Promise<Re
   } catch (err) {
     if (err instanceof TypeError) {
       throw {
-        message:
-          "Brak połączenia z API (load failed). Na telefonie użyj pnpm dev:mobile z mockami lub backendu w LAN — adres localhost z telefonu nie działa.",
+        message: "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.",
         networkError: true,
         cause: err.message,
       };

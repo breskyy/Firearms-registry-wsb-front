@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -12,6 +11,8 @@ import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
 import type { WpaCitizenDto } from "../../types/api";
 import { getPermitStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 
 const PERMIT_TYPE_LABELS: Record<string, string> = {
   Sport: "Sportowe",
@@ -22,11 +23,7 @@ const PERMIT_TYPE_LABELS: Record<string, string> = {
 };
 
 function getPermitStatusBadge(status: string) {
-  const meta = getPermitStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getPermitStatusMeta(status)} />;
 }
 
 function formatDate(s: string) {
@@ -101,9 +98,9 @@ export function CitizenDetailsWPA() {
       toast.success("Badania zaktualizowane");
       setEditingPermitId(null);
       await loadCitizen();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Nie udało się zaktualizować badań", {
-        description: err?.message ?? "Spróbuj ponownie",
+        description: getApiErrorMessage(err) || "Spróbuj ponownie",
       });
     } finally {
       setSavingPermitId(null);
@@ -178,7 +175,7 @@ export function CitizenDetailsWPA() {
                   <p className="text-2xl font-bold">{citizen.totalFirearms}</p>
                 </div>
                 <div className="flex-1 bg-muted/30 rounded-xl p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Aktywne alerty</p>
+                  <p className="text-xs text-muted-foreground mb-1">Aktywne alerty medyczne</p>
                   <p className="text-2xl font-bold text-orange-600">{citizen.activeAlerts}</p>
                 </div>
               </div>
@@ -225,11 +222,11 @@ export function CitizenDetailsWPA() {
                           <p className="font-medium">{formatDate(permit.expiryDate)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Wykorzystane sloty</p>
+                          <p className="text-xs text-muted-foreground">Wykorzystane miejsca</p>
                           <p className="font-medium">{permit.usedSlots} / {permit.maxFirearms}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Dostępne sloty</p>
+                          <p className="text-xs text-muted-foreground">Wolne miejsca w pozwoleniu</p>
                           <p className="font-bold">{permit.availableSlots}</p>
                         </div>
                       </div>
@@ -323,7 +320,7 @@ export function CitizenDetailsWPA() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-600" />
-                  <CardTitle className="text-lg">Alerty ({citizen.activeAlerts})</CardTitle>
+                  <CardTitle className="text-lg">Alerty medyczne ({citizen.activeAlerts})</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>

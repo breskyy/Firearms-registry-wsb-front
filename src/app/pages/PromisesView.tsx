@@ -1,7 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { CheckCircle, XCircle, AlertTriangle, QrCode } from "lucide-react";
 import { citizenService } from "../../services/citizenService";
@@ -10,6 +9,7 @@ import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
 import { DateStatusMeta } from "../components/DateStatusMeta";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 import { getPromiseStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 
 const STATUS_ICON: Record<string, ReactNode> = {
   Active: <CheckCircle className="h-3 w-3 mr-1" />,
@@ -18,15 +18,11 @@ const STATUS_ICON: Record<string, ReactNode> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getPromiseStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
   return (
-    <Badge variant={meta.variant} className={meta.badgeClassName}>
-      {STATUS_ICON[status]}
-      {meta.label}
-    </Badge>
+    <StatusBadge
+      meta={getPromiseStatusMeta(status)}
+      leading={STATUS_ICON[status]}
+    />
   );
 }
 
