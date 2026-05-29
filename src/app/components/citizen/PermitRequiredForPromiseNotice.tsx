@@ -38,7 +38,7 @@ export function PermitRequiredForPromiseNotice({ variant = "card" }: Props) {
           </p>
           <p className="text-sm text-amber-800/90 leading-snug mb-3">
             e-Promesa jest wydawana tylko w ramach aktywnego pozwolenia z wolnymi miejscami na broń.
-            Złóż wniosek o pozwolenie i poczekaj na decyzję WPA.
+            Złóż wniosek o pozwolenie i poczekaj na decyzję urzędu.
           </p>
           <Button
             type="button"

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { cn } from "../components/ui/utils";
@@ -24,6 +23,7 @@ import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
 import { getPromiseQrMatchResult } from "../../lib/promiseQrAvailability";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import type {
   PermitApplicationDto,
   PromiseApplicationDto,
@@ -46,15 +46,7 @@ const PERMIT_TYPE_LABELS: Record<string, string> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (meta) {
-    return (
-      <Badge variant={meta.variant} className={meta.badgeClassName}>
-        {meta.label}
-      </Badge>
-    );
-  }
-  return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function formatDate(dateStr: string) {
@@ -414,7 +406,7 @@ export function ApplicationsList() {
                           className="rounded-xl"
                           onClick={() => navigate(`/applications/${app.id}/correction?type=permit`)}
                         >
-                          Uzupelnij wniosek
+                          Uzupełnij wniosek
                         </Button>
                       )}
                       {app.statusName === "Rejected" && app.rejectionReason && (
@@ -547,7 +539,7 @@ export function ApplicationsList() {
                             className="rounded-xl"
                             onClick={() => navigate(`/applications/${app.id}/correction?type=promise`)}
                           >
-                            Uzupelnij wniosek
+                            Uzupełnij wniosek
                           </Button>
                         )}
                         {app.statusName === "Rejected" && app.rejectionReason && (

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Download, ExternalLink, Loader2, FileWarning } from "lucide-react";
+import { getApiErrorMessage } from "../../../lib/apiErrors";
+import { formatAttachmentContentTypeLabel } from "../../../lib/attachmentLabels";
 
 interface AttachmentPreviewDialogProps {
   open: boolean;
@@ -48,9 +50,9 @@ export function AttachmentPreviewDialog({
         revokedUrl = url;
         setBlobUrl(url);
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err?.message ?? "Nie udało się pobrać pliku");
+        setError(getApiErrorMessage(err) || "Nie udało się pobrać pliku");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -93,8 +95,9 @@ export function AttachmentPreviewDialog({
         <DialogHeader>
           <DialogTitle className="truncate">{fileName}</DialogTitle>
           <DialogDescription>
-            {contentType} {isPdf && "— dokument PDF"}
-            {isImage && "— obraz"}
+            {formatAttachmentContentTypeLabel(contentType)}
+            {isPdf && " — dokument PDF"}
+            {isImage && " — obraz"}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +131,7 @@ export function AttachmentPreviewDialog({
           {!loading && !error && blobUrl && !isImage && !isPdf && (
             <div className="flex flex-col items-center gap-3 text-muted-foreground p-6">
               <FileWarning className="h-10 w-10" />
-              <p className="text-sm text-center">Format <code>{contentType}</code> nie obsługuje podglądu w aplikacji. Pobierz plik aby go otworzyć.</p>
+              <p className="text-sm text-center">Ten format pliku nie obsługuje podglądu w aplikacji. Pobierz plik, aby go otworzyć.</p>
             </div>
           )}
         </div>

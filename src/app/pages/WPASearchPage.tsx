@@ -13,6 +13,8 @@ import { SearchFiltersSheet, SearchFilterField, filterSelectTriggerClass } from 
 import type { WpaCitizenDto, WpaFirearmSearchResult, PermitType } from "../../types/api";
 import { wpaService } from "../../services/wpaService";
 import { getFirearmStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { formatActiveMedicalAlertCount } from "../../lib/medicalAlerts";
 import { User, Shield, ChevronRight, AlertTriangle, ChevronLeft } from "lucide-react";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
@@ -33,11 +35,7 @@ const PERMIT_TYPE_OPTIONS: { value: PermitType; label: string }[] = [
 ];
 
 function getStatusBadge(status: string) {
-  const meta = getFirearmStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getFirearmStatusMeta(status)} />;
 }
 
 function getPermitTypeLabel(type: string) {
@@ -365,7 +363,7 @@ export function WPASearchPage() {
                             className="rounded-full px-2 py-0.5 text-[10px] md:text-xs flex items-center gap-1"
                           >
                             <AlertTriangle className="h-3 w-3" aria-hidden />
-                            {citizen.activeAlerts} alert{citizen.activeAlerts === 1 ? "" : "y"}
+                            {formatActiveMedicalAlertCount(citizen.activeAlerts)}
                           </Badge>
                         )}
                         {citizen.permits.map((permit) => (

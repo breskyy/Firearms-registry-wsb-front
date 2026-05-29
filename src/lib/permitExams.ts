@@ -53,7 +53,7 @@ export function resolveExamStatus(
     return {
       status: "missing",
       daysLeft: null,
-      alertMessage: "Brak daty ważności. WPA musi potwierdzić i uzupełnić dane badań.",
+      alertMessage: "Brak daty ważności. Urząd musi potwierdzić i uzupełnić dane badań.",
     };
   }
   if (daysLeft <= 0 || expiredAlert) {

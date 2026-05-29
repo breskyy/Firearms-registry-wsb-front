@@ -3,11 +3,11 @@ export function getApiErrorMessage(err: unknown): string {
   if (typeof err === "string") return err;
 
   if (err instanceof TypeError) {
-    return "Brak połączenia z serwerem. Na telefonie uruchom aplikację przez pnpm dev:mobile (mocki), albo ustaw backend dostępny w sieci — nie localhost.";
+    return "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.";
   }
 
   if (err instanceof Error) {
-    return err.message || "Nieznany błąd";
+    return err.message || "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.";
   }
 
   if (typeof err === "object" && err !== null) {
@@ -17,5 +17,5 @@ export function getApiErrorMessage(err: unknown): string {
     if (parts.length > 0) return parts.join(" — ");
   }
 
-  return "Błąd połączenia z API";
+  return "Nie udało się połączyć z serwerem. Spróbuj ponownie za chwilę.";
 }

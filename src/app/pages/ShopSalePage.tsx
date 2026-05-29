@@ -17,6 +17,11 @@ import { QrScanner } from "../components/shop/QrScanner";
 import { parseScannedPromesaCode } from "../../lib/promesaQr";
 import { getApiErrorMessage } from "../../lib/apiErrors";
 import { useShopVerifiedContext } from "../../lib/shopFlowContext";
+import { PERMIT_TYPE_LABELS } from "../utils/permitLabels";
+
+function getPermitTypeLabel(type: string) {
+  return PERMIT_TYPE_LABELS[type] ?? type;
+}
 
 type VerifyMode = "scan" | "qr" | "number";
 const CollapsibleCard: any = ReviewCollapsibleCard;
@@ -47,7 +52,7 @@ export function ShopSalePage() {
 
   const runVerify = useCallback(async (payload: { qrToken?: string; promiseNumber?: string }) => {
     if (!payload.qrToken && !payload.promiseNumber) {
-      setErrors({ qrToken: "Wprowadź token QR lub numer promesy" });
+      setErrors({ qrToken: "Wprowadź kod z QR lub numer promesy" });
       return;
     }
 
@@ -146,7 +151,7 @@ export function ShopSalePage() {
       return;
     }
     if (!formData.qrToken) {
-      setErrors({ qrToken: "Wprowadź token QR" });
+      setErrors({ qrToken: "Wprowadź kod z QR" });
       return;
     }
     void runVerify({ qrToken: formData.qrToken });
@@ -155,13 +160,13 @@ export function ShopSalePage() {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
-    if (!formData.qrToken) newErrors.qrToken = "Wymagany";
-    if (!formData.brand) newErrors.brand = "Wymagane";
-    if (!formData.model) newErrors.model = "Wymagane";
-    if (!formData.category) newErrors.category = "Wymagane";
-    if (!formData.caliber) newErrors.caliber = "Wymagane";
-    if (!formData.serialNumber) newErrors.serialNumber = "Wymagane";
-    if (!formData.productionYear) newErrors.productionYear = "Wymagany";
+    if (!formData.qrToken) newErrors.qrToken = "To pole jest wymagane";
+    if (!formData.brand) newErrors.brand = "To pole jest wymagane";
+    if (!formData.model) newErrors.model = "To pole jest wymagane";
+    if (!formData.category) newErrors.category = "To pole jest wymagane";
+    if (!formData.caliber) newErrors.caliber = "To pole jest wymagane";
+    if (!formData.serialNumber) newErrors.serialNumber = "To pole jest wymagane";
+    if (!formData.productionYear) newErrors.productionYear = "To pole jest wymagane";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -181,7 +186,7 @@ export function ShopSalePage() {
       });
 
       toast.success("Broń zarejestrowana", {
-        description: `Nr rejestracji: ${response.registrationNumber ?? "(brak)"}. ${response.message ?? ""}`,
+        description: `Nr rejestracji: ${response.registrationNumber ?? "—"}.`,
         duration: 6000,
       });
       clear();
@@ -211,7 +216,7 @@ export function ShopSalePage() {
           description={
             promesaVerified
               ? "Kod QR został już odczytany i zweryfikowany."
-              : "Skanuj QR (zalecane), użyj tokenu lub numeru promesy jako fallback."
+              : "Zeskanuj kod QR (zalecane), wpisz kod ręcznie lub podaj numer promesy."
           }
           defaultOpen
           priority={!promesaVerified}
@@ -240,7 +245,7 @@ export function ShopSalePage() {
                     className={cn("flex items-center gap-1.5 text-xs sm:text-sm", embeddedTabsTriggerClass)}
                   >
                     <QrCode className="h-4 w-4 shrink-0" />
-                    Token
+                    Kod QR
                   </TabsTrigger>
                   <TabsTrigger
                     value="number"
@@ -257,17 +262,17 @@ export function ShopSalePage() {
 
                 <TabsContent value="qr" className="mt-0 space-y-2">
                   <Label htmlFor="qrToken" className="font-semibold text-sm">
-                    Token QR <span className="text-red-600">*</span>
+                    Kod z QR <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="qrToken"
                     value={formData.qrToken}
                     onChange={(e) => setFormData({ ...formData, qrToken: e.target.value })}
                     className="min-h-[52px]"
-                    placeholder="Wklej zeskanowany token..."
+                    placeholder="Wklej kod odczytany z QR..."
                   />
                   <p className="text-xs text-muted-foreground">
-                    Token pozwala zweryfikować i od razu przejść do rejestracji sprzedaży.
+                    Kod z QR pozwala zweryfikować promesę i od razu przejść do rejestracji sprzedaży.
                   </p>
                 </TabsContent>
 
@@ -280,7 +285,7 @@ export function ShopSalePage() {
                     value={promiseNumber}
                     onChange={(e) => setPromiseNumber(e.target.value)}
                     className="min-h-[52px]"
-                    placeholder="PROM-YYYYMMDD-XXXXXXXX"
+                    placeholder="np. PROM-20240501-AB12CD34"
                   />
                   <p className="text-xs text-muted-foreground">
                     Po numerze sprawdzisz status promesy, ale sprzedaż wymaga pełnego kodu QR.
@@ -323,10 +328,10 @@ export function ShopSalePage() {
                 {verification.isValid && (
                   <div className="mt-2 space-y-1">
                     <p><strong>Nabywca:</strong> {verification.citizenName}</p>
-                    <p><strong>Pozwolenie:</strong> {verification.permitNumber} ({verification.permitType})</p>
+                    <p><strong>Pozwolenie:</strong> {verification.permitNumber} ({getPermitTypeLabel(verification.permitType)})</p>
                     <p><strong>Dopuszczalna broń:</strong> {verification.weaponType}</p>
-                    <p><strong>Pozostała ilość:</strong> {verification.remainingPromiseQuantity} • Wolne sloty: {verification.availableSlots}</p>
-                    <p><strong>Badania:</strong> {verification.medicalExamsValid ? "aktualne" : "wygasły"}</p>
+                    <p><strong>Pozostała ilość:</strong> {verification.remainingPromiseQuantity} • Wolne miejsca w pozwoleniu: {verification.availableSlots}</p>
+                    <p><strong>Badania lekarskie:</strong> {verification.medicalExamsValid ? "aktualne" : "nieaktualne"}</p>
                   </div>
                 )}
               </div>

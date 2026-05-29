@@ -32,16 +32,16 @@ export function translateTransferError(message: string): string {
   if (message.includes('Firearm is not in registered status')) return 'Broń nie jest w statusie pozwalającym na transfer (np. zgłoszona jako zgubiona).';
   if (message.includes('Buyer does not have a valid permit for this firearm category') ||
       message.includes('Buyer does not have a permit covering this firearm category')) {
-    return 'Nie masz aktywnego pozwolenia, które obejmowałoby tę kategorię broni, ma wolne sloty i aktualne badania. Bez odpowiedniego pozwolenia transfer nie może zostać zaakceptowany (Ustawa o broni i amunicji, art. 21).';
+    return 'Nie masz aktywnego pozwolenia, które obejmowałoby tę kategorię broni, ma wolne miejsca w pozwoleniu i aktualne badania. Bez odpowiedniego pozwolenia transfer nie może zostać zaakceptowany (Ustawa o broni i amunicji, art. 21).';
   }
   if (message.includes("Buyer's matching permit is not active")) return 'Pozwolenie nabywcy obejmujące tę kategorię nie jest aktywne (zawieszone/cofnięte/wygasłe).';
-  if (message.includes('Buyer has no free slots')) return 'Nabywca nie ma wolnych slotów w pozwoleniu — wszystkie pozwolone egzemplarze są już zarejestrowane.';
+  if (message.includes('Buyer has no free slots')) return 'Nabywca nie ma wolnych miejsc w pozwoleniu — wszystkie pozwolone egzemplarze są już zarejestrowane.';
   if (message.includes("Buyer's medical or psychological exam has expired")) return 'Badania medyczne nabywcy są nieaktualne — transfer nie może zostać zaakceptowany.';
   if (message.includes('Transfer request is not pending acceptance')) return 'Ten transfer nie jest już w stanie oczekiwania (mógł zostać anulowany lub zaakceptowany).';
   if (message.includes('You are not the buyer')) return 'Nie jesteś nabywcą w tym transferze.';
   if (message.includes('Only the seller can cancel')) return 'Tylko zbywca może anulować transfer.';
   if (message.includes('Only pending transfer requests can be cancelled')) return 'Można anulować tylko transfer w statusie "Oczekuje".';
-  return message;
+  return 'Nie udało się wykonać operacji. Spróbuj ponownie.';
 }
 
 export const citizenService = {

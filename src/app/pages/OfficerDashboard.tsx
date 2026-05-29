@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, WpaMedicalAlertDto } from "../../types/api";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import {
   formatMedicalAlertDate,
   getMedicalAlertTypeLabel,
@@ -21,11 +23,7 @@ import { WpaQuickToolCard } from "../components/wpa/WpaQuickToolCard";
 import { getPermitApplicationTypeLabel } from "../utils/permitLabels";
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function getAlertBadge(type: string) {
@@ -114,7 +112,7 @@ export function OfficerDashboard() {
       await loadAlerts();
     } catch (err: unknown) {
       toast.error("Nie udało się zawiesić pozwolenia", {
-        description: err instanceof Error ? err.message : "Spróbuj ponownie",
+        description: getApiErrorMessage(err) || "Spróbuj ponownie",
       });
     } finally {
       setSuspendingPermitId(null);
@@ -171,7 +169,7 @@ export function OfficerDashboard() {
         <AppTabsList className="grid grid-cols-3">
           <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={pendingPermits.length} />
           <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={pendingPromises.length} />
-          <AppTabTrigger value="alerts" label="Alerty" icon={AlertTriangle} count={alerts.length} />
+          <AppTabTrigger value="alerts" label="Alerty medyczne" icon={AlertTriangle} count={alerts.length} />
         </AppTabsList>
 
         <TabsContent value="permits" className="mt-0 space-y-3">

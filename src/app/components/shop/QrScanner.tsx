@@ -139,7 +139,7 @@ export function QrScanner({ onScan, disabled = false, verifying = false, classNa
         const video = root?.querySelector("video");
         if (!video || video.videoWidth <= 0 || video.videoHeight <= 0) {
           setCameraHint(
-            "Obraz z kamery jest niedostępny (czarny podgląd). Jeśli urządzenie nie ma fizycznej kamery, użyj zakładki Token."
+            "Obraz z kamery jest niedostępny (czarny podgląd). Jeśli urządzenie nie ma aparatu, wpisz kod w zakładce „Kod QR”."
           );
         }
       }, 2500);
@@ -245,7 +245,7 @@ export function QrScanner({ onScan, disabled = false, verifying = false, classNa
       {cameraError && (
         <div className="flex items-center gap-2 text-sm text-amber-800 bg-amber-50 rounded-xl p-3">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>Możesz wpisać token ręcznie w zakładce poniżej.</span>
+          <span>Możesz wpisać kod promesy ręcznie w zakładce poniżej.</span>
         </div>
       )}
 

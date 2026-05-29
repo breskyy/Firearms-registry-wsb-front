@@ -1,7 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
@@ -9,8 +8,10 @@ import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { ArrowRightLeft, CheckCircle, XCircle, Clock, AlertCircle, Inbox, ArrowUpRight, History } from "lucide-react";
 import { toast } from "sonner";
 import { citizenService, translateTransferError } from "../../services/citizenService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { TransferRequestDto } from "../../types/api";
 import { getTransferRequestStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import { DateStatusMeta } from "../components/DateStatusMeta";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 
@@ -22,15 +23,11 @@ const TRANSFER_STATUS_ICON: Record<string, ReactNode> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getTransferRequestStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
   return (
-    <Badge variant={meta.variant} className={meta.badgeClassName}>
-      {TRANSFER_STATUS_ICON[status]}
-      {meta.label}
-    </Badge>
+    <StatusBadge
+      meta={getTransferRequestStatusMeta(status)}
+      leading={TRANSFER_STATUS_ICON[status]}
+    />
   );
 }
 
@@ -78,7 +75,7 @@ export function TransfersList() {
       load();
     } catch (err: any) {
       toast.error("Nie można zaakceptować transferu", {
-        description: translateTransferError(err?.message ?? "") || (err?.message ?? "Spróbuj ponownie"),
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
         duration: 7000,
       });
     } finally {
@@ -93,7 +90,9 @@ export function TransfersList() {
       toast.success("Transfer odrzucony");
       load();
     } catch (err: any) {
-      toast.error("Błąd odrzucenia transferu", { description: translateTransferError(err?.message ?? "") || err?.message });
+      toast.error("Błąd odrzucenia transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -108,7 +107,9 @@ export function TransfersList() {
       });
       load();
     } catch (err: any) {
-      toast.error("Nie można anulować transferu", { description: translateTransferError(err?.message ?? "") || err?.message });
+      toast.error("Nie można anulować transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setActionLoading(null);
     }

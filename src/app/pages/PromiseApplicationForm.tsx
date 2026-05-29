@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PermitRequiredForPromiseNotice } from "../components/citizen/PermitRequiredForPromiseNotice";
 import { SelectedPermitSummary } from "../components/citizen/SelectedPermitSummary";
 import { citizenService } from "../../services/citizenService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import { getEligiblePermitsForPromise } from "../utils/permitEligibility";
 import { getPermitDisplayTypeLabel } from "../utils/permitLabels";
 import { cn } from "../components/ui/utils";
@@ -70,13 +71,14 @@ export function PromiseApplicationForm() {
       });
 
       toast.success("Wniosek o e-Promesę złożony", {
-        description: "Wniosek przekazany do WPA. Śledź status w zakładce Moje wnioski.",
+        description: "Wniosek przekazany do urzędu. Śledź status w zakładce Moje wnioski.",
         duration: 5000,
       });
       navigate("/applications");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Spróbuj ponownie";
-      toast.error("Błąd podczas składania wniosku", { description: message });
+      toast.error("Błąd podczas składania wniosku", {
+        description: getApiErrorMessage(err) || "Spróbuj ponownie",
+      });
     } finally {
       setLoading(false);
     }

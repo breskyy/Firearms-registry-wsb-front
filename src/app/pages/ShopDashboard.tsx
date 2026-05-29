@@ -30,7 +30,7 @@ export function ShopDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
           <WpaQuickToolCard
             title="Nowa sprzedaż"
-            description="Jeden flow: skan/token/numer, potem dane broni i zatwierdzenie."
+            description="Zeskanuj kod QR, wpisz kod ręcznie lub podaj numer promesy — potem uzupełnij dane broni."
             icon={FileCheck}
             onClick={() => navigate("/shop/sale")}
           />
@@ -40,14 +40,14 @@ export function ShopDashboard() {
       <div className="mb-4 md:mb-6">
         <ReviewCollapsibleCard
           title="Procedura sprzedaży"
-          description="Krokowy przebieg zgodny z resztą aplikacji"
+          description="Trzy kroki od weryfikacji do rejestracji"
           defaultOpen
           icon={applicationSectionIcon(<ClipboardList />)}
         >
           <div className="space-y-2 text-sm">
             <div className="rounded-xl bg-muted/30 p-3 flex items-start gap-3">
               <QrCode className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-              <p>1. Zweryfikuj promesę (najlepiej skan QR; numer/token jako fallback).</p>
+              <p>1. Zweryfikuj promesę — najlepiej skanem kodu QR; alternatywnie numer promesy lub wpisany ręcznie kod.</p>
             </div>
             <div className="rounded-xl bg-muted/30 p-3 flex items-start gap-3">
               <ShieldAlert className="h-4 w-4 mt-0.5 text-primary shrink-0" />
@@ -55,7 +55,7 @@ export function ShopDashboard() {
             </div>
             <div className="rounded-xl bg-muted/30 p-3 flex items-start gap-3">
               <FileCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-              <p>3. Zatwierdź. Backend ponownie waliduje promesę i zapisuje transakcję atomowo.</p>
+              <p>3. Zatwierdź. System ponownie sprawdzi promesę i zapisze sprzedaż.</p>
             </div>
           </div>
         </ReviewCollapsibleCard>
@@ -69,10 +69,10 @@ export function ShopDashboard() {
         >
           <div className="text-sm text-blue-900 space-y-2">
             <p className="text-blue-800">
-              Panel sklepu służy do bieżącej rejestracji sprzedaży. Backend finalnie waliduje promesę, pozwolenie i badania przy zapisie.
+              Panel sklepu służy do bieżącej rejestracji sprzedaży. Przy zapisie system sprawdzi promesę, pozwolenie nabywcy i aktualność badań.
             </p>
             <p className="text-xs text-blue-700">
-              Historia sprzedaży i statystyki nie są dostępne w panelu sklepu (dane audytowe po stronie WPA).
+              Historia sprzedaży jest prowadzona w rejestrze urzędowym — w panelu sklepu jej nie widać.
             </p>
           </div>
         </ReviewCollapsibleCard>

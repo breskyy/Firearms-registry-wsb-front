@@ -79,5 +79,5 @@ export function getPromiseQrUnavailableMessage(statusName: string) {
   if (statusName === "Approved") {
     return "Kod QR promesy będzie dostępny po wydaniu aktywnej promesy.";
   }
-  return "Kod QR promesy będzie dostępny po zatwierdzeniu wniosku przez WPA i wydaniu promesy.";
+  return "Kod QR promesy będzie dostępny po zatwierdzeniu wniosku przez urząd i wydaniu promesy.";
 }

@@ -19,6 +19,10 @@ type StatusMeta = {
   variant: "default" | "secondary" | "destructive";
 };
 
+export type { StatusMeta };
+
+export const UNKNOWN_STATUS_LABEL = "Nieznany status";
+
 type ApplicationStatusMeta = StatusMeta;
 
 const BADGE_BASE = "border-none px-2 py-0.5 rounded-full";
@@ -196,4 +200,8 @@ const PROMISE_STATUS_META: Record<PromiseStatus, StatusMeta> = {
 
 export function getPromiseStatusMeta(status: string): StatusMeta | null {
   return PROMISE_STATUS_META[status as PromiseStatus] ?? null;
+}
+
+export function getApplicationOrPromiseStatusMeta(status: string): StatusMeta | null {
+  return getApplicationStatusMeta(status) ?? getPromiseStatusMeta(status);
 }

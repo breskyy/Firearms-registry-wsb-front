@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AlertTriangle, CalendarDays, ClipboardList, Crosshair, Shield } from "lucide-react";
 import { CitizenMedicalNavIcon } from "../components/citizen/CitizenMedicalNavIcon";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { cn } from "../components/ui/utils";
@@ -13,6 +12,7 @@ import { ExamStatusBadge, PermitExamStatusRow } from "../components/citizen/Perm
 import { citizenService } from "../../services/citizenService";
 import type { CitizenMedicalAlertDto, PermitDto } from "../../types/api";
 import { getPermitStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import { getExamEntriesForPermit, needsExamAttention, worstExamStatus } from "../../lib/permitExams";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 
@@ -38,11 +38,7 @@ function formatDate(date: string | null) {
 }
 
 function statusBadge(status: string) {
-  const meta = getPermitStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getPermitStatusMeta(status)} />;
 }
 
 export function PermitDetails() {
@@ -145,7 +141,7 @@ export function PermitDetails() {
                 {examAttentionStatus === "expired"
                   ? "Co najmniej jedno badanie wygasło — odnowienie jest konieczne przed dalszymi operacjami."
                   : examAttentionStatus === "missing"
-                    ? "Brakuje dat ważności badań — skontaktuj się z WPA."
+                    ? "Brakuje dat ważności badań — skontaktuj się z urzędem."
                     : "Zbliża się termin ważności badań — sprawdź szczegóły."}
               </p>
             </div>
@@ -186,7 +182,7 @@ export function PermitDetails() {
 
       <ReviewCollapsibleCard
         title="Status i limity"
-        description="Aktualny status dokumentu oraz wykorzystanie slotów"
+        description="Aktualny status dokumentu oraz wykorzystanie miejsc w pozwoleniu"
         defaultOpen
         icon={applicationSectionIcon(<ClipboardList />)}
       >
@@ -247,7 +243,7 @@ export function PermitDetails() {
           </div>
           {examsNeedAttention && (
             <p className="text-xs text-muted-foreground leading-relaxed mt-4 pt-3 border-t border-border/80">
-              Po odnowieniu badań dostarcz zaświadczenia do WPA. Urzędnik zaktualizuje daty na tym pozwoleniu —
+              Po odnowieniu badań dostarcz zaświadczenia do urzędu. Urzędnik zaktualizuje daty na tym pozwoleniu —
               nie składasz ponownie wniosku o nowe pozwolenie, o ile sam dokument pozwolenia nadal obowiązuje.
             </p>
           )}
