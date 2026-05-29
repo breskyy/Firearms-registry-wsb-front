@@ -380,7 +380,7 @@ export function ShopSalePage() {
                   value={formData.brand}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                   disabled={firearmSectionLocked}
-                  className="min-h-[52px] mt-1.5 rounded-xl text-base"
+                  className="min-h-[52px] mt-1.5 rounded-xl"
                   placeholder="Glock"
                 />
                 {errors.brand && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.brand}</p>}
@@ -393,7 +393,7 @@ export function ShopSalePage() {
                   value={formData.model}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   disabled={firearmSectionLocked}
-                  className="min-h-[52px] mt-1.5 rounded-xl text-base"
+                  className="min-h-[52px] mt-1.5 rounded-xl"
                   placeholder="17 Gen 5"
                 />
                 {errors.model && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.model}</p>}
@@ -408,7 +408,7 @@ export function ShopSalePage() {
                   disabled={firearmSectionLocked}
                   onValueChange={(value) => setFormData({ ...formData, category: value as FirearmCategory })}
                 >
-                  <SelectTrigger id="category" className="min-h-[52px] mt-1.5 rounded-xl text-base">
+                  <SelectTrigger id="category" className="min-h-[52px] mt-1.5 rounded-xl">
                     <SelectValue placeholder="Kategoria" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -427,7 +427,7 @@ export function ShopSalePage() {
                   value={formData.caliber}
                   onChange={(e) => setFormData({ ...formData, caliber: e.target.value })}
                   disabled={firearmSectionLocked}
-                  className="min-h-[52px] mt-1.5 rounded-xl text-base"
+                  className="min-h-[52px] mt-1.5 rounded-xl"
                   placeholder="9x19mm"
                 />
                 {errors.caliber && <p className="flex items-center gap-1.5 mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1 duration-200"><AlertCircle className="h-4 w-4 shrink-0" />{errors.caliber}</p>}
@@ -456,7 +456,7 @@ export function ShopSalePage() {
                   value={formData.productionYear}
                   onChange={(e) => setFormData({ ...formData, productionYear: e.target.value })}
                   disabled={firearmSectionLocked}
-                  className="min-h-[52px] mt-1.5 rounded-xl text-base"
+                  className="min-h-[52px] mt-1.5 rounded-xl"
                   placeholder="2024"
                   min="1900"
                   max={new Date().getFullYear()}
@@ -477,7 +477,7 @@ export function ShopSalePage() {
         <Button
           type="submit"
           disabled={submitting || !promesaVerified}
-          className="w-full min-h-[52px] rounded-xl text-base font-semibold"
+          className="w-full min-h-[52px] rounded-xl font-semibold"
         >
           {submitting ? "Rejestrowanie..." : "Zatwierdź i zgłoś sprzedaż"}
         </Button>

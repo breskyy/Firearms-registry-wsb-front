@@ -20,6 +20,8 @@ import {
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { WpaQuickToolCard } from "../components/wpa/WpaQuickToolCard";
+import { PAGE_SECTION_TITLE_CLASS } from "../utils/citizenCardUi";
+import { cn } from "../components/ui/utils";
 import { getPermitApplicationTypeLabel } from "../utils/permitLabels";
 
 function getStatusBadge(status: string) {
@@ -144,11 +146,11 @@ export function OfficerDashboard() {
     <div className="pt-1 md:pt-2">
       <div className="mb-4 md:mb-6 px-0.5">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-0.5 md:mb-1">Panel urzędnika WPA</h1>
-        <p className="text-sm md:text-base text-muted-foreground leading-snug">Rozpatrywanie wniosków i zarządzanie decyzjami administracyjnymi</p>
+        <p className="text-sm text-muted-foreground leading-snug">Rozpatrywanie wniosków i zarządzanie decyzjami administracyjnymi</p>
       </div>
 
       <div className="mb-4 md:mb-6">
-        <h3 className="text-base md:text-lg font-bold mb-2 md:mb-3 px-0.5 text-foreground">Narzędzia WPA</h3>
+        <h3 className={cn(PAGE_SECTION_TITLE_CLASS, "mb-2 md:mb-3 px-0.5")}>Narzędzia WPA</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
           <WpaQuickToolCard
             title="Wyszukiwarka"
@@ -200,7 +202,7 @@ export function OfficerDashboard() {
           ) : (
             <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
               <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak oczekujących wniosków o pozwolenie</p>
+              <p className="text-sm">Brak oczekujących wniosków o pozwolenie</p>
             </div>
           )}
         </TabsContent>
@@ -231,7 +233,7 @@ export function OfficerDashboard() {
           ) : (
             <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
               <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak oczekujących wniosków o promesę</p>
+              <p className="text-sm">Brak oczekujących wniosków o promesę</p>
             </div>
           )}
         </TabsContent>
@@ -289,7 +291,7 @@ export function OfficerDashboard() {
           ) : (
             <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
               <CheckCircle className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak aktywnych alertów medycznych</p>
+              <p className="text-sm">Brak aktywnych alertów medycznych</p>
             </div>
           )}
         </TabsContent>

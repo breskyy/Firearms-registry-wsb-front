@@ -80,8 +80,8 @@ export function ReviewCollapsibleCard({
             </CardHeader>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden">
-          <CardContent className="px-3 pb-3 pt-0 md:px-6 md:pb-5 text-sm md:text-base leading-snug">
+        <CollapsibleContent className="overflow-hidden overflow-x-hidden">
+          <CardContent className="min-w-0 max-w-full px-3 pb-3 pt-0 md:px-6 md:pb-5 text-sm leading-snug">
             {children}
           </CardContent>
         </CollapsibleContent>

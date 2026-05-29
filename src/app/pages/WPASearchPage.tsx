@@ -90,7 +90,7 @@ function getSearchPlaceholder(tab: TabValue, citizenSearchBy: CitizenSearchBy, f
       case "name": return "Imię lub nazwisko...";
       case "pesel": return "Numer PESEL...";
       case "permitNumber": return "Numer pozwolenia...";
-      default: return "Imię, nazwisko, PESEL, nr pozwolenia...";
+      default: return "Szukaj w rejestrze…";
     }
   }
   switch (firearmSearchBy) {

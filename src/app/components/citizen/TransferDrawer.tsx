@@ -82,7 +82,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[92vh] flex flex-col px-0 rounded-t-3xl border-0 shadow-2xl">
         <DrawerHeader className="border-b px-4 py-4 shrink-0">
-          <DrawerTitle className="text-xl font-bold tracking-tight text-foreground">Transfer broni</DrawerTitle>
+          <DrawerTitle className="text-lg md:text-xl font-bold tracking-tight text-foreground">Transfer broni</DrawerTitle>
           <DrawerDescription className="text-sm">
             {firearmInfo
               ? `${firearmInfo.brand} ${firearmInfo.model} (SN: ${firearmInfo.serialNumber})`
@@ -118,7 +118,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                 inputMode="numeric"
                 value={formData.buyerPesel}
                 onChange={(e) => setFormData({ ...formData, buyerPesel: e.target.value.replace(/\D/g, "") })}
-                className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono bg-background"
+                className="min-h-[52px] mt-1.5 rounded-xl font-mono bg-background"
                 placeholder="12345678901"
                 maxLength={11}
               />
@@ -136,7 +136,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                 value={formData.transferType}
                 onValueChange={(v) => setFormData({ ...formData, transferType: v as TransferType })}
               >
-                <SelectTrigger id="transferType" className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background">
+                <SelectTrigger id="transferType" className="min-h-[52px] mt-1.5 rounded-xl bg-background">
                   <SelectValue placeholder="Wybierz typ" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -158,7 +158,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
             form="transfer-form"
             type="submit"
             disabled={loading}
-            className="w-full min-h-[56px] rounded-2xl text-[17px] font-bold shadow-sm"
+            className="w-full min-h-[56px] rounded-2xl text-sm font-bold shadow-sm"
           >
             {loading ? "Inicjowanie..." : "Zainicjuj transfer"}
           </Button>

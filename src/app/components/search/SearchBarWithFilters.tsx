@@ -11,6 +11,8 @@ export type SearchBarWithFiltersProps = {
   placeholder?: string;
   ariaLabel?: string;
   label?: string;
+  /** When false, only aria-label is used (no visible label above the field). */
+  showLabel?: boolean;
   activeFilterCount?: number;
   onFiltersClick: () => void;
   className?: string;
@@ -23,6 +25,7 @@ export function SearchBarWithFilters({
   placeholder = "Szukaj...",
   ariaLabel = "Wyszukaj",
   label,
+  showLabel = false,
   activeFilterCount = 0,
   onFiltersClick,
   className,
@@ -30,13 +33,16 @@ export function SearchBarWithFilters({
 }: SearchBarWithFiltersProps) {
   const inputId = useId();
   const fieldLabel = label ?? ariaLabel;
+  const visibleLabel = showLabel ? fieldLabel : label;
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
-        {fieldLabel}
-      </Label>
+    <div className={cn(visibleLabel ? "space-y-2" : "space-y-0", className)}>
+      {visibleLabel ? (
+        <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
+          {visibleLabel}
+        </Label>
+      ) : null}
       <div className={cn("flex gap-2", disabled && "pointer-events-none opacity-50")}>
         <div className="relative flex-1 min-w-0">
           <Search

@@ -100,7 +100,7 @@ export function Layout() {
               <button
                 type="button"
                 onClick={() => navigate(homePath)}
-                className="flex items-center gap-2.5 rounded-xl hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center gap-2.5 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Przejdź do pulpitu"
               >
                 <AppLogo size="lg" />

@@ -20,13 +20,13 @@ export function ShopDashboard() {
     <div className="pt-1 md:pt-2">
       <div className="mb-4 md:mb-6 px-0.5">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-0.5 md:mb-1">Panel sklepu</h1>
-        <p className="text-sm md:text-base text-muted-foreground leading-snug">
+        <p className="text-sm text-muted-foreground leading-snug">
           Stanowisko sprzedaży: zweryfikuj promesę, uzupełnij dane broni i zarejestruj transakcję.
         </p>
       </div>
 
       <div className="mb-4 md:mb-6">
-        <h3 className="text-base md:text-lg font-bold mb-2 md:mb-3 px-0.5 text-foreground">Narzędzia sklepu</h3>
+        <h3 className="text-sm md:text-lg font-bold mb-2 md:mb-3 px-0.5 text-foreground">Narzędzia sklepu</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
           <WpaQuickToolCard
             title="Nowa sprzedaż"

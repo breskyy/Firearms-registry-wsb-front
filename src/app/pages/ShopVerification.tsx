@@ -237,7 +237,7 @@ export function ShopVerification() {
 
               {mode !== "scan" && (
                 <>
-                  <Button type="submit" disabled={loading} className="w-full min-h-[52px] rounded-xl text-base font-semibold">
+                  <Button type="submit" disabled={loading} className="w-full min-h-[52px] rounded-xl font-semibold">
                     <Search className="h-4 w-4 mr-2" />
                     {loading ? "Sprawdzam..." : "Sprawdź"}
                   </Button>

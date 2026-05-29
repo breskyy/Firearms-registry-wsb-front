@@ -23,3 +23,10 @@ export const CITIZEN_TILE_TITLE_CLASS =
 
 /** Subtitle on citizen list tiles and matching collapsible section headers. */
 export const CITIZEN_TILE_SUBTITLE_CLASS = "text-xs text-muted-foreground mt-0.5 line-clamp-2";
+
+/** Section title above list blocks (mobile-first; scales up on md). */
+export const PAGE_SECTION_TITLE_CLASS =
+  "text-sm md:text-lg font-bold text-foreground leading-tight";
+
+/** Emphasized numeric stat in compact summary cards. */
+export const PAGE_STAT_VALUE_CLASS = "text-xl md:text-2xl font-bold";

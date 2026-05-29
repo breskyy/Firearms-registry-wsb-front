@@ -121,7 +121,7 @@ export function TransfersList() {
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="font-semibold text-base mb-2">{t.firearmDescription}</h3>
+              <h3 className="font-semibold text-sm mb-2">{t.firearmDescription}</h3>
               <DateStatusMeta className="mb-3" emphasizeDate statusBadge={getStatusBadge(t.statusName)}>
                 Zgłoszono: {formatDate(t.createdAt)}
               </DateStatusMeta>
