@@ -24,6 +24,7 @@ import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { FirearmDto, TransferType } from "../../types/api";
 import { getFirearmStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 
 function getStatusBadge(status: string) {
   return <StatusBadge meta={getFirearmStatusMeta(status)} />;
@@ -364,19 +365,24 @@ export function WeaponRegistry() {
           </div>
         </>
       ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <Shield className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-          {hasActiveQuery ? (
-            <>
-              <p className="mb-2">Brak broni dla wybranych kryteriów wyszukiwania</p>
-              <Button variant="outline" onClick={clearSearchAndFilters} className="min-h-[44px] rounded-xl mt-2" aria-label="Wyczyść filtry">
-                Wyczyść filtry
-              </Button>
-            </>
-          ) : (
-            <p className="mb-4">Nie masz jeszcze zarejestrowanej broni. Broń pojawi się tutaj po zakupie w sklepie.</p>
-          )}
-        </div>
+        <EmptyStateCard
+          icon={Shield}
+          title={
+            hasActiveQuery
+              ? "Brak broni dla wybranych kryteriów wyszukiwania"
+              : "Nie masz jeszcze zarejestrowanej broni. Broń pojawi się tutaj po zakupie w sklepie."
+          }
+          action={
+            hasActiveQuery
+              ? {
+                  label: "Wyczyść filtry",
+                  variant: "outline",
+                  onClick: clearSearchAndFilters,
+                  "aria-label": "Wyczyść filtry",
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Report Lost Dialog */}

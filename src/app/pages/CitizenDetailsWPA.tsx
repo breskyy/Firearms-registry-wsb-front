@@ -10,6 +10,7 @@ import type { PermitDto, WpaCitizenDto, WpaFirearmSearchResult } from "../../typ
 import { getPermitStatusMeta, getFirearmStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
 import { getApiErrorMessage } from "../../lib/apiErrors";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ReviewCollapsibleCard } from "../components/wpa/ReviewCollapsibleCard";
 import { ApplicationDetailField, applicationSectionIcon } from "../components/wpa/ApplicationDetailField";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
@@ -344,7 +345,7 @@ export function CitizenDetailsWPA() {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm py-2 text-center">Brak pozwoleń</p>
+          <EmptyStateCard icon={Shield} title="Brak pozwoleń" />
         )}
       </ReviewCollapsibleCard>
 
@@ -370,7 +371,7 @@ export function CitizenDetailsWPA() {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm py-2 text-center">Brak zarejestrowanej broni</p>
+          <EmptyStateCard icon={Crosshair} title="Brak zarejestrowanej broni" />
         )}
       </ReviewCollapsibleCard>
 

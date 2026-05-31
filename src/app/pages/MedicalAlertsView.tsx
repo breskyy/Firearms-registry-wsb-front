@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
 import { AppTabTrigger } from "../components/ui/AppTabTrigger";
@@ -125,19 +125,19 @@ export function MedicalAlertsView() {
       </div>
 
       {activePermits.length === 0 ? (
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-12 text-center">
-            <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-            <p className="text-foreground font-semibold mb-1">Brak aktywnych pozwoleń</p>
-            <p className="text-muted-foreground text-sm">
-              Gdy pozwolenie zostanie aktywowane, badania pojawią się automatycznie w tym widoku.
-            </p>
-            <Button variant="outline" className="mt-4 rounded-xl" onClick={() => navigate("/weapons")}>
-              <Shield className="h-4 w-4 mr-2" />
-              Moje pozwolenia
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateCard
+          icon={CheckCircle}
+          iconClassName="text-emerald-600"
+          title="Brak aktywnych pozwoleń"
+          description="Gdy pozwolenie zostanie aktywowane, badania pojawią się automatycznie w tym widoku."
+          emphasizeTitle
+          action={{
+            label: "Moje pozwolenia",
+            variant: "outline",
+            onClick: () => navigate("/weapons"),
+            icon: <Shield className="h-4 w-4 mr-2" aria-hidden />,
+          }}
+        />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <AppTabsList className="grid grid-cols-2">
@@ -147,12 +147,11 @@ export function MedicalAlertsView() {
 
           <TabsContent value="all" className="space-y-3">
             {allGroups.length === 0 ? (
-              <Card className="rounded-2xl border-none shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-                  <p className="text-muted-foreground">Brak danych o badaniach dla aktywnych pozwoleń</p>
-                </CardContent>
-              </Card>
+              <EmptyStateCard
+                icon={CheckCircle}
+                iconClassName="text-emerald-600"
+                title="Brak danych o badaniach dla aktywnych pozwoleń"
+              />
             ) : (
               renderGroups(allGroups)
             )}
@@ -160,15 +159,13 @@ export function MedicalAlertsView() {
 
           <TabsContent value="attention" className="space-y-3">
             {attentionGroups.length === 0 ? (
-              <Card className="rounded-2xl border-none shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-                  <p className="text-foreground font-semibold mb-1">Wszystko aktualne</p>
-                  <p className="text-muted-foreground text-sm">
-                    Żadne badanie nie wygasa, nie wygasło ani nie ma brakującej daty w rejestrze.
-                  </p>
-                </CardContent>
-              </Card>
+              <EmptyStateCard
+                icon={CheckCircle}
+                iconClassName="text-emerald-600"
+                title="Wszystko aktualne"
+                description="Żadne badanie nie wygasa, nie wygasło ani nie ma brakującej daty w rejestrze."
+                emphasizeTitle
+              />
             ) : (
               renderGroups(attentionGroups)
             )}
