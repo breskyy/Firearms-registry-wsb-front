@@ -17,6 +17,9 @@ export const CITIZEN_PERMIT_STACK_CARD_INTERACTION =
  */
 export const CITIZEN_LIST_CARD_CONTENT_CLASS = "p-4 !pb-4";
 
+/** Collapsible section body — same horizontal/bottom padding as list tiles, no top gap under header. */
+export const CITIZEN_COLLAPSIBLE_CONTENT_CLASS = "px-4 !pb-4 pt-0";
+
 /** Title on citizen list tiles and matching collapsible section headers. */
 export const CITIZEN_TILE_TITLE_CLASS =
   "font-semibold text-sm leading-snug text-foreground line-clamp-2";
