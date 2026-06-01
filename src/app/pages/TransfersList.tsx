@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
@@ -202,15 +203,6 @@ export function TransfersList() {
     </Card>
   );
 
-  const EmptyState = ({ label }: { label: string }) => (
-    <Card className="rounded-2xl border-none shadow-sm">
-      <CardContent className="p-12 text-center">
-        <ArrowRightLeft className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-        <p className="text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
-  );
-
   if (loading) {
     return (
       <div className="pt-2 space-y-4">
@@ -245,21 +237,27 @@ export function TransfersList() {
         </AppTabsList>
 
         <TabsContent value="incoming" className="space-y-4">
-          {incoming.length === 0
-            ? <EmptyState label="Brak oczekujących transferów" />
-            : incoming.map((t) => <TransferCard key={t.id} t={t} />)}
+          {incoming.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak oczekujących transferów" />
+          ) : (
+            incoming.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
 
         <TabsContent value="outgoing" className="space-y-4">
-          {outgoing.length === 0
-            ? <EmptyState label="Brak wychodzących transferów" />
-            : outgoing.map((t) => <TransferCard key={t.id} t={t} />)}
+          {outgoing.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak wychodzących transferów" />
+          ) : (
+            outgoing.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          {completed.length === 0
-            ? <EmptyState label="Brak zakończonych transferów" />
-            : completed.map((t) => <TransferCard key={t.id} t={t} />)}
+          {completed.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak zakończonych transferów" />
+          ) : (
+            completed.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { CheckCircle, XCircle, AlertTriangle, QrCode } from "lucide-react";
 import { citizenService } from "../../services/citizenService";
 import type { PromiseDto } from "../../types/api";
@@ -73,15 +74,14 @@ export function PromisesView() {
       </div>
 
       {promises.length === 0 ? (
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-12 text-center">
-            <QrCode className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-            <p className="text-muted-foreground mb-4">Nie masz żadnych promes</p>
-            <Button onClick={() => navigate("/applications/new/promise")} className="min-h-[44px] rounded-xl">
-              Złóż wniosek o promesę
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateCard
+          icon={QrCode}
+          title="Nie masz żadnych promes"
+          action={{
+            label: "Złóż wniosek o promesę",
+            onClick: () => navigate("/applications/new/promise"),
+          }}
+        />
       ) : (
         <div className="space-y-4">
           {promises.map((promise) => {

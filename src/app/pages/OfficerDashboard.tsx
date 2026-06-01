@@ -17,6 +17,7 @@ import {
   getMedicalAlertTypeLabel,
   isMedicalAlertExpired,
 } from "../../lib/medicalAlerts";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { WpaQuickToolCard } from "../components/wpa/WpaQuickToolCard";
@@ -200,10 +201,7 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">Brak oczekujących wniosków o pozwolenie</p>
-            </div>
+            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o pozwolenie" />
           )}
         </TabsContent>
 
@@ -231,10 +229,7 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">Brak oczekujących wniosków o promesę</p>
-            </div>
+            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o promesę" />
           )}
         </TabsContent>
 
@@ -289,10 +284,11 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <CheckCircle className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">Brak aktywnych alertów medycznych</p>
-            </div>
+            <EmptyStateCard
+              icon={CheckCircle}
+              iconClassName="text-emerald-600"
+              title="Brak aktywnych alertów medycznych"
+            />
           )}
         </TabsContent>
       </Tabs>

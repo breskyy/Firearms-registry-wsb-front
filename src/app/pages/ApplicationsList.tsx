@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
+import { EmptyStateCard, type EmptyStateAction } from "../components/EmptyStateCard";
 import { cn } from "../components/ui/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Tabs, TabsContent } from "../components/ui/tabs";
@@ -62,6 +64,31 @@ function isWpaPermit(a: AnyPermit): a is WpaPermitApplicationDto {
 
 function isWpaPromise(a: AnyPromise): a is WpaPromiseApplicationDto {
   return "citizenName" in a;
+}
+
+function applicationsTabEmptyState(
+  icon: LucideIcon,
+  hasActiveQuery: boolean,
+  onClearFilters: () => void,
+  emptyMessage: string,
+  emptyAction?: EmptyStateAction,
+) {
+  return (
+    <EmptyStateCard
+      icon={icon}
+      title={hasActiveQuery ? "Brak wniosków dla wybranych kryteriów" : emptyMessage}
+      action={
+        hasActiveQuery
+          ? {
+              label: "Wyczyść filtry",
+              variant: "outline",
+              onClick: onClearFilters,
+              "aria-label": "Wyczyść filtry",
+            }
+          : emptyAction
+      }
+    />
+  );
 }
 
 type ApplicationSearchBy = "all" | "citizen" | "pesel" | "type" | "reason";
@@ -367,19 +394,12 @@ export function ApplicationsList() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-                  <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-                  {hasActiveQuery ? (
-                    <>
-                      <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                      <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                        Wyczyść filtry
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="mb-3">Brak wniosków o pozwolenie</p>
-                  )}
-                </div>
+                applicationsTabEmptyState(
+                  Shield,
+                  hasActiveQuery,
+                  clearSearchAndFilters,
+                  "Brak wniosków o pozwolenie",
+                )
               )}
             </div>
           ) : filteredPermit.length > 0 ? (
@@ -420,24 +440,10 @@ export function ApplicationsList() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              {hasActiveQuery ? (
-                <>
-                  <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                  <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                    Wyczyść filtry
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="mb-3">Brak wniosków o pozwolenie</p>
-                  <Button className="rounded-xl" onClick={() => navigate("/applications/new/permit")}>
-                    Złóż wniosek
-                  </Button>
-                </>
-              )}
-            </div>
+            applicationsTabEmptyState(Shield, hasActiveQuery, clearSearchAndFilters, "Brak wniosków o pozwolenie", {
+              label: "Złóż wniosek",
+              onClick: () => navigate("/applications/new/permit"),
+            })
           )}
         </TabsContent>
 
@@ -473,19 +479,12 @@ export function ApplicationsList() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-                  <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-                  {hasActiveQuery ? (
-                    <>
-                      <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                      <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                        Wyczyść filtry
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="mb-3">Brak wniosków o promesę</p>
-                  )}
-                </div>
+                applicationsTabEmptyState(
+                  CreditCard,
+                  hasActiveQuery,
+                  clearSearchAndFilters,
+                  "Brak wniosków o promesę",
+                )
               )}
             </div>
           ) : filteredPromise.length > 0 ? (
@@ -554,26 +553,18 @@ export function ApplicationsList() {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              {hasActiveQuery ? (
-                <>
-                  <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                  <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                    Wyczyść filtry
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="mb-3">Brak wniosków o promesę</p>
-                  {promiseAllowed && (
-                    <Button className="rounded-xl" onClick={() => navigate("/applications/new/promise")}>
-                      Złóż wniosek o promesę
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
+            applicationsTabEmptyState(
+              CreditCard,
+              hasActiveQuery,
+              clearSearchAndFilters,
+              "Brak wniosków o promesę",
+              promiseAllowed
+                ? {
+                    label: "Złóż wniosek o promesę",
+                    onClick: () => navigate("/applications/new/promise"),
+                  }
+                : undefined,
+            )
           )}
         </TabsContent>
       </Tabs>

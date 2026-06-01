@@ -16,6 +16,7 @@ import { getFirearmStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatActiveMedicalAlertCount } from "../../lib/medicalAlerts";
 import { User, Shield, ChevronRight, AlertTriangle, ChevronLeft } from "lucide-react";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { WpaFirearmSearchCard } from "../components/wpa/WpaFirearmSearchCard";
@@ -373,15 +374,19 @@ export function WPASearchPage() {
               />
             </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <User className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">{debouncedQuery ? "Brak wyników dla podanych kryteriów" : "Brak obywateli w rejestrze"}</p>
-              {(debouncedQuery || activeFilterCount > 0) && (
-                <Button variant="outline" className="mt-3 rounded-xl min-h-[44px]" onClick={clearAll}>
-                  Wyczyść wyszukiwanie
-                </Button>
-              )}
-            </div>
+            <EmptyStateCard
+              icon={User}
+              title={debouncedQuery ? "Brak wyników dla podanych kryteriów" : "Brak obywateli w rejestrze"}
+              action={
+                debouncedQuery || activeFilterCount > 0
+                  ? {
+                      label: "Wyczyść wyszukiwanie",
+                      variant: "outline",
+                      onClick: clearAll,
+                    }
+                  : undefined
+              }
+            />
           )}
         </TabsContent>
 
@@ -422,17 +427,23 @@ export function WPASearchPage() {
               />
             </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">
-                {firearmsSearched ? "Brak wyników dla podanych kryteriów" : "Wpisz frazę w wyszukiwarce powyżej"}
-              </p>
-              {(debouncedQuery || activeFilterCount > 0) && (
-                <Button variant="outline" className="mt-3 rounded-xl min-h-[44px]" onClick={clearAll}>
-                  Wyczyść wyszukiwanie
-                </Button>
-              )}
-            </div>
+            <EmptyStateCard
+              icon={Shield}
+              title={
+                firearmsSearched
+                  ? "Brak wyników dla podanych kryteriów"
+                  : "Wpisz frazę w wyszukiwarce powyżej"
+              }
+              action={
+                debouncedQuery || activeFilterCount > 0
+                  ? {
+                      label: "Wyczyść wyszukiwanie",
+                      variant: "outline",
+                      onClick: clearAll,
+                    }
+                  : undefined
+              }
+            />
           )}
         </TabsContent>
       </Tabs>

@@ -5,6 +5,8 @@ import { WPA_REVIEW_BAR_PORTAL_ID } from "./wpa/WpaApplicationReviewBar";
 import { contentColumnClass } from "../utils/layout";
 import { cn } from "./ui/utils";
 import { AppLogo } from "./AppLogo";
+import { getMobileBottomNav } from "../config/mobileBottomNav";
+import { MobileBottomNavIcon } from "./MobileBottomNavIcon";
 
 export function Layout() {
   const navigate = useNavigate();
@@ -48,8 +50,7 @@ export function Layout() {
     navigate("/");
   };
 
-  // Mobile Bottom Navigation mapping
-  const getMobileNavigation = () => {
+  const getDesktopNavigation = () => {
     switch (userRole) {
       case "citizen":
         return [
@@ -74,7 +75,8 @@ export function Layout() {
     }
   };
 
-  const navigation = getMobileNavigation();
+  const desktopNavigation = getDesktopNavigation();
+  const mobileNavigation = getMobileBottomNav(userRole);
   const navTarget = (item: { path: string; search?: string }) =>
     `${item.path}${item.search ?? ""}`;
 
@@ -110,7 +112,7 @@ export function Layout() {
             
             <div className="flex items-center gap-2">
               <nav className="hidden md:flex items-center gap-2 mr-4">
-                {navigation.map((item) => {
+                {desktopNavigation.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Button
@@ -151,7 +153,7 @@ export function Layout() {
       {/* Main Content */}
       <main
         className={cn(
-          "flex-1 flex flex-col pt-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-8",
+          "flex-1 flex flex-col pt-4 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-8",
           contentColumnClass,
         )}
       >
@@ -162,23 +164,30 @@ export function Layout() {
       {!isLoginPage && (
         <nav
           aria-label="Nawigacja główna"
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white px-2 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
         >
-          <div className="flex h-16 items-stretch gap-1.5 px-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
+          <div className="flex h-12 items-center justify-center gap-0.5">
+            {mobileNavigation.map((item) => {
               const isActive = isNavItemActive(item.path);
               return (
                 <button
                   key={item.path}
+                  type="button"
                   onClick={() => navigate(navTarget(item))}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex flex-1 flex-col items-center justify-center gap-0.5 min-h-0 h-full rounded-xl cursor-pointer",
+                    "flex flex-none flex-col items-center justify-center gap-0.5 min-w-[4.25rem] px-2.5 py-0.5 rounded-xl cursor-pointer",
+                    "hover:bg-transparent active:bg-transparent focus-visible:bg-transparent",
+                    "[-webkit-tap-highlight-color:transparent]",
                     isActive ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  <Icon className="h-6 w-6" aria-hidden />
-                  <span className="text-[11px] font-medium tracking-wide">{item.label}</span>
+                  <MobileBottomNavIcon
+                    iconOutline={item.iconOutline}
+                    iconSolid={item.iconSolid}
+                    active={isActive}
+                  />
+                  <span className="text-[10px] font-medium leading-none">{item.label}</span>
                 </button>
               );
             })}
