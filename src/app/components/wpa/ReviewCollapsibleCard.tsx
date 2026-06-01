@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
-import { CITIZEN_TILE_SUBTITLE_CLASS, CITIZEN_TILE_TITLE_CLASS } from "../../utils/citizenCardUi";
+import {
+  CITIZEN_COLLAPSIBLE_CONTENT_CLASS,
+  CITIZEN_LIST_CARD_CONTENT_CLASS,
+  CITIZEN_TILE_SUBTITLE_CLASS,
+  CITIZEN_TILE_TITLE_CLASS,
+} from "../../utils/citizenCardUi";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { cn } from "../ui/utils";
 
@@ -59,7 +64,7 @@ export function ReviewCollapsibleCard({
                   : `Rozwiń sekcję: ${title}`
             }
           >
-            <CardHeader className="px-3 pt-2.5 pb-2 md:px-6 md:pt-4 md:pb-3">
+            <CardHeader className={CITIZEN_LIST_CARD_CONTENT_CLASS}>
               <div className="flex items-center gap-3">
                 {icon}
                 <div className="min-w-0 flex-1">
@@ -81,7 +86,7 @@ export function ReviewCollapsibleCard({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden">
-          <CardContent className="px-3 pb-3 pt-0 md:px-6 md:pb-5 text-sm md:text-base leading-snug">
+          <CardContent className={cn(CITIZEN_COLLAPSIBLE_CONTENT_CLASS, "text-sm leading-snug")}>
             {children}
           </CardContent>
         </CollapsibleContent>
