@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Shield, CreditCard, ChevronDown } from "lucide-react";
 import { ApplicationDetailField } from "./ApplicationDetailField";
@@ -10,26 +9,18 @@ import { contentColumnClass } from "../../utils/layout";
 import type { PermitDto, WpaPermitApplicationDto, WpaPromiseApplicationDto } from "../../../types/api";
 import { formatApplicationId } from "../../../lib/registryNumbers";
 import { getPermitApplicationTypeLabel } from "../../utils/permitLabels";
+import { getApplicationStatusMeta, getPermitStatusMeta } from "../../../lib/statusUi";
+import { StatusBadge } from "../StatusBadge";
 
 export const WPA_REVIEW_BAR_PORTAL_ID = "wpa-review-bar-portal";
 
 function getStatusBadge(status: string) {
-  switch (status) {
-    case "Submitted":
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Złożony</Badge>;
-    case "Paid":
-      return <Badge variant="secondary" className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Opłacony</Badge>;
-    case "UnderReview":
-      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">W weryfikacji</Badge>;
-    case "Approved":
-      return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Zatwierdzony</Badge>;
-    case "Rejected":
-      return <Badge variant="destructive" className="rounded-full px-2 py-0.5 shrink-0 text-[10px] md:text-xs">Odrzucony</Badge>;
-    case "RequiresCorrection":
-      return <Badge variant="secondary" className="bg-orange-100 text-orange-800 hover:bg-orange-200 border-none px-2 py-0.5 rounded-full shrink-0 text-[10px] md:text-xs">Do uzupełnienia</Badge>;
-    default:
-      return <Badge className="rounded-full px-2 py-0.5 shrink-0 text-[10px] md:text-xs">{status}</Badge>;
-  }
+  return (
+    <StatusBadge
+      meta={getApplicationStatusMeta(status)}
+      className="shrink-0 text-[10px] md:text-xs"
+    />
+  );
 }
 
 function getAppTitle(
@@ -76,26 +67,42 @@ function ApplicationHeaderInfo({
     : "text-[11px] md:text-xs text-muted-foreground leading-snug";
   const titleClass = compact
     ? "font-semibold text-[15px] text-foreground leading-snug tracking-tight"
-    : "font-bold text-base sm:text-lg text-foreground leading-tight";
+    : "font-bold text-sm sm:text-lg text-foreground leading-tight";
   const metaClass = compact
     ? "text-[11px] font-medium text-foreground leading-snug"
-    : "text-sm md:text-base font-medium text-foreground leading-snug";
+    : "text-sm font-medium text-foreground leading-snug";
 
   return (
     <div className="min-w-0 flex-1 space-y-1.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className={labelClass}>Rodzaj wniosku</p>
-            {getStatusBadge(app.statusName)}
+      {compact ? (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <p className={labelClass}>Rodzaj wniosku</p>
+              {getStatusBadge(app.statusName)}
+            </div>
+            <div className="shrink-0 text-right">
+              <p className={labelClass}>Data złożenia</p>
+              <p className={metaClass}>{formatDateTime(app.createdAt)}</p>
+            </div>
           </div>
-          <p className={cn(titleClass, "mt-0.5")}>{getAppTitle(permitApp, promiseApp)}</p>
+          <p className={cn(titleClass, "mt-0.5 w-full")}>{getAppTitle(permitApp, promiseApp)}</p>
+        </>
+      ) : (
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className={labelClass}>Rodzaj wniosku</p>
+              {getStatusBadge(app.statusName)}
+            </div>
+            <p className={cn(titleClass, "mt-0.5")}>{getAppTitle(permitApp, promiseApp)}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className={labelClass}>Data złożenia</p>
+            <p className={metaClass}>{formatDateTime(app.createdAt)}</p>
+          </div>
         </div>
-        <div className="shrink-0 text-right">
-          <p className={labelClass}>Data złożenia</p>
-          <p className={metaClass}>{formatDateTime(app.createdAt)}</p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -162,10 +169,12 @@ function ExpandedApplicationDetails({
           </div>
 
           {linkedPermit && (
-            <ApplicationDetailField label="Wolne sloty pozwolenia">
+            <ApplicationDetailField label="Wolne miejsca w pozwoleniu">
               <span className={linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}>
                 {linkedPermit.availableSlots} / {linkedPermit.maxFirearms}
-                {linkedPermit.statusName !== "Active" && " · pozwolenie nieaktywne"}
+                {linkedPermit.statusName !== "Active" && (
+                  <> · {getPermitStatusMeta(linkedPermit.statusName)?.label ?? "pozwolenie nieaktywne"}</>
+                )}
               </span>
             </ApplicationDetailField>
           )}

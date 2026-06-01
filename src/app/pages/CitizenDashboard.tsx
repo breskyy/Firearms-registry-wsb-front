@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Shield, AlertCircle, Crosshair, QrCode, ArrowRightLeft, Clock, ChevronRight, FileText } from "lucide-react";
 import { CitizenMedicalNavIcon } from "../components/citizen/CitizenMedicalNavIcon";
 import { CitizenApplicationCard } from "../components/citizen/CitizenApplicationCard";
@@ -12,18 +11,19 @@ import { citizenService } from "../../services/citizenService";
 import type { CitizenMedicalAlertDto, CitizenProfileDto, PermitDto, PermitApplicationDto, PromiseApplicationDto } from "../../types/api";
 import { mapPermitExamEntries, worstExamStatus } from "../../lib/permitExams";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
-import { CITIZEN_NAV_ICON_TONE } from "../utils/citizenCardUi";
+import { StatusBadge } from "../components/StatusBadge";
+import {
+  CITIZEN_NAV_ICON_TONE,
+  CITIZEN_PERMIT_STACK_CARD_INTERACTION,
+  PAGE_SECTION_TITLE_CLASS,
+} from "../utils/citizenCardUi";
 
 type RecentEntry =
   | { kind: "permit"; data: PermitApplicationDto }
   | { kind: "promise"; data: PromiseApplicationDto };
 
 function renderStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function getPermitTypeLabel(app: PermitApplicationDto) {
@@ -132,18 +132,20 @@ export function CitizenDashboard() {
       {sortedPermits.length > 0 ? (
         <div>
           <div className="flex items-end justify-between mb-3 px-1">
-            <h3 className="text-lg font-bold text-foreground">Moje pozwolenia</h3>
+            <h3 className={PAGE_SECTION_TITLE_CLASS}>Moje pozwolenia</h3>
             <span className="text-sm text-muted-foreground">{sortedPermits.length} razem</span>
           </div>
           <div className="relative">
             {sortedPermits.map((permit, index) => (
               <div
                 key={permit.id}
-                className={`relative overflow-hidden rounded-2xl p-4 min-h-[164px] shadow-[0_-4px_10px_rgba(15,23,42,0.08),0_10px_22px_rgba(15,23,42,0.14)] ring-1 ring-white/15 cursor-pointer transition-transform active:scale-[0.99] ${
+                className={cn(
+                  "relative overflow-hidden rounded-2xl p-4 min-h-[164px] shadow-[0_-4px_10px_rgba(15,23,42,0.08),0_10px_22px_rgba(15,23,42,0.14)] ring-1 ring-white/15",
+                  CITIZEN_PERMIT_STACK_CARD_INTERACTION,
                   permit.statusName === "Active"
                     ? permitCardThemes[permit.permitTypeName] ?? permitCardThemes.Other
-                    : "bg-muted text-foreground"
-                }`}
+                    : "bg-muted text-foreground",
+                )}
                 style={{
                   marginTop: index === 0 ? 0 : -86,
                   zIndex: index + 1,
@@ -165,7 +167,7 @@ export function CitizenDashboard() {
                       <p className={permit.statusName === "Active" ? "text-white/85 text-sm font-semibold mb-1" : "text-muted-foreground text-sm font-semibold mb-1"}>
                         e-Pozwolenie
                       </p>
-                      <h2 className="text-lg font-bold truncate">
+                      <h2 className="text-sm md:text-lg font-bold truncate">
                         {PERMIT_TYPE_LABELS[permit.permitTypeName] ?? permit.permitTypeName}
                       </h2>
                       <p className={permit.statusName === "Active" ? "text-white/80 text-xs font-mono mt-1 truncate" : "text-muted-foreground text-xs font-mono mt-1 truncate"}>
@@ -221,7 +223,7 @@ export function CitizenDashboard() {
                 <p className="text-sm font-semibold text-blue-950 mb-1">
                   Wniosek o pozwolenie jest już złożony
                 </p>
-                <h2 className="text-lg font-bold text-foreground truncate">
+                <h2 className="text-sm md:text-lg font-bold text-foreground truncate">
                   {getPermitTypeLabel(activePermitApplication)}
                 </h2>
                 <DateStatusMeta className="mt-2" statusBadge={renderStatusBadge(activePermitApplication.statusName)}>
@@ -229,7 +231,7 @@ export function CitizenDashboard() {
                 </DateStatusMeta>
                 <p className="text-sm text-muted-foreground mt-3 leading-snug">
                   {activePermitApplication.statusName === "RequiresCorrection"
-                    ? "WPA poprosiło o uzupełnienie danych. Kliknij, żeby poprawić wniosek."
+                    ? "Urząd poprosił o uzupełnienie danych. Kliknij, żeby poprawić wniosek."
                     : "Nie musisz składać kolejnego wniosku. Status sprawdzisz w swoich sprawach."}
                 </p>
               </div>
@@ -283,7 +285,7 @@ export function CitizenDashboard() {
 
       {/* Quick Actions Grid */}
       <div>
-        <h3 className="text-lg font-bold mb-3 px-1 text-foreground">Usługi</h3>
+        <h3 className={cn(PAGE_SECTION_TITLE_CLASS, "mb-3 px-1")}>Usługi</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { label: "Nowy wniosek", icon: FileText, path: "/application/new" },
@@ -317,7 +319,7 @@ export function CitizenDashboard() {
       {recentApps.length > 0 && (
         <div>
           <div className="flex justify-between items-baseline gap-3 mb-3 px-1">
-            <h3 className="text-lg font-bold text-foreground leading-tight">Ostatnie wnioski</h3>
+            <h3 className={PAGE_SECTION_TITLE_CLASS}>Ostatnie wnioski</h3>
             <Button
               variant="link"
               className="text-primary text-sm h-auto min-h-0 px-0 py-0 font-medium shrink-0"

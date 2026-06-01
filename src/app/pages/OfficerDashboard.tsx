@@ -2,30 +2,31 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Tabs, TabsContent, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
+import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { FileText, Clock, CheckCircle, Shield, CreditCard, AlertTriangle, Search, User, CalendarCheck, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, WpaMedicalAlertDto } from "../../types/api";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import {
   formatMedicalAlertDate,
   getMedicalAlertTypeLabel,
   isMedicalAlertExpired,
 } from "../../lib/medicalAlerts";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { WpaQuickToolCard } from "../components/wpa/WpaQuickToolCard";
+import { PAGE_SECTION_TITLE_CLASS } from "../utils/citizenCardUi";
 import { cn } from "../components/ui/utils";
 import { getPermitApplicationTypeLabel } from "../utils/permitLabels";
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function getAlertBadge(type: string) {
@@ -51,22 +52,6 @@ function sortPendingApplications<T extends { statusName: string; createdAt: stri
     if (statusDiff !== 0) return statusDiff;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
-}
-
-function getTabCountBadge(count: number, tone: "default" | "alert" = "default") {
-  if (count <= 0) return null;
-  return (
-    <Badge
-      className={cn(
-        "ml-1.5 px-1.5 py-0 text-xs h-5 min-w-5",
-        tone === "alert"
-          ? "bg-amber-500 hover:bg-amber-600"
-          : "bg-slate-500 hover:bg-slate-600",
-      )}
-    >
-      {count > 99 ? "99+" : count}
-    </Badge>
-  );
 }
 
 function getMedicalAlertLines(alert: WpaMedicalAlertDto) {
@@ -130,7 +115,7 @@ export function OfficerDashboard() {
       await loadAlerts();
     } catch (err: unknown) {
       toast.error("Nie udało się zawiesić pozwolenia", {
-        description: err instanceof Error ? err.message : "Spróbuj ponownie",
+        description: getApiErrorMessage(err) || "Spróbuj ponownie",
       });
     } finally {
       setSuspendingPermitId(null);
@@ -162,17 +147,17 @@ export function OfficerDashboard() {
     <div className="pt-1 md:pt-2">
       <div className="mb-4 md:mb-6 px-0.5">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-0.5 md:mb-1">Panel urzędnika WPA</h1>
-        <p className="text-sm md:text-base text-muted-foreground leading-snug">Rozpatrywanie wniosków i zarządzanie decyzjami administracyjnymi</p>
+        <p className="text-sm text-muted-foreground leading-snug">Rozpatrywanie wniosków i zarządzanie decyzjami administracyjnymi</p>
       </div>
 
       <div className="mb-4 md:mb-6">
-        <h3 className="text-base md:text-lg font-bold mb-2 md:mb-3 px-0.5 text-foreground">Narzędzia WPA</h3>
+        <h3 className={cn(PAGE_SECTION_TITLE_CLASS, "mb-2 md:mb-3 px-0.5")}>Narzędzia WPA</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
           <WpaQuickToolCard
             title="Wyszukiwarka"
             description="Szukaj obywateli i broni w rejestrze"
             icon={Search}
-            onClick={() => navigate("/wpa/search")}
+            onClick={() => navigate("/officer/search")}
           />
           <WpaQuickToolCard
             title="Wszystkie wnioski"
@@ -185,21 +170,15 @@ export function OfficerDashboard() {
 
       <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
         <AppTabsList className="grid grid-cols-3">
-          <TabsTrigger value="permits" className="flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm">
-            <Shield className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Pozwolenia</span>
-            {getTabCountBadge(pendingPermits.length)}
-          </TabsTrigger>
-          <TabsTrigger value="promises" className="flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm">
-            <CreditCard className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Promesy</span>
-            {getTabCountBadge(pendingPromises.length)}
-          </TabsTrigger>
-          <TabsTrigger value="alerts" className="flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm">
-            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Alerty</span>
-            {getTabCountBadge(alerts.length, "alert")}
-          </TabsTrigger>
+          <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={pendingPermits.length} />
+          <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={pendingPromises.length} />
+          <AppTabTrigger
+            value="alerts"
+            label="Alerty"
+            ariaLabel="Alerty medyczne"
+            icon={AlertTriangle}
+            count={alerts.length}
+          />
         </AppTabsList>
 
         <TabsContent value="permits" className="mt-0 space-y-3">
@@ -222,10 +201,7 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak oczekujących wniosków o pozwolenie</p>
-            </div>
+            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o pozwolenie" />
           )}
         </TabsContent>
 
@@ -253,10 +229,7 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Clock className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak oczekujących wniosków o promesę</p>
-            </div>
+            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o promesę" />
           )}
         </TabsContent>
 
@@ -279,7 +252,7 @@ export function OfficerDashboard() {
                       <Button
                         variant="outline"
                         className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                        onClick={() => navigate(`/wpa/citizens/${alert.citizenId}`)}
+                        onClick={() => navigate(`/officer/citizens/${alert.citizenId}`)}
                       >
                         <User className="h-4 w-4 mr-2" aria-hidden />
                         Profil
@@ -288,7 +261,7 @@ export function OfficerDashboard() {
                         <Button
                           variant="outline"
                           className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                          onClick={() => navigate(`/wpa/citizens/${alert.citizenId}?permitId=${alert.permitId}`)}
+                          onClick={() => navigate(`/officer/citizens/${alert.citizenId}?permitId=${alert.permitId}`)}
                         >
                           <CalendarCheck className="h-4 w-4 mr-2" aria-hidden />
                           Aktualizuj badania
@@ -311,10 +284,11 @@ export function OfficerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <CheckCircle className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-30" aria-hidden />
-              <p className="text-sm md:text-base">Brak aktywnych alertów medycznych</p>
-            </div>
+            <EmptyStateCard
+              icon={CheckCircle}
+              iconClassName="text-emerald-600"
+              title="Brak aktywnych alertów medycznych"
+            />
           )}
         </TabsContent>
       </Tabs>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { citizenService } from "../../../services/citizenService";
+import { getApiErrorMessage } from "../../../lib/apiErrors";
 
 export const PERMIT_TYPE_VALUES: Record<string, number> = {
   Sport: 0,
@@ -147,14 +148,15 @@ export function usePermitApplicationForm() {
       });
 
       toast.success("Wniosek o pozwolenie złożony", {
-        description: "Wniosek i załączniki zostały przekazane do WPA.",
+        description: "Wniosek i załączniki zostały przekazane do urzędu.",
         duration: 5000,
       });
       navigate("/applications");
       return true;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Spróbuj ponownie";
-      toast.error("Błąd podczas składania wniosku", { description: message });
+      toast.error("Błąd podczas składania wniosku", {
+        description: getApiErrorMessage(err) || "Spróbuj ponownie",
+      });
       return false;
     } finally {
       setLoading(false);

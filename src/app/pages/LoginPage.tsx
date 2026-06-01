@@ -111,7 +111,7 @@ export function LoginPage() {
           </Card>
           <Button
             type="submit"
-            className="w-full min-h-[52px] text-base rounded-xl font-semibold"
+            className="w-full min-h-[52px] rounded-xl font-semibold"
             disabled={loading}
           >
             {loading ? "Logowanie..." : "Zaloguj się"}

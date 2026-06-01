@@ -20,15 +20,14 @@ import { SearchBarWithFilters } from "../components/search/SearchBarWithFilters"
 import { SearchFiltersSheet, SearchFilterField, filterSelectTriggerClass } from "../components/search/SearchFiltersSheet";
 import { toast } from "sonner";
 import { citizenService, translateTransferError } from "../../services/citizenService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { FirearmDto, TransferType } from "../../types/api";
 import { getFirearmStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 
 function getStatusBadge(status: string) {
-  const meta = getFirearmStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getFirearmStatusMeta(status)} />;
 }
 
 function getCategoryBadge(category: "A" | "B" | "C") {
@@ -58,7 +57,7 @@ export function WeaponRegistry() {
 
   useEffect(() => {
     if (isOfficer) {
-      navigate("/wpa/search?tab=firearms", { replace: true });
+      navigate("/officer/search?tab=firearms", { replace: true });
     }
   }, [isOfficer, navigate]);
 
@@ -169,7 +168,7 @@ export function WeaponRegistry() {
       setLostDescription("");
       load();
     } catch (err: any) {
-      toast.error("Błąd zgłoszenia", { description: err?.message ?? "Spróbuj ponownie" });
+      toast.error("Błąd zgłoszenia", { description: getApiErrorMessage(err) });
     } finally {
       setReportLoading(false);
     }
@@ -209,7 +208,7 @@ export function WeaponRegistry() {
       load();
     } catch (err: any) {
       toast.error("Nie można zainicjować transferu", {
-        description: translateTransferError(err?.message ?? "") || (err?.message ?? "Spróbuj ponownie"),
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
         duration: 7000,
       });
     } finally {
@@ -366,19 +365,24 @@ export function WeaponRegistry() {
           </div>
         </>
       ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <Shield className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-          {hasActiveQuery ? (
-            <>
-              <p className="mb-2">Brak broni dla wybranych kryteriów wyszukiwania</p>
-              <Button variant="outline" onClick={clearSearchAndFilters} className="min-h-[44px] rounded-xl mt-2" aria-label="Wyczyść filtry">
-                Wyczyść filtry
-              </Button>
-            </>
-          ) : (
-            <p className="mb-4">Nie masz jeszcze zarejestrowanej broni. Broń pojawi się tutaj po zakupie w sklepie.</p>
-          )}
-        </div>
+        <EmptyStateCard
+          icon={Shield}
+          title={
+            hasActiveQuery
+              ? "Brak broni dla wybranych kryteriów wyszukiwania"
+              : "Nie masz jeszcze zarejestrowanej broni. Broń pojawi się tutaj po zakupie w sklepie."
+          }
+          action={
+            hasActiveQuery
+              ? {
+                  label: "Wyczyść filtry",
+                  variant: "outline",
+                  onClick: clearSearchAndFilters,
+                  "aria-label": "Wyczyść filtry",
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Report Lost Dialog */}
@@ -392,7 +396,7 @@ export function WeaponRegistry() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="bg-red-50 rounded-xl p-3 text-xs text-red-900">
-              Zgłoszenie utraty zwolni slot w pozwoleniu. Operacja jest nieodwracalna.
+              Zgłoszenie utraty zwolni miejsce w pozwoleniu. Operacja jest nieodwracalna.
             </div>
             <div>
               <Label htmlFor="lostDesc">Opis okoliczności (opcjonalnie)</Label>
@@ -426,7 +430,7 @@ export function WeaponRegistry() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="bg-blue-50 rounded-xl p-3 text-xs text-blue-900 space-y-1">
-              <p><strong>Nabywca musi już mieć:</strong> aktywne pozwolenie obejmujące tę kategorię broni, wolny slot w pozwoleniu, aktualne badania medyczne.</p>
+              <p><strong>Nabywca musi już mieć:</strong> aktywne pozwolenie obejmujące tę kategorię broni, wolne miejsce w pozwoleniu, aktualne badania medyczne.</p>
               <p>System sprawdza wymagania od razu przy inicjacji — bez spełnienia warunków transfer nie powstanie. Po inicjacji broń pozostaje u Ciebie do akceptacji przez nabywcę.</p>
             </div>
             <div>
@@ -457,7 +461,7 @@ export function WeaponRegistry() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                Dziedziczenie wymaga osobnej procedury z udziałem WPA (depozyt policji, 6 miesięcy na uzyskanie pozwolenia — Ustawa o broni i amunicji, art. 14 ust. 1).
+                Dziedziczenie wymaga osobnej procedury z udziałem policji (depozyt, 6 miesięcy na uzyskanie pozwolenia — Ustawa o broni i amunicji, art. 14 ust. 1).
               </p>
             </div>
           </div>

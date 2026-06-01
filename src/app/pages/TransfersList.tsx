@@ -1,15 +1,18 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
-import { ArrowRightLeft, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import { AppTabTrigger } from "../components/ui/AppTabTrigger";
+import { ArrowRightLeft, CheckCircle, XCircle, Clock, AlertCircle, Inbox, ArrowUpRight, History } from "lucide-react";
 import { toast } from "sonner";
 import { citizenService, translateTransferError } from "../../services/citizenService";
+import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { TransferRequestDto } from "../../types/api";
 import { getTransferRequestStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import { DateStatusMeta } from "../components/DateStatusMeta";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 
@@ -21,15 +24,11 @@ const TRANSFER_STATUS_ICON: Record<string, ReactNode> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getTransferRequestStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
   return (
-    <Badge variant={meta.variant} className={meta.badgeClassName}>
-      {TRANSFER_STATUS_ICON[status]}
-      {meta.label}
-    </Badge>
+    <StatusBadge
+      meta={getTransferRequestStatusMeta(status)}
+      leading={TRANSFER_STATUS_ICON[status]}
+    />
   );
 }
 
@@ -77,7 +76,7 @@ export function TransfersList() {
       load();
     } catch (err: any) {
       toast.error("Nie można zaakceptować transferu", {
-        description: translateTransferError(err?.message ?? "") || (err?.message ?? "Spróbuj ponownie"),
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
         duration: 7000,
       });
     } finally {
@@ -92,7 +91,9 @@ export function TransfersList() {
       toast.success("Transfer odrzucony");
       load();
     } catch (err: any) {
-      toast.error("Błąd odrzucenia transferu", { description: translateTransferError(err?.message ?? "") || err?.message });
+      toast.error("Błąd odrzucenia transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -107,7 +108,9 @@ export function TransfersList() {
       });
       load();
     } catch (err: any) {
-      toast.error("Nie można anulować transferu", { description: translateTransferError(err?.message ?? "") || err?.message });
+      toast.error("Nie można anulować transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setActionLoading(null);
     }
@@ -119,7 +122,7 @@ export function TransfersList() {
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="font-semibold text-base mb-2">{t.firearmDescription}</h3>
+              <h3 className="font-semibold text-sm mb-2">{t.firearmDescription}</h3>
               <DateStatusMeta className="mb-3" emphasizeDate statusBadge={getStatusBadge(t.statusName)}>
                 Zgłoszono: {formatDate(t.createdAt)}
               </DateStatusMeta>
@@ -200,15 +203,6 @@ export function TransfersList() {
     </Card>
   );
 
-  const EmptyState = ({ label }: { label: string }) => (
-    <Card className="rounded-2xl border-none shadow-sm">
-      <CardContent className="p-12 text-center">
-        <ArrowRightLeft className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-        <p className="text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
-  );
-
   if (loading) {
     return (
       <div className="pt-2 space-y-4">
@@ -237,34 +231,33 @@ export function TransfersList() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <AppTabsList className="grid grid-cols-3">
-          <TabsTrigger value="incoming" className="rounded-xl">
-            Przychodzące
-            {incoming.length > 0 && (
-              <Badge className="ml-2 bg-amber-500 hover:bg-amber-600 px-1.5 py-0 text-xs h-5 min-w-5">
-                {incoming.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="outgoing" className="rounded-xl">Wychodzące</TabsTrigger>
-          <TabsTrigger value="completed" className="rounded-xl">Historia</TabsTrigger>
+          <AppTabTrigger value="incoming" label="Przychodzące" icon={Inbox} count={incoming.length} />
+          <AppTabTrigger value="outgoing" label="Wychodzące" icon={ArrowUpRight} count={outgoing.length} />
+          <AppTabTrigger value="completed" label="Historia" icon={History} count={completed.length} />
         </AppTabsList>
 
         <TabsContent value="incoming" className="space-y-4">
-          {incoming.length === 0
-            ? <EmptyState label="Brak oczekujących transferów" />
-            : incoming.map((t) => <TransferCard key={t.id} t={t} />)}
+          {incoming.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak oczekujących transferów" />
+          ) : (
+            incoming.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
 
         <TabsContent value="outgoing" className="space-y-4">
-          {outgoing.length === 0
-            ? <EmptyState label="Brak wychodzących transferów" />
-            : outgoing.map((t) => <TransferCard key={t.id} t={t} />)}
+          {outgoing.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak wychodzących transferów" />
+          ) : (
+            outgoing.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          {completed.length === 0
-            ? <EmptyState label="Brak zakończonych transferów" />
-            : completed.map((t) => <TransferCard key={t.id} t={t} />)}
+          {completed.length === 0 ? (
+            <EmptyStateCard icon={ArrowRightLeft} title="Brak zakończonych transferów" />
+          ) : (
+            completed.map((t) => <TransferCard key={t.id} t={t} />)
+          )}
         </TabsContent>
       </Tabs>
     </div>

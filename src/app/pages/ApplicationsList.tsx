@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { EmptyStateCard, type EmptyStateAction } from "../components/EmptyStateCard";
+import { cn } from "../components/ui/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Tabs, TabsContent, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
+import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { SearchBarWithFilters } from "../components/search/SearchBarWithFilters";
 import { SearchFiltersSheet, SearchFilterField, filterSelectTriggerClass } from "../components/search/SearchFiltersSheet";
-import { Shield, CreditCard } from "lucide-react";
+import { Shield, CreditCard, FileText, QrCode } from "lucide-react";
+import { CITIZEN_NAV_ICON_TONE, CITIZEN_NAV_ICON_TONE_DISABLED } from "../utils/citizenCardUi";
 import { CitizenApplicationCard } from "../components/citizen/CitizenApplicationCard";
 import { toast } from "sonner";
 import { citizenService } from "../../services/citizenService";
@@ -20,6 +25,7 @@ import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
 import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
 import { getPromiseQrMatchResult } from "../../lib/promiseQrAvailability";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 import type {
   PermitApplicationDto,
   PromiseApplicationDto,
@@ -42,15 +48,7 @@ const PERMIT_TYPE_LABELS: Record<string, string> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (meta) {
-    return (
-      <Badge variant={meta.variant} className={meta.badgeClassName}>
-        {meta.label}
-      </Badge>
-    );
-  }
-  return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 function formatDate(dateStr: string) {
@@ -68,6 +66,31 @@ function isWpaPromise(a: AnyPromise): a is WpaPromiseApplicationDto {
   return "citizenName" in a;
 }
 
+function applicationsTabEmptyState(
+  icon: LucideIcon,
+  hasActiveQuery: boolean,
+  onClearFilters: () => void,
+  emptyMessage: string,
+  emptyAction?: EmptyStateAction,
+) {
+  return (
+    <EmptyStateCard
+      icon={icon}
+      title={hasActiveQuery ? "Brak wniosków dla wybranych kryteriów" : emptyMessage}
+      action={
+        hasActiveQuery
+          ? {
+              label: "Wyczyść filtry",
+              variant: "outline",
+              onClick: onClearFilters,
+              "aria-label": "Wyczyść filtry",
+            }
+          : emptyAction
+      }
+    />
+  );
+}
+
 type ApplicationSearchBy = "all" | "citizen" | "pesel" | "type" | "reason";
 
 export function ApplicationsList() {
@@ -78,6 +101,7 @@ export function ApplicationsList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchBy, setSearchBy] = useState<ApplicationSearchBy>("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"permits" | "promises">("permits");
   const [draftStatusFilter, setDraftStatusFilter] = useState("all");
   const [draftSearchBy, setDraftSearchBy] = useState<ApplicationSearchBy>("all");
   const [permitApps, setPermitApps] = useState<AnyPermit[]>([]);
@@ -230,6 +254,17 @@ export function ApplicationsList() {
     );
   }
 
+  const isPromiseCreateTab = activeTab === "promises";
+  const createTileDisabled = !isOfficer && isPromiseCreateTab && !promiseAllowed;
+  const CreateTileIcon = isPromiseCreateTab ? QrCode : FileText;
+  const createTileLabel = isPromiseCreateTab ? "Nowa promesa" : "Nowy wniosek";
+  const createTilePath = isPromiseCreateTab ? "/applications/new/promise" : "/applications/new/permit";
+
+  const handleCreateTileActivate = () => {
+    if (createTileDisabled) return;
+    navigate(createTilePath);
+  };
+
   return (
     <div className="pt-2 max-md:pb-2">
       <div className="mb-4 px-1">
@@ -290,17 +325,46 @@ export function ApplicationsList() {
         </SearchFilterField>
       </SearchFiltersSheet>
 
-      <Tabs defaultValue="permits" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "permits" | "promises")} className="space-y-6">
         <AppTabsList className="grid grid-cols-2">
-          <TabsTrigger value="permits" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span>Pozwolenia ({filteredPermit.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="promises" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span>Promesy ({filteredPromise.length})</span>
-          </TabsTrigger>
+          <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={filteredPermit.length} />
+          <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={filteredPromise.length} />
         </AppTabsList>
+
+        {!isOfficer && (
+          <div className="flex justify-center -mt-2">
+            <Card
+              role="button"
+              tabIndex={createTileDisabled ? -1 : 0}
+              aria-disabled={createTileDisabled}
+              aria-label={createTileLabel}
+              className={cn(
+                "w-full max-w-[160px] rounded-2xl border-none shadow-sm active:scale-[0.98]",
+                createTileDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+              )}
+              onClick={handleCreateTileActivate}
+              onKeyDown={(event) => {
+                if (createTileDisabled) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleCreateTileActivate();
+                }
+              }}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
+                <div
+                  className={cn(
+                    "p-3 rounded-2xl mb-1",
+                    createTileDisabled ? CITIZEN_NAV_ICON_TONE_DISABLED : CITIZEN_NAV_ICON_TONE,
+                  )}
+                >
+                  <CreateTileIcon className="h-6 w-6" aria-hidden />
+                </div>
+                <span className="text-xs font-semibold leading-tight">{createTileLabel}</span>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <TabsContent value="permits" className="mt-0">
           {isOfficer ? (
@@ -330,19 +394,12 @@ export function ApplicationsList() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-                  <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-                  {hasActiveQuery ? (
-                    <>
-                      <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                      <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                        Wyczyść filtry
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="mb-3">Brak wniosków o pozwolenie</p>
-                  )}
-                </div>
+                applicationsTabEmptyState(
+                  Shield,
+                  hasActiveQuery,
+                  clearSearchAndFilters,
+                  "Brak wniosków o pozwolenie",
+                )
               )}
             </div>
           ) : filteredPermit.length > 0 ? (
@@ -369,7 +426,7 @@ export function ApplicationsList() {
                           className="rounded-xl"
                           onClick={() => navigate(`/applications/${app.id}/correction?type=permit`)}
                         >
-                          Uzupelnij wniosek
+                          Uzupełnij wniosek
                         </Button>
                       )}
                       {app.statusName === "Rejected" && app.rejectionReason && (
@@ -383,24 +440,10 @@ export function ApplicationsList() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              {hasActiveQuery ? (
-                <>
-                  <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                  <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                    Wyczyść filtry
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="mb-3">Brak wniosków o pozwolenie</p>
-                  <Button className="rounded-xl" onClick={() => navigate("/applications/new/permit")}>
-                    Złóż wniosek
-                  </Button>
-                </>
-              )}
-            </div>
+            applicationsTabEmptyState(Shield, hasActiveQuery, clearSearchAndFilters, "Brak wniosków o pozwolenie", {
+              label: "Złóż wniosek",
+              onClick: () => navigate("/applications/new/permit"),
+            })
           )}
         </TabsContent>
 
@@ -436,19 +479,12 @@ export function ApplicationsList() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-                  <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-                  {hasActiveQuery ? (
-                    <>
-                      <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                      <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                        Wyczyść filtry
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="mb-3">Brak wniosków o promesę</p>
-                  )}
-                </div>
+                applicationsTabEmptyState(
+                  CreditCard,
+                  hasActiveQuery,
+                  clearSearchAndFilters,
+                  "Brak wniosków o promesę",
+                )
               )}
             </div>
           ) : filteredPromise.length > 0 ? (
@@ -502,7 +538,7 @@ export function ApplicationsList() {
                             className="rounded-xl"
                             onClick={() => navigate(`/applications/${app.id}/correction?type=promise`)}
                           >
-                            Uzupelnij wniosek
+                            Uzupełnij wniosek
                           </Button>
                         )}
                         {app.statusName === "Rejected" && app.rejectionReason && (
@@ -517,26 +553,18 @@ export function ApplicationsList() {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              {hasActiveQuery ? (
-                <>
-                  <p className="mb-3">Brak wniosków dla wybranych kryteriów</p>
-                  <Button variant="outline" className="rounded-xl min-h-[44px]" onClick={clearSearchAndFilters} aria-label="Wyczyść filtry">
-                    Wyczyść filtry
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="mb-3">Brak wniosków o promesę</p>
-                  {promiseAllowed && (
-                    <Button className="rounded-xl" onClick={() => navigate("/applications/new/promise")}>
-                      Złóż wniosek o promesę
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
+            applicationsTabEmptyState(
+              CreditCard,
+              hasActiveQuery,
+              clearSearchAndFilters,
+              "Brak wniosków o promesę",
+              promiseAllowed
+                ? {
+                    label: "Złóż wniosek o promesę",
+                    onClick: () => navigate("/applications/new/promise"),
+                  }
+                : undefined,
+            )
           )}
         </TabsContent>
       </Tabs>

@@ -22,7 +22,7 @@ const PROMISE_STATUS_PL: Record<string, string> = {
 
 export function translateVerifyMessage(message: string): string {
   if (!message) return '';
-  if (message === 'Promise not found') return 'Nie znaleziono promesy o podanym tokenie/numerze.';
+  if (message === 'Promise not found') return 'Nie znaleziono promesy o podanym kodzie lub numerze.';
   if (message === 'Promise has expired') return 'Promesa wygasła (termin ważności minął).';
   if (message === 'Promise has been fully used') return 'Promesa została w całości wykorzystana — wszystkie dozwolone sztuki zostały już sprzedane.';
   if (message === 'Associated permit is not valid') return 'Powiązane pozwolenie obywatela nie jest aktywne (zawieszone/cofnięte/wygasłe).';
@@ -34,11 +34,11 @@ export function translateVerifyMessage(message: string): string {
     const pl = PROMISE_STATUS_PL[status] ?? status;
     if (status === 'Used') return 'Promesa została w całości wykorzystana — limit egzemplarzy wyczerpany. Obywatel musi złożyć nowy wniosek.';
     if (status === 'Expired') return 'Promesa wygasła — minął 3-miesięczny termin ważności.';
-    if (status === 'Rejected') return 'Promesa została odrzucona przez WPA.';
+    if (status === 'Rejected') return 'Promesa została odrzucona przez urząd.';
     return `Promesa ma status "${pl}" i nie pozwala na rejestrację sprzedaży.`;
   }
 
-  return message;
+  return 'Nie udało się zweryfikować promesy. Sprawdź kod lub numer i spróbuj ponownie.';
 }
 
 export const shopService = {

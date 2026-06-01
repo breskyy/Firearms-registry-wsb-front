@@ -8,6 +8,10 @@ export const CITIZEN_NAV_ICON_TONE_DISABLED = "bg-muted text-muted-foreground";
 export const CITIZEN_LIST_CARD_CLASS =
   "rounded-2xl border-none shadow-sm gap-0 cursor-pointer active:scale-[0.99]";
 
+/** Stacked e-permit cards — lift on hover to reveal deck layering. */
+export const CITIZEN_PERMIT_STACK_CARD_INTERACTION =
+  "cursor-pointer transition-transform hover:-translate-y-1 active:scale-[0.99]";
+
 /**
  * List tile CardContent — uniform p-4; overrides CardContent default [&:last-child]:pb-6.
  */
@@ -22,3 +26,10 @@ export const CITIZEN_TILE_TITLE_CLASS =
 
 /** Subtitle on citizen list tiles and matching collapsible section headers. */
 export const CITIZEN_TILE_SUBTITLE_CLASS = "text-xs text-muted-foreground mt-0.5 line-clamp-2";
+
+/** Section title above list blocks (mobile-first; scales up on md). */
+export const PAGE_SECTION_TITLE_CLASS =
+  "text-sm md:text-lg font-bold text-foreground leading-tight";
+
+/** Emphasized numeric stat in compact summary cards. */
+export const PAGE_STAT_VALUE_CLASS = "text-xl md:text-2xl font-bold";

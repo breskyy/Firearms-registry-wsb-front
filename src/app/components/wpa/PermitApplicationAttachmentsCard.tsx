@@ -32,7 +32,7 @@ export function PermitApplicationAttachmentsCard({
   } | null>(null);
 
   const attachmentList = attachments.length > 0 ? (
-    <div className="space-y-1.5 md:space-y-2">
+    <div className="space-y-1.5 md:space-y-2 min-w-0 max-w-full">
       {attachments.map((attachment) => {
         const isImage = attachment.contentType.startsWith("image/");
         return (
@@ -46,24 +46,27 @@ export function PermitApplicationAttachmentsCard({
                 contentType: attachment.contentType,
               })
             }
-            className="w-full flex items-center justify-between gap-2 md:gap-3 rounded-lg md:rounded-xl bg-muted/30 p-2.5 md:p-3 text-left border border-transparent"
+            className="w-full min-w-0 max-w-full grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 md:gap-3 rounded-lg md:rounded-xl bg-muted/30 p-2.5 md:p-3 text-left border border-transparent overflow-hidden"
           >
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden">
               <div className={`p-1.5 md:p-2 rounded-md md:rounded-lg shrink-0 ${isImage ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
                 {isImage ? <ImageIcon className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <FileText className="h-3.5 w-3.5 md:h-4 md:w-4" />}
               </div>
-              <div className="min-w-0">
-                <p className="text-xs md:text-sm font-medium truncate">{attachment.fileName}</p>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-snug">
+              <div className="min-w-0 overflow-hidden">
+                <p className="text-xs md:text-sm font-medium truncate" title={attachment.fileName}>
+                  {attachment.fileName}
+                </p>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-snug truncate">
                   {ATTACHMENT_LABELS[attachment.attachmentTypeName] ?? attachment.attachmentTypeName}
                   {" • "}
                   {(attachment.fileSize / 1024).toFixed(1)} KB
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-0.5 md:gap-1 text-[10px] md:text-xs text-primary font-medium shrink-0">
-              <Eye className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              Podgląd
+            <div className="flex items-center gap-0.5 md:gap-1 text-[10px] md:text-xs text-primary font-medium shrink-0 pl-1">
+              <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" aria-hidden />
+              <span className="hidden sm:inline">Podgląd</span>
+              <span className="sr-only sm:hidden">Podgląd</span>
             </div>
           </button>
         );
@@ -95,7 +98,7 @@ export function PermitApplicationAttachmentsCard({
           onOpenChange={(open) => !open && setPreviewAttachment(null)}
           fileName={previewAttachment.fileName}
           contentType={previewAttachment.contentType}
-          viewUrl={`/wpa/attachments/${applicationId}/${previewAttachment.id}?name=${encodeURIComponent(previewAttachment.fileName)}`}
+          viewUrl={`/officer/attachments/${applicationId}/${previewAttachment.id}?name=${encodeURIComponent(previewAttachment.fileName)}`}
           fetchBlob={() =>
             wpaService.downloadPermitApplicationAttachment(applicationId, previewAttachment.id)
           }

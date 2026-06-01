@@ -103,7 +103,7 @@ export function SearchFiltersSheet({
                 <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden />
               </div>
               <div className="min-w-0">
-                <SheetTitle className="text-base font-semibold leading-snug md:text-lg">{title}</SheetTitle>
+                <SheetTitle className="text-sm font-semibold leading-snug md:text-lg">{title}</SheetTitle>
                 {description && (
                   <SheetDescription className="mt-0.5 text-xs leading-relaxed md:text-sm">
                     {description}
@@ -133,14 +133,14 @@ export function SearchFiltersSheet({
           <Button
             type="button"
             variant="outline"
-            className="min-h-[44px] flex-1 rounded-xl bg-card px-3 text-sm dark:bg-card md:min-h-[48px] md:text-base"
+            className="min-h-[44px] flex-1 rounded-xl bg-card px-3 text-sm dark:bg-card md:min-h-[48px]"
             onClick={onReset}
           >
             Resetuj
           </Button>
           <Button
             type="button"
-            className="min-h-[44px] flex-1 rounded-xl px-3 text-sm font-semibold md:min-h-[48px] md:text-base"
+            className="min-h-[44px] flex-1 rounded-xl px-3 text-sm font-semibold md:min-h-[48px]"
             onClick={handleApply}
           >
             Zastosuj filtry

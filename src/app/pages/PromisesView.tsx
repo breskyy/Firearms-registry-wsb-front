@@ -1,8 +1,8 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { CheckCircle, XCircle, AlertTriangle, QrCode } from "lucide-react";
 import { citizenService } from "../../services/citizenService";
 import type { PromiseDto } from "../../types/api";
@@ -10,6 +10,7 @@ import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
 import { DateStatusMeta } from "../components/DateStatusMeta";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 import { getPromiseStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
 
 const STATUS_ICON: Record<string, ReactNode> = {
   Active: <CheckCircle className="h-3 w-3 mr-1" />,
@@ -18,15 +19,11 @@ const STATUS_ICON: Record<string, ReactNode> = {
 };
 
 function getStatusBadge(status: string) {
-  const meta = getPromiseStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
   return (
-    <Badge variant={meta.variant} className={meta.badgeClassName}>
-      {STATUS_ICON[status]}
-      {meta.label}
-    </Badge>
+    <StatusBadge
+      meta={getPromiseStatusMeta(status)}
+      leading={STATUS_ICON[status]}
+    />
   );
 }
 
@@ -77,15 +74,14 @@ export function PromisesView() {
       </div>
 
       {promises.length === 0 ? (
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-12 text-center">
-            <QrCode className="h-16 w-16 mx-auto mb-4 opacity-30 text-primary" />
-            <p className="text-muted-foreground mb-4">Nie masz żadnych promes</p>
-            <Button onClick={() => navigate("/applications/new/promise")} className="min-h-[44px] rounded-xl">
-              Złóż wniosek o promesę
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateCard
+          icon={QrCode}
+          title="Nie masz żadnych promes"
+          action={{
+            label: "Złóż wniosek o promesę",
+            onClick: () => navigate("/applications/new/promise"),
+          }}
+        />
       ) : (
         <div className="space-y-4">
           {promises.map((promise) => {
@@ -101,7 +97,7 @@ export function PromisesView() {
                 <CardContent className={CITIZEN_LIST_CARD_CONTENT_CLASS}>
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-base text-foreground mb-2">{promise.weaponType}</h3>
+                      <h3 className="font-semibold text-sm text-foreground mb-2">{promise.weaponType}</h3>
                       <DateStatusMeta
                         className="mb-3"
                         emphasizeDate

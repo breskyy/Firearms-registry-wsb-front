@@ -83,8 +83,8 @@ export function PermitExamStatusRow({ entry, className }: PermitExamStatusRowPro
             <p className={cn("text-xs", entry.status === "expired" ? "text-red-900" : "text-slate-800")}>
               <strong>Wymagane działanie:</strong>{" "}
               {entry.status === "missing"
-                ? "Brakuje potwierdzonej daty ważności badania. Skontaktuj się z WPA w celu aktualizacji."
-                : "Odnów badanie i dostarcz zaświadczenie do WPA, aby odblokować pozwolenie."}
+                ? "Brakuje potwierdzonej daty ważności badania. Skontaktuj się z urzędem w celu aktualizacji."
+                : "Odnów badanie i dostarcz zaświadczenie do urzędu, aby odblokować pozwolenie."}
             </p>
           </div>
         )}

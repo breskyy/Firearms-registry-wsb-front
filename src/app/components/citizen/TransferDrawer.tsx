@@ -6,7 +6,8 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { citizenService } from "../../../services/citizenService";
+import { citizenService, translateTransferError } from "../../../services/citizenService";
+import { getApiErrorMessage } from "../../../lib/apiErrors";
 import type { TransferType } from "../../../types/api";
 
 interface TransferDrawerProps {
@@ -69,7 +70,9 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
       });
       onSuccess?.();
     } catch (err: any) {
-      toast.error("Błąd inicjowania transferu", { description: err?.message ?? "Spróbuj ponownie" });
+      toast.error("Błąd inicjowania transferu", {
+        description: translateTransferError(getApiErrorMessage(err)) || "Spróbuj ponownie.",
+      });
     } finally {
       setLoading(false);
     }
@@ -79,7 +82,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[92vh] flex flex-col px-0 rounded-t-3xl border-0 shadow-2xl">
         <DrawerHeader className="border-b px-4 py-4 shrink-0">
-          <DrawerTitle className="text-xl font-bold tracking-tight text-foreground">Transfer broni</DrawerTitle>
+          <DrawerTitle className="text-lg md:text-xl font-bold tracking-tight text-foreground">Transfer broni</DrawerTitle>
           <DrawerDescription className="text-sm">
             {firearmInfo
               ? `${firearmInfo.brand} ${firearmInfo.model} (SN: ${firearmInfo.serialNumber})`
@@ -99,7 +102,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                     <li>Kupujący otrzyma powiadomienie w aplikacji</li>
                     <li>Kupujący musi zaakceptować lub odrzucić transfer</li>
                     <li>Po akceptacji broń zmieni właściciela automatycznie</li>
-                    <li>Twój slot w pozwoleniu zostanie zwolniony</li>
+                    <li>Twoje miejsce w pozwoleniu zostanie zwolnione</li>
                   </ol>
                 </div>
               </div>
@@ -115,7 +118,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                 inputMode="numeric"
                 value={formData.buyerPesel}
                 onChange={(e) => setFormData({ ...formData, buyerPesel: e.target.value.replace(/\D/g, "") })}
-                className="min-h-[52px] mt-1.5 rounded-xl text-base font-mono bg-background"
+                className="min-h-[52px] mt-1.5 rounded-xl font-mono bg-background"
                 placeholder="12345678901"
                 maxLength={11}
               />
@@ -133,7 +136,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
                 value={formData.transferType}
                 onValueChange={(v) => setFormData({ ...formData, transferType: v as TransferType })}
               >
-                <SelectTrigger id="transferType" className="min-h-[52px] mt-1.5 rounded-xl text-base bg-background">
+                <SelectTrigger id="transferType" className="min-h-[52px] mt-1.5 rounded-xl bg-background">
                   <SelectValue placeholder="Wybierz typ" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -155,7 +158,7 @@ export function TransferDrawer({ open, onOpenChange, firearmId, firearmInfo, onS
             form="transfer-form"
             type="submit"
             disabled={loading}
-            className="w-full min-h-[56px] rounded-2xl text-[17px] font-bold shadow-sm"
+            className="w-full min-h-[56px] rounded-2xl text-sm font-bold shadow-sm"
           >
             {loading ? "Inicjowanie..." : "Zainicjuj transfer"}
           </Button>

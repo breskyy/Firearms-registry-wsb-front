@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Tabs, TabsContent, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
+import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
 import { Label } from "../components/ui/label";
@@ -12,9 +13,15 @@ import { SearchFiltersSheet, SearchFilterField, filterSelectTriggerClass } from 
 import type { WpaCitizenDto, WpaFirearmSearchResult, PermitType } from "../../types/api";
 import { wpaService } from "../../services/wpaService";
 import { getFirearmStatusMeta } from "../../lib/statusUi";
+import { StatusBadge } from "../components/StatusBadge";
+import { formatActiveMedicalAlertCount } from "../../lib/medicalAlerts";
 import { User, Shield, ChevronRight, AlertTriangle, ChevronLeft } from "lucide-react";
+import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
+import { WpaFirearmSearchCard } from "../components/wpa/WpaFirearmSearchCard";
+import { formatPermitCount } from "../utils/permitLabels";
+import { getFirearmCategoryBadge } from "../utils/firearmUi";
 
 const PAGE_SIZE = 20;
 
@@ -31,25 +38,7 @@ const PERMIT_TYPE_OPTIONS: { value: PermitType; label: string }[] = [
 ];
 
 function getStatusBadge(status: string) {
-  const meta = getFirearmStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
-}
-
-function getCategoryBadge(category: string) {
-  const config: Record<string, { label: string; color: string }> = {
-    A: { label: "Kat. A", color: "bg-red-100 text-red-800" },
-    B: { label: "Kat. B", color: "bg-blue-100 text-blue-800" },
-    C: { label: "Kat. C", color: "bg-green-100 text-green-800" },
-  };
-  const c = config[category] ?? { label: `Kat. ${category}`, color: "bg-muted text-muted-foreground" };
-  return (
-    <Badge className={`${c.color} hover:${c.color} border-none px-2 py-0.5 rounded-full text-xs`}>
-      {c.label}
-    </Badge>
-  );
+  return <StatusBadge meta={getFirearmStatusMeta(status)} />;
 }
 
 function formatDate(s: string) {
@@ -102,7 +91,7 @@ function getSearchPlaceholder(tab: TabValue, citizenSearchBy: CitizenSearchBy, f
       case "name": return "Imię lub nazwisko...";
       case "pesel": return "Numer PESEL...";
       case "permitNumber": return "Numer pozwolenia...";
-      default: return "Imię, nazwisko, PESEL, nr pozwolenia...";
+      default: return "Szukaj w rejestrze…";
     }
   }
   switch (firearmSearchBy) {
@@ -117,14 +106,6 @@ function tabFromSearchParam(value: string | null): TabValue {
   return value === "firearms" ? "firearms" : "citizens";
 }
 
-function getTabCountBadge(count: number) {
-  if (count <= 0) return null;
-  return (
-    <Badge className="ml-1.5 bg-slate-500 hover:bg-slate-600 px-1.5 py-0 text-xs h-5 min-w-5">
-      {count > 99 ? "99+" : count}
-    </Badge>
-  );
-}
 
 function getCitizensSectionDescription(query: string, total: number, loading: boolean) {
   if (loading && total === 0) return "Ładowanie...";
@@ -174,6 +155,7 @@ export function WPASearchPage() {
   const [firearmsTotalCount, setFirearmsTotalCount] = useState(0);
   const [firearmsTotalPages, setFirearmsTotalPages] = useState(0);
   const [firearmsSearched, setFirearmsSearched] = useState(false);
+  const [expandedFirearmId, setExpandedFirearmId] = useState<string | null>(null);
 
   useEffect(() => {
     setCitizensPage(1);
@@ -236,12 +218,12 @@ export function WPASearchPage() {
   }, [debouncedQuery, firearmSearchBy, permitTypeFilter]);
 
   useEffect(() => {
-    if (activeTab === "citizens") fetchCitizens(citizensPage);
-  }, [activeTab, citizensPage, fetchCitizens]);
+    fetchCitizens(citizensPage);
+  }, [citizensPage, fetchCitizens]);
 
   useEffect(() => {
-    if (activeTab === "firearms") doFirearmSearch(firearmsPage);
-  }, [activeTab, firearmsPage, doFirearmSearch]);
+    doFirearmSearch(firearmsPage);
+  }, [firearmsPage, doFirearmSearch]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -328,16 +310,14 @@ export function WPASearchPage() {
         className="space-y-4"
       >
         <AppTabsList className="grid grid-cols-2">
-          <TabsTrigger value="citizens" className="flex items-center justify-center gap-1.5 rounded-xl text-xs md:text-sm">
-            <User className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Obywatele</span>
-            {getTabCountBadge(citizensTotalCount)}
-          </TabsTrigger>
-          <TabsTrigger value="firearms" className="flex items-center justify-center gap-1.5 rounded-xl text-xs md:text-sm">
-            <Shield className="h-4 w-4 shrink-0" aria-hidden />
-            <span>Broń</span>
-            {firearmsSearched && getTabCountBadge(firearmsTotalCount)}
-          </TabsTrigger>
+          <AppTabTrigger value="citizens" label="Obywatele" icon={User} count={citizensTotalCount} className="text-xs md:text-sm" />
+          <AppTabTrigger
+            value="firearms"
+            label="Broń"
+            icon={Shield}
+            count={firearmsTotalCount}
+            className="text-xs md:text-sm"
+          />
         </AppTabsList>
 
         <TabsContent value="citizens" className="mt-0 space-y-3">
@@ -369,21 +349,17 @@ export function WPASearchPage() {
                             className="rounded-full px-2 py-0.5 text-[10px] md:text-xs flex items-center gap-1"
                           >
                             <AlertTriangle className="h-3 w-3" aria-hidden />
-                            {citizen.activeAlerts} alert{citizen.activeAlerts === 1 ? "" : "y"}
+                            {formatActiveMedicalAlertCount(citizen.activeAlerts)}
                           </Badge>
                         )}
-                        {citizen.permits.map((permit) => (
-                          <Badge
-                            key={permit.id}
-                            variant="secondary"
-                            className="rounded-full px-2 py-0.5 text-[10px] md:text-xs"
-                          >
-                            {permit.permitTypeName}
+                        {citizen.permits.length > 0 && (
+                          <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px] md:text-xs">
+                            {formatPermitCount(citizen.permits.length)}
                           </Badge>
-                        ))}
+                        )}
                       </div>
                     }
-                    onClick={() => navigate(`/wpa/citizens/${citizen.id}`)}
+                    onClick={() => navigate(`/officer/citizens/${citizen.id}`)}
                   />
                 ))}
               </div>
@@ -398,15 +374,19 @@ export function WPASearchPage() {
               />
             </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <User className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">{debouncedQuery ? "Brak wyników dla podanych kryteriów" : "Brak obywateli w rejestrze"}</p>
-              {(debouncedQuery || activeFilterCount > 0) && (
-                <Button variant="outline" className="mt-3 rounded-xl min-h-[44px]" onClick={clearAll}>
-                  Wyczyść wyszukiwanie
-                </Button>
-              )}
-            </div>
+            <EmptyStateCard
+              icon={User}
+              title={debouncedQuery ? "Brak wyników dla podanych kryteriów" : "Brak obywateli w rejestrze"}
+              action={
+                debouncedQuery || activeFilterCount > 0
+                  ? {
+                      label: "Wyczyść wyszukiwanie",
+                      variant: "outline",
+                      onClick: clearAll,
+                    }
+                  : undefined
+              }
+            />
           )}
         </TabsContent>
 
@@ -423,25 +403,16 @@ export function WPASearchPage() {
             <>
               <div className="space-y-3">
                 {firearms.map((f) => (
-                  <ApplicationListTile
+                  <WpaFirearmSearchCard
                     key={f.id}
-                    icon={<Shield />}
-                    title={`${f.brand} ${f.model}`}
-                    lines={[
-                      `Właściciel: ${f.ownerName}`,
-                      `PESEL: ${f.ownerPesel}`,
-                      `Nr seryjny: ${f.serialNumber} · ${f.caliber}`,
-                      `Pozwolenie: ${f.permitNumber} · Rejestracja: ${formatDate(f.registeredAt)}`,
-                    ]}
-                    statusBadge={
-                      <div className="flex flex-wrap gap-1.5">
-                        {getStatusBadge(f.status)}
-                        {getCategoryBadge(f.category)}
-                        <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px] md:text-xs">
-                          {f.permitType}
-                        </Badge>
-                      </div>
+                    firearm={f}
+                    expanded={expandedFirearmId === f.id}
+                    onToggle={() =>
+                      setExpandedFirearmId((current) => (current === f.id ? null : f.id))
                     }
+                    statusBadge={getStatusBadge(f.status)}
+                    categoryBadge={getFirearmCategoryBadge(f.category)}
+                    formatDate={formatDate}
                   />
                 ))}
               </div>
@@ -456,17 +427,23 @@ export function WPASearchPage() {
               />
             </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground rounded-2xl bg-muted/20">
-              <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" aria-hidden />
-              <p className="text-sm">
-                {firearmsSearched ? "Brak wyników dla podanych kryteriów" : "Wpisz frazę w wyszukiwarce powyżej"}
-              </p>
-              {(debouncedQuery || activeFilterCount > 0) && (
-                <Button variant="outline" className="mt-3 rounded-xl min-h-[44px]" onClick={clearAll}>
-                  Wyczyść wyszukiwanie
-                </Button>
-              )}
-            </div>
+            <EmptyStateCard
+              icon={Shield}
+              title={
+                firearmsSearched
+                  ? "Brak wyników dla podanych kryteriów"
+                  : "Wpisz frazę w wyszukiwarce powyżej"
+              }
+              action={
+                debouncedQuery || activeFilterCount > 0
+                  ? {
+                      label: "Wyczyść wyszukiwanie",
+                      variant: "outline",
+                      onClick: clearAll,
+                    }
+                  : undefined
+              }
+            />
           )}
         </TabsContent>
       </Tabs>

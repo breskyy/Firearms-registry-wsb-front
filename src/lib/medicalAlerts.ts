@@ -11,7 +11,7 @@ export function getMedicalAlertTypeLabel(type: string) {
     case "PsychologicalExamExpired":
       return "Badanie psychologiczne wygasło";
     default:
-      return type;
+      return "Inny alert medyczny";
   }
 }
 
@@ -26,6 +26,12 @@ export function getDaysUntilDueDate(dueDate: string | null | undefined) {
   const due = new Date(dueDate);
   due.setHours(0, 0, 0, 0);
   return Math.ceil((due.getTime() - today.getTime()) / (1000 * 3600 * 24));
+}
+
+export function formatActiveMedicalAlertCount(count: number) {
+  if (count === 1) return "1 alert medyczny";
+  if (count >= 2 && count <= 4) return `${count} alerty medyczne`;
+  return `${count} alertów medycznych`;
 }
 
 export function formatMedicalAlertDate(dateStr: string) {

@@ -4,7 +4,6 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
 import { cn } from "../components/ui/utils";
 import {
   AlertCircle,
@@ -25,7 +24,9 @@ import { ReviewCollapsibleCard } from "../components/wpa/ReviewCollapsibleCard";
 import { applicationSectionIcon } from "../components/wpa/ApplicationDetailField";
 import { PermitApplicationAttachmentsCard } from "../components/wpa/PermitApplicationAttachmentsCard";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, PermitDto } from "../../types/api";
-import { getApplicationStatusMeta } from "../../lib/statusUi";
+import { getApplicationStatusMeta, getPermitStatusMeta, UNKNOWN_STATUS_LABEL } from "../../lib/statusUi";
+import { getApiErrorMessage } from "../../lib/apiErrors";
+import { StatusBadge } from "../components/StatusBadge";
 
 const PERMIT_TYPE_LABELS: Record<string, string> = {
   Sport: "Sportowe",
@@ -45,11 +46,7 @@ const CORRECTABLE_STATUSES = ["Submitted", "UnderReview"];
 const FINAL_STATUSES = ["Approved", "Rejected"];
 
 function getStatusBadge(status: string) {
-  const meta = getApplicationStatusMeta(status);
-  if (!meta) {
-    return <Badge className="rounded-full px-2 py-0.5">{status}</Badge>;
-  }
-  return <Badge variant={meta.variant} className={meta.badgeClassName}>{meta.label}</Badge>;
+  return <StatusBadge meta={getApplicationStatusMeta(status)} />;
 }
 
 export function DecisionPage() {
@@ -128,12 +125,12 @@ export function DecisionPage() {
     if (!decision) newErrors.decision = "Musisz podjąć decyzję";
 
     if (decision === "mark-under-review" && !canMarkUnderReview) {
-      newErrors.decision = "Tego wniosku nie mozna juz oznaczyc jako weryfikowany";
+      newErrors.decision = "Tego wniosku nie można już oznaczyć jako weryfikowany";
     }
     if (decision === "approve" && !canApprove) {
       newErrors.decision = type === "promise"
-        ? "Najpierw oznacz wniosek jako weryfikowany, dopiero potem zatwierdz promese"
-        : "Tego wniosku nie mozna zatwierdzic w obecnym statusie";
+        ? "Najpierw oznacz wniosek jako weryfikowany, dopiero potem zatwierdź promesę"
+        : "Tego wniosku nie można zatwierdzić w obecnym statusie";
     }
 
     if (decision === "require-correction" && !canRequireCorrection) {
@@ -200,8 +197,8 @@ export function DecisionPage() {
       };
       toast.success(messages[decision!]);
       navigate("/officer");
-    } catch (err: any) {
-      toast.error("Błąd zapisu decyzji", { description: err?.message ?? "Spróbuj ponownie" });
+    } catch (err: unknown) {
+      toast.error("Błąd zapisu decyzji", { description: getApiErrorMessage(err) || "Spróbuj ponownie" });
     } finally {
       setSubmitting(false);
     }
@@ -244,7 +241,7 @@ export function DecisionPage() {
       />
 
       <div className="grid gap-2.5 md:gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-w-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-2.5 md:gap-4">
             {!isReadOnly && (
               <ReviewCollapsibleCard
@@ -302,7 +299,7 @@ export function DecisionPage() {
                     >
                       <Clock className="h-4 w-4 md:h-5 md:w-5 text-blue-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Oznacz jako weryfikowany</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Oznacz jako weryfikowany</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Zmiana statusu na &quot;W weryfikacji&quot;</p>
                       </div>
                     </button>
@@ -321,7 +318,7 @@ export function DecisionPage() {
                     >
                       <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-emerald-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Zatwierdź wniosek</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Zatwierdź wniosek</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">{type === "permit" ? "Wygeneruj pozwolenie na broń" : "Wygeneruj aktywną promesę"}</p>
                       </div>
                     </button>
@@ -340,7 +337,7 @@ export function DecisionPage() {
                     >
                       <FileWarning className="h-4 w-4 md:h-5 md:w-5 text-orange-500 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Wezwij do uzupełnienia</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Wezwij do uzupełnienia</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Wniosek posiada braki formalne lub dokumentacyjne</p>
                       </div>
                     </button>
@@ -359,14 +356,14 @@ export function DecisionPage() {
                     >
                       <XCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm md:text-base text-foreground mb-0.5">Odrzuć wniosek</p>
+                        <p className="font-semibold text-sm text-foreground mb-0.5">Odrzuć wniosek</p>
                         <p className="text-xs md:text-sm text-muted-foreground leading-snug">Wydaj negatywną decyzję z uzasadnieniem</p>
                       </div>
                     </button>
                   </div>
                   {type === "promise" && !canApprove && (
                     <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-                      Najpierw oznacz wniosek jako weryfikowany. Zatwierdzenie promesy bedzie dostepne po zmianie statusu na &quot;UnderReview&quot;.
+                      Najpierw oznacz wniosek jako weryfikowany. Zatwierdzenie promesy będzie dostępne po zmianie statusu na „{getApplicationStatusMeta("UnderReview")?.label ?? "W weryfikacji"}”.
                     </div>
                   )}
                   {errors.decision && (
@@ -494,7 +491,7 @@ export function DecisionPage() {
             {promiseApp && (
               <ReviewCollapsibleCard
                 title="Pozwolenie bazowe"
-                description="Promesa może być wydana tylko przy aktywnym pozwoleniu z wolnymi slotami i aktualnych badaniach"
+                description="Promesa może być wydana tylko przy aktywnym pozwoleniu z wolnymi miejscami i aktualnych badaniach"
                 icon={applicationSectionIcon(<Shield className="h-5 w-5" />)}
                 defaultOpen={false}
                 className="order-6 lg:order-4"
@@ -508,25 +505,25 @@ export function DecisionPage() {
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Typ</p>
-                        <p className="font-medium text-sm md:text-base">
+                        <p className="font-medium text-sm">
                           {PERMIT_TYPE_LABELS[linkedPermit.permitTypeName] ?? linkedPermit.permitTypeName}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Status</p>
-                        <p className={`font-medium text-sm md:text-base ${linkedPermit.statusName === "Active" ? "text-emerald-700" : "text-red-600"}`}>
-                          {linkedPermit.statusName === "Active" ? "Aktywne" : linkedPermit.statusName}
+                        <p className={`font-medium text-sm ${linkedPermit.statusName === "Active" ? "text-emerald-700" : "text-red-600"}`}>
+                          {getPermitStatusMeta(linkedPermit.statusName)?.label ?? UNKNOWN_STATUS_LABEL}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[11px] md:text-xs text-muted-foreground">Wolne sloty</p>
-                        <p className={`font-medium text-sm md:text-base ${linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <p className="text-[11px] md:text-xs text-muted-foreground">Wolne miejsca w pozwoleniu</p>
+                        <p className={`font-medium text-sm ${linkedPermit.availableSlots > 0 ? "text-emerald-700" : "text-red-600"}`}>
                           {linkedPermit.availableSlots} z {linkedPermit.maxFirearms}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] md:text-xs text-muted-foreground">Ważne do</p>
-                        <p className="font-medium text-sm md:text-base">{new Date(linkedPermit.expiryDate).toLocaleDateString("pl-PL")}</p>
+                        <p className="font-medium text-sm">{new Date(linkedPermit.expiryDate).toLocaleDateString("pl-PL")}</p>
                       </div>
                     </div>
 
@@ -543,14 +540,14 @@ export function DecisionPage() {
                           <>
                             <div className={`rounded-lg md:rounded-xl p-2.5 md:p-3 ${medValid ? "bg-emerald-50" : "bg-red-50"}`}>
                               <p className="text-[11px] md:text-xs text-muted-foreground">Bad. lekarskie ważne do</p>
-                              <p className={`font-semibold text-sm md:text-base ${medValid ? "text-emerald-900" : "text-red-900"}`}>
+                              <p className={`font-semibold text-sm ${medValid ? "text-emerald-900" : "text-red-900"}`}>
                                 {med ? med.toLocaleDateString("pl-PL") : "Brak danych"}
                                 {!medValid && med && " (wygasło)"}
                               </p>
                             </div>
                             <div className={`rounded-lg md:rounded-xl p-2.5 md:p-3 ${psyValid ? "bg-emerald-50" : "bg-red-50"}`}>
                               <p className="text-[11px] md:text-xs text-muted-foreground">Bad. psychologiczne ważne do</p>
-                              <p className={`font-semibold text-sm md:text-base ${psyValid ? "text-emerald-900" : "text-red-900"}`}>
+                              <p className={`font-semibold text-sm ${psyValid ? "text-emerald-900" : "text-red-900"}`}>
                                 {psy ? psy.toLocaleDateString("pl-PL") : "Brak danych"}
                                 {!psyValid && psy && " (wygasło)"}
                               </p>
@@ -576,7 +573,7 @@ export function DecisionPage() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[52px] w-full rounded-xl text-sm md:text-base font-semibold"
+                className="min-h-[52px] w-full rounded-xl text-sm font-semibold"
               >
                 {submitting ? "Zapisywanie..." : "Zatwierdź i wyślij"}
               </Button>

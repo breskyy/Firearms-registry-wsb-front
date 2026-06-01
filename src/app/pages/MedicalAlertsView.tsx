@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsTrigger } from "../components/ui/tabs";
+import { EmptyStateCard } from "../components/EmptyStateCard";
+import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
-import { CheckCircle, ChevronRight, Shield } from "lucide-react";
+import { AppTabTrigger } from "../components/ui/AppTabTrigger";
+import { CheckCircle, ChevronRight, Shield, ClipboardList, AlertTriangle } from "lucide-react";
 import { cn } from "../components/ui/utils";
 import { CitizenNavIconTile } from "../components/citizen/CitizenNavIconTile";
 import { PermitExamStatusRow } from "../components/citizen/PermitExamStatusRow";
@@ -125,48 +125,33 @@ export function MedicalAlertsView() {
       </div>
 
       {activePermits.length === 0 ? (
-        <Card className="rounded-2xl border-none shadow-sm">
-          <CardContent className="p-12 text-center">
-            <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-            <p className="text-foreground font-semibold mb-1">Brak aktywnych pozwoleń</p>
-            <p className="text-muted-foreground text-sm">
-              Gdy pozwolenie zostanie aktywowane, badania pojawią się automatycznie w tym widoku.
-            </p>
-            <Button variant="outline" className="mt-4 rounded-xl" onClick={() => navigate("/weapons")}>
-              <Shield className="h-4 w-4 mr-2" />
-              Moje pozwolenia
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateCard
+          icon={CheckCircle}
+          iconClassName="text-emerald-600"
+          title="Brak aktywnych pozwoleń"
+          description="Gdy pozwolenie zostanie aktywowane, badania pojawią się automatycznie w tym widoku."
+          emphasizeTitle
+          action={{
+            label: "Moje pozwolenia",
+            variant: "outline",
+            onClick: () => navigate("/weapons"),
+            icon: <Shield className="h-4 w-4 mr-2" aria-hidden />,
+          }}
+        />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <AppTabsList className="grid grid-cols-2">
-            <TabsTrigger value="all" className="rounded-xl">
-              Wszystkie
-              {allGroups.length > 0 && (
-                <Badge className="ml-2 bg-slate-500 hover:bg-slate-600 px-1.5 py-0 text-xs h-5 min-w-5">
-                  {allGroups.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="attention" className="rounded-xl">
-              Wymaga uwagi
-              {attentionGroups.length > 0 && (
-                <Badge className="ml-2 bg-amber-500 hover:bg-amber-600 px-1.5 py-0 text-xs h-5 min-w-5">
-                  {attentionGroups.length}
-                </Badge>
-              )}
-            </TabsTrigger>
+            <AppTabTrigger value="all" label="Wszystkie" icon={ClipboardList} count={allGroups.length} />
+            <AppTabTrigger value="attention" label="Wymaga uwagi" icon={AlertTriangle} count={attentionGroups.length} />
           </AppTabsList>
 
           <TabsContent value="all" className="space-y-3">
             {allGroups.length === 0 ? (
-              <Card className="rounded-2xl border-none shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-                  <p className="text-muted-foreground">Brak danych o badaniach dla aktywnych pozwoleń</p>
-                </CardContent>
-              </Card>
+              <EmptyStateCard
+                icon={CheckCircle}
+                iconClassName="text-emerald-600"
+                title="Brak danych o badaniach dla aktywnych pozwoleń"
+              />
             ) : (
               renderGroups(allGroups)
             )}
@@ -174,15 +159,13 @@ export function MedicalAlertsView() {
 
           <TabsContent value="attention" className="space-y-3">
             {attentionGroups.length === 0 ? (
-              <Card className="rounded-2xl border-none shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="h-16 w-16 mx-auto mb-4 opacity-30 text-emerald-600" />
-                  <p className="text-foreground font-semibold mb-1">Wszystko aktualne</p>
-                  <p className="text-muted-foreground text-sm">
-                    Żadne badanie nie wygasa, nie wygasło ani nie ma brakującej daty w rejestrze.
-                  </p>
-                </CardContent>
-              </Card>
+              <EmptyStateCard
+                icon={CheckCircle}
+                iconClassName="text-emerald-600"
+                title="Wszystko aktualne"
+                description="Żadne badanie nie wygasa, nie wygasło ani nie ma brakującej daty w rejestrze."
+                emphasizeTitle
+              />
             ) : (
               renderGroups(attentionGroups)
             )}
