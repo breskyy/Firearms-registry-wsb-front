@@ -347,7 +347,41 @@ export const transferRequests: any[] = [];
 
 // ── Medical exam renewals (permit) ────────────────────────────────────────────
 
-export const medicalExamRenewals: any[] = [];
+/** Demo pending renewal on permit4 (WPA verification queue); permit1 stays without renewal so citizen sees CTA. */
+export const medicalExamRenewals: any[] = [
+  {
+    id: 'renewal-demo-002',
+    permitId: IDS.permit4,
+    citizenId: 'citizen-003',
+    status: 'Submitted',
+    statusName: 'Submitted',
+    proposedMedicalExamExpiryDate: daysFromNow(365),
+    proposedPsychologicalExamExpiryDate: daysFromNow(90),
+    createdAt: daysAgo(1),
+    reviewedAt: null,
+    rejectionReason: null,
+    attachments: [
+      {
+        id: 'renewal-att-med-004',
+        attachmentType: 'MedicalCertificate',
+        attachmentTypeName: 'MedicalCertificate',
+        fileName: 'orzeczenie_lekarskie_odnowienie.pdf',
+        contentType: 'application/pdf',
+        fileSizeBytes: 120_000,
+        uploadedAt: daysAgo(1),
+      },
+      {
+        id: 'renewal-att-psych-004',
+        attachmentType: 'PsychologicalCertificate',
+        attachmentTypeName: 'PsychologicalCertificate',
+        fileName: 'orzeczenie_psychologiczne_odnowienie.pdf',
+        contentType: 'application/pdf',
+        fileSizeBytes: 98_000,
+        uploadedAt: daysAgo(1),
+      },
+    ],
+  },
+];
 
 export const PENDING_RENEWAL_STATUSES = new Set(['Submitted', 'UnderReview']);
 

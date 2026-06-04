@@ -233,7 +233,7 @@ export function WeaponRegistry() {
   }
 
   return (
-    <div className="pt-2 max-md:pb-2">
+    <div className="pt-2">
       <div className="mb-4 px-1">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">Rejestr broni</h1>
         <p className="text-sm text-muted-foreground">Twoje zarejestrowane egzemplarze</p>

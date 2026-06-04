@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
 import { AppTabTrigger } from "../components/ui/AppTabTrigger";
-import { FileText, Clock, CheckCircle, Shield, CreditCard, AlertTriangle, Search, User, CalendarCheck, Ban } from "lucide-react";
+import { FileText, Clock, CheckCircle, Shield, CreditCard, AlertTriangle, Search, User, CalendarCheck, Ban, HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
 import type {
@@ -14,7 +14,6 @@ import type {
   WpaMedicalAlertDto,
   WpaPermitMedicalExamRenewalDto,
 } from "../../types/api";
-import { PENDING_RENEWAL_STATUSES } from "../../lib/medicalExamRenewals";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
 import { getApiErrorMessage } from "../../lib/apiErrors";
@@ -23,6 +22,7 @@ import {
   getMedicalAlertTypeLabel,
   isMedicalAlertExpired,
 } from "../../lib/medicalAlerts";
+import { buildWpaMedicalWorkQueue, getRenewalStatusMeta } from "../../lib/wpaMedicalWorkQueue";
 import { EmptyStateCard } from "../components/EmptyStateCard";
 import { ApplicationListTile } from "../components/wpa/ApplicationListTile";
 import { WpaListSectionHeader } from "../components/wpa/WpaListSectionHeader";
@@ -33,6 +33,11 @@ import { getPermitApplicationTypeLabel } from "../utils/permitLabels";
 
 function getStatusBadge(status: string) {
   return <StatusBadge meta={getApplicationStatusMeta(status)} />;
+}
+
+function getRenewalStatusBadge(status: string) {
+  const meta = getRenewalStatusMeta(status);
+  return meta ? <StatusBadge meta={meta} /> : null;
 }
 
 function getAlertBadge(type: string) {
@@ -83,9 +88,13 @@ export function OfficerDashboard() {
   const [loading, setLoading] = useState(true);
   const [suspendingPermitId, setSuspendingPermitId] = useState<string | null>(null);
 
-  const loadAlerts = async () => {
-    const al = await wpaService.getMedicalAlerts({ page: 1, pageSize: 20, resolved: false });
+  const loadMedicalWork = async () => {
+    const [al, renewals] = await Promise.all([
+      wpaService.getMedicalAlerts({ page: 1, pageSize: 50, resolved: false }),
+      wpaService.getMedicalExamRenewals({ page: 1, pageSize: 50 }),
+    ]);
     setAlerts(al.items);
+    setExamRenewals(renewals.items);
   };
 
   useEffect(() => {
@@ -97,9 +106,7 @@ export function OfficerDashboard() {
         ]);
         setPermitApps(pa.items);
         setPromiseApps(pra.items);
-        await loadAlerts();
-        const renewals = await wpaService.getMedicalExamRenewals({ page: 1, pageSize: 20 });
-        setExamRenewals(renewals.items);
+        await loadMedicalWork();
       } catch {
         // silent
       } finally {
@@ -109,10 +116,10 @@ export function OfficerDashboard() {
     load();
   }, []);
 
-  const findPendingRenewalForPermit = (permitId?: string | null) =>
-    examRenewals.find(
-      (r) => r.permitId === permitId && PENDING_RENEWAL_STATUSES.includes(r.status),
-    );
+  const medicalQueue = useMemo(
+    () => buildWpaMedicalWorkQueue(examRenewals, alerts),
+    [examRenewals, alerts],
+  );
 
   const handleSuspendPermit = async (alert: WpaMedicalAlertDto) => {
     if (!alert.permitId) {
@@ -126,7 +133,7 @@ export function OfficerDashboard() {
     try {
       await wpaService.suspendPermit(alert.permitId, { reason: reason || undefined });
       toast.success("Pozwolenie zawieszone");
-      await loadAlerts();
+      await loadMedicalWork();
     } catch (err: unknown) {
       toast.error("Nie udało się zawiesić pozwolenia", {
         description: getApiErrorMessage(err) || "Spróbuj ponownie",
@@ -143,6 +150,7 @@ export function OfficerDashboard() {
     promiseApps.filter((a) => a.statusName === "Submitted" || a.statusName === "Paid" || a.statusName === "UnderReview"),
   );
   const defaultTab = pendingPromises.length > pendingPermits.length ? "promises" : "permits";
+
   if (loading) {
     return (
       <div className="pt-1 md:pt-2">
@@ -156,6 +164,9 @@ export function OfficerDashboard() {
       </div>
     );
   }
+
+  const { verificationRenewals, monitoringAlerts, tabCount: medicalTabCount } = medicalQueue;
+  const hasMedicalWork = medicalTabCount > 0;
 
   return (
     <div className="pt-1 md:pt-2">
@@ -183,21 +194,14 @@ export function OfficerDashboard() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
-        <AppTabsList className="grid grid-cols-2 md:grid-cols-4">
+        <AppTabsList className="grid grid-cols-3">
           <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={pendingPermits.length} />
           <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={pendingPromises.length} />
           <AppTabTrigger
-            value="renewals"
-            label="Odnowienia"
-            icon={CalendarCheck}
-            count={examRenewals.length}
-          />
-          <AppTabTrigger
-            value="alerts"
-            label="Alerty"
-            ariaLabel="Alerty medyczne"
-            icon={AlertTriangle}
-            count={alerts.length}
+            value="medical"
+            label="Badania"
+            icon={HeartPulse}
+            count={medicalTabCount}
           />
         </AppTabsList>
 
@@ -209,45 +213,19 @@ export function OfficerDashboard() {
           {pendingPermits.length > 0 ? (
             <div className="space-y-3">
               {pendingPermits.map((app) => (
-                  <ApplicationListTile
-                    key={app.id}
-                    icon={<Shield />}
-                    title={`Pozwolenie — ${getPermitApplicationTypeLabel(app)}`}
-                    lines={[`Wnioskodawca: ${app.citizenName}`, `PESEL: ${app.citizenPesel}`]}
-                    date={formatDate(app.createdAt)}
-                    statusBadge={getStatusBadge(app.statusName)}
-                    onClick={() => navigate(`/applications/${app.id}?type=permit`)}
-                  />
-              ))}
-            </div>
-          ) : (
-            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o pozwolenie" />
-          )}
-        </TabsContent>
-
-        <TabsContent value="renewals" className="mt-0 space-y-3">
-          <WpaListSectionHeader
-            title="Odnowienia badań"
-            description="Zgłoszenia obywateli z nowymi zaświadczeniami"
-          />
-          {examRenewals.length > 0 ? (
-            <div className="space-y-3">
-              {examRenewals.map((renewal) => (
                 <ApplicationListTile
-                  key={renewal.id}
-                  icon={<CalendarCheck />}
-                  title={`${renewal.citizenName} — ${renewal.permitNumber}`}
-                  lines={[
-                    `Status: ${renewal.statusName}`,
-                    `Lekarskie do: ${formatMedicalAlertDate(renewal.proposedMedicalExamExpiryDate)}`,
-                  ]}
-                  date={formatDate(renewal.createdAt)}
-                  onClick={() => navigate(`/officer/medical-exam-renewals/${renewal.id}`)}
+                  key={app.id}
+                  icon={<Shield />}
+                  title={`Pozwolenie — ${getPermitApplicationTypeLabel(app)}`}
+                  lines={[`Wnioskodawca: ${app.citizenName}`, `PESEL: ${app.citizenPesel}`]}
+                  date={formatDate(app.createdAt)}
+                  statusBadge={getStatusBadge(app.statusName)}
+                  onClick={() => navigate(`/applications/${app.id}?type=permit`)}
                 />
               ))}
             </div>
           ) : (
-            <EmptyStateCard icon={CheckCircle} title="Brak oczekujących odnowień badań" />
+            <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o pozwolenie" />
           )}
         </TabsContent>
 
@@ -259,19 +237,19 @@ export function OfficerDashboard() {
           {pendingPromises.length > 0 ? (
             <div className="space-y-3">
               {pendingPromises.map((app) => (
-                  <ApplicationListTile
-                    key={app.id}
-                    icon={<CreditCard />}
-                    title={app.requestedWeaponType}
-                    lines={[
-                      `Wnioskodawca: ${app.citizenName}`,
-                      `PESEL: ${app.citizenPesel}`,
-                      `Pozwolenie: ${app.permitNumber} · Ilość: ${app.requestedQuantity}`,
-                    ]}
-                    date={formatDate(app.createdAt)}
-                    statusBadge={getStatusBadge(app.statusName)}
-                    onClick={() => navigate(`/applications/${app.id}?type=promise`)}
-                  />
+                <ApplicationListTile
+                  key={app.id}
+                  icon={<CreditCard />}
+                  title={app.requestedWeaponType}
+                  lines={[
+                    `Wnioskodawca: ${app.citizenName}`,
+                    `PESEL: ${app.citizenPesel}`,
+                    `Pozwolenie: ${app.permitNumber} · Ilość: ${app.requestedQuantity}`,
+                  ]}
+                  date={formatDate(app.createdAt)}
+                  statusBadge={getStatusBadge(app.statusName)}
+                  onClick={() => navigate(`/applications/${app.id}?type=promise`)}
+                />
               ))}
             </div>
           ) : (
@@ -279,69 +257,98 @@ export function OfficerDashboard() {
           )}
         </TabsContent>
 
-        <TabsContent value="alerts" className="mt-0 space-y-3">
-          <WpaListSectionHeader
-            title="Alerty medyczne"
-            description="Wygasające i wygasłe badania lekarskie"
-          />
-          {alerts.length > 0 ? (
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <ApplicationListTile
-                  key={alert.id}
-                  icon={<AlertTriangle />}
-                  title={getMedicalAlertTypeLabel(alert.alertTypeName)}
-                  lines={getMedicalAlertLines(alert)}
-                  statusBadge={getAlertBadge(alert.alertTypeName)}
-                  footer={
-                    <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                        onClick={() => navigate(`/officer/citizens/${alert.citizenId}`)}
-                      >
-                        <User className="h-4 w-4 mr-2" aria-hidden />
-                        Profil
-                      </Button>
-                      {alert.permitId && (() => {
-                        const pendingRenewal = findPendingRenewalForPermit(alert.permitId);
-                        return (
-                          <Button
-                            variant="outline"
-                            className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                            onClick={() =>
-                              pendingRenewal
-                                ? navigate(`/officer/medical-exam-renewals/${pendingRenewal.id}`)
-                                : navigate(`/officer/citizens/${alert.citizenId}?permitId=${alert.permitId}`)
-                            }
-                          >
-                            <CalendarCheck className="h-4 w-4 mr-2" aria-hidden />
-                            {pendingRenewal ? "Weryfikuj odnowienie" : "Profil i korekta dat"}
-                          </Button>
-                        );
-                      })()}
-                      {alert.permitId && isMedicalAlertExpired(alert.alertTypeName) && (
-                        <Button
-                          variant="destructive"
-                          className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                          disabled={suspendingPermitId === alert.permitId}
-                          onClick={() => handleSuspendPermit(alert)}
-                        >
-                          <Ban className="h-4 w-4 mr-2" aria-hidden />
-                          {suspendingPermitId === alert.permitId ? "Zawieszanie..." : "Zawieś pozwolenie"}
-                        </Button>
-                      )}
-                    </div>
-                  }
-                />
-              ))}
-            </div>
-          ) : (
+        <TabsContent value="medical" className="mt-0 space-y-6">
+          {!hasMedicalWork ? (
             <EmptyStateCard
               icon={CheckCircle}
               iconClassName="text-emerald-600"
-              title="Brak aktywnych alertów medycznych"
+              title="Brak spraw medycznych wymagających uwagi"
             />
+          ) : (
+            <>
+              <div className="space-y-3">
+                <WpaListSectionHeader
+                  title="Do weryfikacji"
+                  description="Zgłoszenia obywatela z załączonymi orzeczeniami — otwórz sprawę, aby pobrać pliki i zatwierdzić lub odrzucić"
+                />
+                {verificationRenewals.length > 0 ? (
+                  <div className="space-y-3">
+                    {verificationRenewals.map((renewal) => (
+                      <ApplicationListTile
+                        key={renewal.id}
+                        icon={<CalendarCheck />}
+                        title={`Odnowienie badań — ${renewal.permitNumber}`}
+                        lines={[
+                          `Obywatel: ${renewal.citizenName}`,
+                          `PESEL: ${renewal.citizenPesel}`,
+                          `Proponowane lekarskie do: ${formatMedicalAlertDate(renewal.proposedMedicalExamExpiryDate)}`,
+                        ]}
+                        date={formatDate(renewal.createdAt)}
+                        statusBadge={getRenewalStatusBadge(renewal.status)}
+                        onClick={() => navigate(`/officer/medical-exam-renewals/${renewal.id}`)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground px-0.5">
+                    Brak zgłoszeń oczekujących na weryfikację.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <WpaListSectionHeader
+                  title="Monitorowanie"
+                  description="Alerty w rejestrze — obywatel nie złożył jeszcze odnowienia w systemie. Korekta dat tylko z profilu obywatela (dokumenty papierowe)."
+                />
+                {monitoringAlerts.length > 0 ? (
+                  <div className="space-y-3">
+                    {monitoringAlerts.map((alert) => (
+                      <ApplicationListTile
+                        key={alert.id}
+                        icon={<AlertTriangle />}
+                        title={getMedicalAlertTypeLabel(alert.alertTypeName)}
+                        lines={getMedicalAlertLines(alert)}
+                        statusBadge={getAlertBadge(alert.alertTypeName)}
+                        footer={
+                          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/officer/citizens/${alert.citizenId}`);
+                              }}
+                            >
+                              <User className="h-4 w-4 mr-2" aria-hidden />
+                              Profil obywatela
+                            </Button>
+                            {alert.permitId && isMedicalAlertExpired(alert.alertTypeName) && (
+                              <Button
+                                variant="destructive"
+                                className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
+                                disabled={suspendingPermitId === alert.permitId}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleSuspendPermit(alert);
+                                }}
+                              >
+                                <Ban className="h-4 w-4 mr-2" aria-hidden />
+                                {suspendingPermitId === alert.permitId ? "Zawieszanie..." : "Zawieś pozwolenie"}
+                              </Button>
+                            )}
+                          </div>
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground px-0.5">
+                    Brak alertów bez zgłoszenia odnowienia.
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </TabsContent>
       </Tabs>

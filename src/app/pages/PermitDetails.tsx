@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { AlertTriangle, CalendarDays, ClipboardList, Crosshair, FileUp, Shield } from "lucide-react";
+import { CalendarDays, ClipboardList, Crosshair, FileUp, Shield } from "lucide-react";
 import { CitizenMedicalNavIcon } from "../components/citizen/CitizenMedicalNavIcon";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -129,7 +129,9 @@ export function PermitDetails() {
 
       {examsNeedAttention && (
         <Card
-          className="rounded-2xl border-none shadow-sm bg-amber-50/80 gap-0 cursor-pointer active:scale-[0.99] transition-transform"
+          className={cn(
+            "rounded-2xl border-none shadow-sm bg-card gap-0 cursor-pointer active:scale-[0.99] transition-transform ring-1 ring-border/80",
+          )}
           onClick={scrollToExamsSection}
           role="button"
           tabIndex={0}
@@ -141,12 +143,10 @@ export function PermitDetails() {
           }}
         >
           <CardContent className={cn(CITIZEN_LIST_CARD_CONTENT_CLASS, "flex items-center gap-3")}>
-            <div className="bg-amber-100 p-2 rounded-full text-amber-700 shrink-0">
-              <AlertTriangle className="h-5 w-5" aria-hidden />
-            </div>
+            <CitizenMedicalNavIcon status={examAttentionStatus} variant="inline" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-950 leading-snug">Badania wymagają uwagi</p>
-              <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+              <p className="text-sm font-semibold text-foreground leading-snug">Badania wymagają uwagi</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                 {examAttentionStatus === "expired"
                   ? "Co najmniej jedno badanie wygasło — odnowienie jest konieczne przed dalszymi operacjami."
                   : examAttentionStatus === "missing"
@@ -241,7 +241,6 @@ export function PermitDetails() {
           title="Badania"
           description="Ważność badań medycznych i psychologicznych"
           icon={<CitizenMedicalNavIcon status={examAttentionStatus} variant="inline" />}
-          titleAddon={examsNeedAttention ? <ExamStatusBadge status={examAttentionStatus} /> : undefined}
           open={examsSectionOpen}
           onOpenChange={setExamsSectionOpen}
         >

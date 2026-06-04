@@ -165,10 +165,7 @@ export function ApplicationDetails() {
         />
       ) : (
         <div className="mb-6 px-1">
-          <div className="flex items-start justify-between mb-1">
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground flex-1 pr-4">{title}</h1>
-            <div className="mt-1">{getStatusBadge(app.statusName)}</div>
-          </div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">{title}</h1>
           <p className="text-sm text-muted-foreground">
             Nr wniosku: <span className="font-mono text-foreground">{formatApplicationId(app.id)}</span>
           </p>
