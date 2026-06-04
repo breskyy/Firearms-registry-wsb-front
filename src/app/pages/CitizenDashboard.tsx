@@ -108,7 +108,7 @@ export function CitizenDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6 pt-2 max-md:pb-2">
+      <div className="space-y-6 pt-2">
         <div className="px-1">
           <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-2" />
           <div className="h-4 w-64 bg-muted animate-pulse rounded" />
@@ -119,7 +119,7 @@ export function CitizenDashboard() {
   }
 
   return (
-    <div className="space-y-6 pt-2 max-md:pb-2">
+    <div className="space-y-6 pt-2">
       {/* Header */}
       <div className="px-1">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">

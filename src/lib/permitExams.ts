@@ -189,12 +189,12 @@ export function sortPermitGroupsByAttentionPriority(groups: PermitExamGroup[]) {
   );
 }
 
-/** Icon tile background for exam status (citizen nav, list rows, permit details). */
+/** Icon tile accent for exam status — subtle tint on small icon only, not whole cards. */
 export function getExamStatusTileClass(status: ExamStatus | null | undefined) {
   if (!status || status === "current") return undefined;
-  if (status === "expired") return "bg-red-100 text-red-700";
-  if (status === "expiring") return "bg-amber-100 text-amber-800";
-  return "bg-slate-100 text-slate-700";
+  if (status === "expired") return "bg-red-50 text-red-700";
+  if (status === "expiring") return "bg-amber-50 text-amber-800";
+  return "bg-muted text-muted-foreground";
 }
 
 /** Attention dot on medical nav icon (amber = wygasa, red = wygasło). */

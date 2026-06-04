@@ -93,7 +93,7 @@ export function ApplicationTypeSelect() {
   };
 
   return (
-    <div className="pt-2 max-md:pb-2 space-y-4">
+    <div className="pt-2 space-y-4">
       <div className="px-1">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">
           Nowy wniosek

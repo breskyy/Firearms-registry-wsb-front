@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { Button } from "./ui/button";
 import { LogOut, ChevronLeft, Home, FileText, Shield, PlusCircle, CheckSquare, FileCheck } from "lucide-react";
 import { WPA_REVIEW_BAR_PORTAL_ID } from "./wpa/WpaApplicationReviewBar";
-import { contentColumnClass } from "../utils/layout";
+import { contentColumnClass, mobileMainPaddingBottomClass } from "../utils/layout";
 import { cn } from "./ui/utils";
 import { AppLogo } from "./AppLogo";
 import { getMobileBottomNav } from "../config/mobileBottomNav";
@@ -86,27 +86,26 @@ export function Layout() {
       {!isLoginPage && (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Back button logic */}
+            <div className="flex items-center gap-1 md:gap-3 min-w-0">
               {!isDashboardPath && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="mr-1 h-10 w-10 rounded-full"
+                  className="shrink-0 h-8 w-8 min-h-8 min-w-8 md:h-10 md:w-10 md:min-h-[44px] md:min-w-[44px] rounded-full"
                   aria-label="Wróć"
                 >
-                  <ChevronLeft className="h-6 w-6 text-primary" />
+                  <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </Button>
               )}
               <button
                 type="button"
                 onClick={() => navigate(homePath)}
-                className="flex items-center gap-2.5 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center gap-1.5 md:gap-2.5 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-w-0"
                 aria-label="Przejdź do pulpitu"
               >
-                <AppLogo size="lg" />
-                <span className="text-xl font-bold text-foreground">e-Broń</span>
+                <AppLogo className="!h-9 !w-9 md:!h-12 md:!w-12 shrink-0" />
+                <span className="text-base md:text-xl font-bold text-foreground truncate">e-Broń</span>
               </button>
             </div>
             
@@ -153,7 +152,9 @@ export function Layout() {
       {/* Main Content */}
       <main
         className={cn(
-          "flex-1 flex flex-col pt-4 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-8",
+          "flex-1 flex flex-col pt-4",
+          mobileMainPaddingBottomClass,
+          "md:pb-8",
           contentColumnClass,
         )}
       >

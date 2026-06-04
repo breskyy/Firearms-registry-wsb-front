@@ -66,9 +66,14 @@ export function PermitExamStatusRow({ entry, className, pendingRenewalLabel }: P
 
         <DateStatusMeta className="mt-1" emphasizeDate statusBadge={statusBadge(entry)}>
           {entry.expiryDate
-            ? `${entry.status === "expired" ? "Wygasło" : "Ważne do"}: ${formatMedicalAlertDate(entry.expiryDate)}`
-            : "Ważne do: brak danych"}
-          {entry.daysLeft != null && entry.daysLeft < 0 && ` (${Math.abs(entry.daysLeft)} dni temu)`}
+            ? `${formatMedicalAlertDate(entry.expiryDate)}${
+                entry.daysLeft != null && entry.daysLeft < 0
+                  ? ` (${Math.abs(entry.daysLeft)} dni temu)`
+                  : entry.daysLeft != null && entry.daysLeft >= 0
+                    ? ` (za ${entry.daysLeft} dni)`
+                    : ""
+              }`
+            : "Brak daty ważności w rejestrze"}
         </DateStatusMeta>
 
         {entry.alertMessage && (
@@ -76,25 +81,18 @@ export function PermitExamStatusRow({ entry, className, pendingRenewalLabel }: P
         )}
 
         {pendingRenewalLabel && (
-          <p className="text-xs text-amber-900 bg-amber-50 rounded-lg p-2 mt-2 leading-relaxed">
-            <strong>Zgłoszenie w WPA:</strong> {pendingRenewalLabel}
+          <p className="text-xs text-muted-foreground bg-muted/40 border border-border/80 rounded-xl p-2.5 mt-2 leading-relaxed">
+            <span className="font-medium text-foreground">Zgłoszenie w WPA:</span> {pendingRenewalLabel}
           </p>
         )}
 
         {showWarningBlock && (
-          <div
-            className={cn(
-              "rounded-lg p-2 mt-2",
-              entry.status === "expired" ? "bg-red-100" : "bg-slate-100",
-            )}
-          >
-            <p className={cn("text-xs", entry.status === "expired" ? "text-red-900" : "text-slate-800")}>
-              <strong>Wymagane działanie:</strong>{" "}
-              {entry.status === "missing"
-                ? "Brakuje potwierdzonej daty ważności w rejestrze. Złóż odnowienie z zaświadczeniami do WPA."
-                : "Odnów badanie i złóż nowe zaświadczenia w systemie — urzędnik zaktualizuje pozwolenie po weryfikacji."}
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground bg-muted/40 border border-border/80 rounded-xl p-2.5 mt-2 leading-relaxed">
+            <span className="font-medium text-foreground">Wymagane działanie:</span>{" "}
+            {entry.status === "missing"
+              ? "Brakuje potwierdzonej daty ważności w rejestrze. Złóż odnowienie z zaświadczeniami do WPA."
+              : "Odnów badanie i złóż nowe zaświadczenia w systemie — urzędnik zaktualizuje pozwolenie po weryfikacji."}
+          </p>
         )}
       </div>
     </div>

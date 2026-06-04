@@ -9,7 +9,11 @@ import { Button } from "../components/ui/button";
 import { cn } from "../components/ui/utils";
 import { CitizenNavIconTile } from "../components/citizen/CitizenNavIconTile";
 import { PermitExamStatusRow } from "../components/citizen/PermitExamStatusRow";
-import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
+import {
+  CITIZEN_LIST_CARD_CLASS,
+  CITIZEN_LIST_CARD_CONTENT_CLASS,
+  CITIZEN_TILE_SUBTITLE_CLASS,
+} from "../utils/citizenCardUi";
 import { useNavigate } from "react-router";
 import { citizenService } from "../../services/citizenService";
 import type { CitizenMedicalAlertDto, PermitDto, PermitMedicalExamRenewalDto } from "../../types/api";
@@ -74,15 +78,7 @@ export function MedicalAlertsView() {
     const showRenewalCta = needsExamAttention(tone) && !pending;
 
     return (
-      <Card
-        className={cn(
-          "rounded-2xl border-none shadow-sm gap-0 overflow-hidden",
-          tone === "expired" && "bg-red-50/40",
-          tone === "missing" && "bg-slate-50",
-          tone === "current" && "bg-card",
-          tone === "expiring" && "bg-card",
-        )}
-      >
+      <Card className={cn(CITIZEN_LIST_CARD_CLASS, "bg-card overflow-hidden")}>
         <CardContent className={CITIZEN_LIST_CARD_CONTENT_CLASS}>
           <button
             type="button"
@@ -95,7 +91,7 @@ export function MedicalAlertsView() {
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">Pozwolenie</p>
               <h3 className="font-semibold text-sm leading-snug text-foreground font-mono">{group.permitNumber}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{permitType}</p>
+              <p className={cn(CITIZEN_TILE_SUBTITLE_CLASS, "mt-0.5")}>{permitType}</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground self-center" aria-hidden />
           </button>
@@ -110,6 +106,12 @@ export function MedicalAlertsView() {
             ))}
           </div>
 
+          {pending && (
+            <p className="text-xs text-muted-foreground bg-muted/40 border border-border/80 rounded-xl p-2.5 mt-3 leading-relaxed">
+              <span className="font-medium text-foreground">Zgłoszenie wysłane:</span>{" "}
+              {renewalStatusLabel(pending.status)}. Nie możesz złożyć drugiego odnowienia do czasu decyzji WPA.
+            </p>
+          )}
           {showRenewalCta && (
             <Button
               className="w-full mt-3 min-h-[44px] rounded-xl"
