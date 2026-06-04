@@ -101,6 +101,9 @@ function PermitRow({
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Korekta rejestru (bez zgłoszenia obywatela) — użyj tylko poza ścieżką odnowienia badań.
+              </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor={`medical-${permit.id}`}>Badanie lekarskie ważne do</Label>
@@ -157,7 +160,7 @@ function PermitRow({
               }}
             >
               <CalendarCheck className="h-4 w-4 mr-2" />
-              Zaktualizuj badania
+              Korekta dat w rejestrze
             </Button>
           )}
         </div>

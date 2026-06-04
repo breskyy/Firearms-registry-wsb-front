@@ -2,17 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { EmptyStateCard, type EmptyStateAction } from "../components/EmptyStateCard";
-import { cn } from "../components/ui/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
 import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { SearchBarWithFilters } from "../components/search/SearchBarWithFilters";
 import { SearchFiltersSheet, SearchFilterField, filterSelectTriggerClass } from "../components/search/SearchFiltersSheet";
-import { Shield, CreditCard, FileText, QrCode } from "lucide-react";
-import { CITIZEN_NAV_ICON_TONE, CITIZEN_NAV_ICON_TONE_DISABLED } from "../utils/citizenCardUi";
+import { Shield, CreditCard } from "lucide-react";
 import { CitizenApplicationCard } from "../components/citizen/CitizenApplicationCard";
 import { toast } from "sonner";
 import { citizenService } from "../../services/citizenService";
@@ -254,17 +251,6 @@ export function ApplicationsList() {
     );
   }
 
-  const isPromiseCreateTab = activeTab === "promises";
-  const createTileDisabled = !isOfficer && isPromiseCreateTab && !promiseAllowed;
-  const CreateTileIcon = isPromiseCreateTab ? QrCode : FileText;
-  const createTileLabel = isPromiseCreateTab ? "Nowa promesa" : "Nowy wniosek";
-  const createTilePath = isPromiseCreateTab ? "/applications/new/promise" : "/applications/new/permit";
-
-  const handleCreateTileActivate = () => {
-    if (createTileDisabled) return;
-    navigate(createTilePath);
-  };
-
   return (
     <div className="pt-2 max-md:pb-2">
       <div className="mb-4 px-1">
@@ -330,41 +316,6 @@ export function ApplicationsList() {
           <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={filteredPermit.length} />
           <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={filteredPromise.length} />
         </AppTabsList>
-
-        {!isOfficer && (
-          <div className="flex justify-center -mt-2">
-            <Card
-              role="button"
-              tabIndex={createTileDisabled ? -1 : 0}
-              aria-disabled={createTileDisabled}
-              aria-label={createTileLabel}
-              className={cn(
-                "w-full max-w-[160px] rounded-2xl border-none shadow-sm active:scale-[0.98]",
-                createTileDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
-              )}
-              onClick={handleCreateTileActivate}
-              onKeyDown={(event) => {
-                if (createTileDisabled) return;
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  handleCreateTileActivate();
-                }
-              }}
-            >
-              <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-[100px]">
-                <div
-                  className={cn(
-                    "p-3 rounded-2xl mb-1",
-                    createTileDisabled ? CITIZEN_NAV_ICON_TONE_DISABLED : CITIZEN_NAV_ICON_TONE,
-                  )}
-                >
-                  <CreateTileIcon className="h-6 w-6" aria-hidden />
-                </div>
-                <span className="text-xs font-semibold leading-tight">{createTileLabel}</span>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         <TabsContent value="permits" className="mt-0">
           {isOfficer ? (

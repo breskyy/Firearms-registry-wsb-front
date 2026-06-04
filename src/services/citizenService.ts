@@ -16,6 +16,7 @@ import type {
   TransferRequestDto,
   CreateTransferRequestRequest,
   CitizenMedicalAlertDto,
+  PermitMedicalExamRenewalDto,
 } from '../types/api';
 
 const TRANSFER_TYPE_VALUES: Record<string, number> = {
@@ -138,5 +139,30 @@ export const citizenService = {
 
   async getMedicalAlerts(): Promise<CitizenMedicalAlertDto[]> {
     return api.get<CitizenMedicalAlertDto[]>('/citizen/me/medical-alerts');
+  },
+
+  async getMedicalExamRenewals(): Promise<PermitMedicalExamRenewalDto[]> {
+    return api.get('/citizen/me/medical-exam-renewals');
+  },
+
+  async getMedicalExamRenewalsForPermit(permitId: string): Promise<PermitMedicalExamRenewalDto[]> {
+    return api.get(`/citizen/me/permits/${permitId}/medical-exam-renewals`);
+  },
+
+  async submitMedicalExamRenewal(
+    permitId: string,
+    data: {
+      medicalCertificate: File;
+      psychologicalCertificate: File;
+      medicalExamExpiryDate: string;
+      psychologicalExamExpiryDate: string;
+    },
+  ): Promise<PermitMedicalExamRenewalDto> {
+    const formData = new FormData();
+    formData.append('medicalCertificate', data.medicalCertificate);
+    formData.append('psychologicalCertificate', data.psychologicalCertificate);
+    formData.append('medicalExamExpiryDate', data.medicalExamExpiryDate);
+    formData.append('psychologicalExamExpiryDate', data.psychologicalExamExpiryDate);
+    return api.post(`/citizen/me/permits/${permitId}/medical-exam-renewals`, formData);
   },
 };

@@ -44,7 +44,7 @@ export const permits: any[] = [
     usedSlots: 1,
     availableSlots: 4,
     isValid: true,
-    medicalExamExpiryDate: daysFromNow(20),
+    medicalExamExpiryDate: daysAgo(14),
     psychologicalExamExpiryDate: daysFromNow(365),
     citizenId: IDS.citizenProfile,
   },
@@ -344,6 +344,25 @@ export const promiseApplications: any[] = [
 // ── Transfer requests (starts empty) ─────────────────────────────────────────
 
 export const transferRequests: any[] = [];
+
+// ── Medical exam renewals (permit) ────────────────────────────────────────────
+
+export const medicalExamRenewals: any[] = [];
+
+export const PENDING_RENEWAL_STATUSES = new Set(['Submitted', 'UnderReview']);
+
+export function getPendingRenewalForPermit(permitId: string) {
+  return medicalExamRenewals.find(
+    (r) => r.permitId === permitId && PENDING_RENEWAL_STATUSES.has(r.status),
+  );
+}
+
+export function resolveMedicalAlertsForPermit(permitId: string) {
+  medicalAlerts.forEach((a) => {
+    if (a.permitId === permitId) a.isResolved = true;
+  });
+  syncMedicalAlertsFromPermits();
+}
 
 // ── Medical alerts (synced from permit exam dates) ────────────────────────────
 

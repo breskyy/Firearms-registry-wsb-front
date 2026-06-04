@@ -24,6 +24,9 @@ import { PermitDetails } from "./pages/PermitDetails";
 import { WpaAttachmentViewPage } from "./pages/WpaAttachmentViewPage";
 import { ApplicationCorrection } from "./pages/ApplicationCorrection";
 import { LegacyOfficerAttachmentRedirect, LegacyOfficerCitizenRedirect } from "./components/officer/LegacyOfficerRedirects";
+import { PermitExamRenewalForm } from "./pages/PermitExamRenewalForm";
+import { OfficerMedicalExamRenewalPage } from "./pages/OfficerMedicalExamRenewalPage";
+import { PermitIdRouteOutlet } from "./components/PermitIdRouteOutlet";
 
 export const router = createBrowserRouter([
   {
@@ -66,7 +69,14 @@ export const router = createBrowserRouter([
         ],
       },
       { path: "promises", Component: PromisesView },
-      { path: "permits/:id", Component: PermitDetails },
+      {
+        path: "permits/:id",
+        Component: PermitIdRouteOutlet,
+        children: [
+          { index: true, Component: PermitDetails },
+          { path: "renew-exams", Component: PermitExamRenewalForm },
+        ],
+      },
       { path: "transfers", Component: TransfersList },
       { path: "medical-alerts", Component: MedicalAlertsView },
       { path: "weapons", Component: WeaponRegistry },
@@ -75,6 +85,7 @@ export const router = createBrowserRouter([
       // Officer registry routes
       { path: "officer/search", Component: WPASearchPage },
       { path: "officer/citizens/:id", Component: CitizenDetailsWPA },
+      { path: "officer/medical-exam-renewals/:id", Component: OfficerMedicalExamRenewalPage },
 
       // Legacy WPA frontend URLs
       { path: "wpa/search", Component: () => <RedirectTo to="/officer/search" /> },

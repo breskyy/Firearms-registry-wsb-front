@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { AlertTriangle, CalendarDays, ClipboardList, Crosshair, Shield } from "lucide-react";
+import { AlertTriangle, CalendarDays, ClipboardList, Crosshair, FileUp, Shield } from "lucide-react";
 import { CitizenMedicalNavIcon } from "../components/citizen/CitizenMedicalNavIcon";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -10,7 +10,8 @@ import { ReviewCollapsibleCard } from "../components/wpa/ReviewCollapsibleCard";
 import { applicationSectionIcon } from "../components/wpa/ApplicationDetailField";
 import { ExamStatusBadge, PermitExamStatusRow } from "../components/citizen/PermitExamStatusRow";
 import { citizenService } from "../../services/citizenService";
-import type { CitizenMedicalAlertDto, PermitDto } from "../../types/api";
+import type { CitizenMedicalAlertDto, PermitDto, PermitMedicalExamRenewalDto } from "../../types/api";
+import { findPendingRenewal, renewalStatusLabel } from "../../lib/medicalExamRenewals";
 import { getPermitStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
 import { getExamEntriesForPermit, needsExamAttention, worstExamStatus } from "../../lib/permitExams";
@@ -46,13 +47,19 @@ export function PermitDetails() {
   const navigate = useNavigate();
   const [permit, setPermit] = useState<PermitDto | null>(null);
   const [alerts, setAlerts] = useState<CitizenMedicalAlertDto[]>([]);
+  const [renewals, setRenewals] = useState<PermitMedicalExamRenewalDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([citizenService.getPermits(), citizenService.getMedicalAlerts()])
-      .then(([permits, alertsRes]) => {
+    Promise.all([
+      citizenService.getPermits(),
+      citizenService.getMedicalAlerts(),
+      id ? citizenService.getMedicalExamRenewalsForPermit(id) : Promise.resolve([]),
+    ])
+      .then(([permits, alertsRes, renewalsRes]) => {
         setPermit(permits.find((p) => p.id === id) ?? null);
         setAlerts(alertsRes);
+        setRenewals(renewalsRes);
       })
       .catch(() => {
         setPermit(null);
@@ -67,6 +74,8 @@ export function PermitDetails() {
   );
   const examAttentionStatus = worstExamStatus(examEntries);
   const examsNeedAttention = needsExamAttention(examAttentionStatus);
+  const pendingRenewal = permit ? findPendingRenewal(renewals, permit.id) : undefined;
+  const showRenewalCta = examsNeedAttention && !pendingRenewal;
   const examsSectionRef = useRef<HTMLDivElement>(null);
   const [examsSectionOpen, setExamsSectionOpen] = useState(false);
 
@@ -238,13 +247,27 @@ export function PermitDetails() {
         >
           <div className="divide-y divide-border/80 -mx-1">
             {examEntries.map((entry) => (
-              <PermitExamStatusRow key={entry.id} entry={entry} />
+              <PermitExamStatusRow
+                key={entry.id}
+                entry={entry}
+                pendingRenewalLabel={pendingRenewal ? renewalStatusLabel(pendingRenewal.status) : null}
+              />
             ))}
           </div>
-          {examsNeedAttention && (
+          {showRenewalCta && (
+            <Button
+              className="w-full mt-4 min-h-[44px] rounded-xl"
+              onClick={() => navigate(`/permits/${permit.id}/renew-exams`)}
+            >
+              <FileUp className="h-4 w-4 mr-2" aria-hidden />
+              Złóż odnowienie badań
+            </Button>
+          )}
+          {(showRenewalCta || pendingRenewal) && (
             <p className="text-xs text-muted-foreground leading-relaxed mt-4 pt-3 border-t border-border/80">
-              Po odnowieniu badań dostarcz zaświadczenia do urzędu. Urzędnik zaktualizuje daty na tym pozwoleniu —
-              nie składasz ponownie wniosku o nowe pozwolenie, o ile sam dokument pozwolenia nadal obowiązuje.
+              {pendingRenewal
+                ? "Urzędnik WPA weryfikuje złożone zaświadczenia. Po zatwierdzeniu daty w rejestrze zostaną zaktualizowane."
+                : "Odnowienie dotyczy tego samego pozwolenia — nie składasz nowego wniosku o wydanie pozwolenia."}
             </p>
           )}
         </ReviewCollapsibleCard>

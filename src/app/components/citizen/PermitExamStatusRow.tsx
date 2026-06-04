@@ -44,10 +44,12 @@ function statusBadge(entry: PermitExamEntry) {
 type PermitExamStatusRowProps = {
   entry: PermitExamEntry;
   className?: string;
+  pendingRenewalLabel?: string | null;
 };
 
-export function PermitExamStatusRow({ entry, className }: PermitExamStatusRowProps) {
-  const showWarningBlock = entry.status === "expired" || entry.status === "missing";
+export function PermitExamStatusRow({ entry, className, pendingRenewalLabel }: PermitExamStatusRowProps) {
+  const showWarningBlock =
+    (entry.status === "expired" || entry.status === "missing") && !pendingRenewalLabel;
   const Icon = examIcon(entry.examType);
   return (
     <div className={cn("flex items-start gap-3 py-3 first:pt-0 last:pb-0", className)}>
@@ -73,6 +75,12 @@ export function PermitExamStatusRow({ entry, className }: PermitExamStatusRowPro
           <p className="text-xs text-muted-foreground leading-relaxed mt-2">{entry.alertMessage}</p>
         )}
 
+        {pendingRenewalLabel && (
+          <p className="text-xs text-amber-900 bg-amber-50 rounded-lg p-2 mt-2 leading-relaxed">
+            <strong>Zgłoszenie w WPA:</strong> {pendingRenewalLabel}
+          </p>
+        )}
+
         {showWarningBlock && (
           <div
             className={cn(
@@ -83,8 +91,8 @@ export function PermitExamStatusRow({ entry, className }: PermitExamStatusRowPro
             <p className={cn("text-xs", entry.status === "expired" ? "text-red-900" : "text-slate-800")}>
               <strong>Wymagane działanie:</strong>{" "}
               {entry.status === "missing"
-                ? "Brakuje potwierdzonej daty ważności badania. Skontaktuj się z urzędem w celu aktualizacji."
-                : "Odnów badanie i dostarcz zaświadczenie do urzędu, aby odblokować pozwolenie."}
+                ? "Brakuje potwierdzonej daty ważności w rejestrze. Złóż odnowienie z zaświadczeniami do WPA."
+                : "Odnów badanie i złóż nowe zaświadczenia w systemie — urzędnik zaktualizuje pozwolenie po weryfikacji."}
             </p>
           </div>
         )}
