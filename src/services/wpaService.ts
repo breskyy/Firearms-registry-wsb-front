@@ -13,6 +13,10 @@ import type {
   RevokePermitRequest,
   RestorePermitRequest,
   UpdateMedicalExamsRequest,
+  WpaPermitMedicalExamRenewalDto,
+  ApprovePermitMedicalExamRenewalRequest,
+  RejectPermitMedicalExamRenewalRequest,
+  PermitMedicalExamRenewalStatus,
   PaginatedResult,
   PaginationParams,
   PermitApplicationStatus,
@@ -151,5 +155,29 @@ export const wpaService = {
 
   async updateMedicalExams(id: string, data: UpdateMedicalExamsRequest): Promise<void> {
     return api.patch<void>(`/wpa/permits/${id}/medical-exams`, data);
+  },
+
+  async getMedicalExamRenewals(params?: PaginationParams & { status?: PermitMedicalExamRenewalStatus }): Promise<PaginatedResult<WpaPermitMedicalExamRenewalDto>> {
+    return api.get<PaginatedResult<WpaPermitMedicalExamRenewalDto>>('/wpa/medical-exam-renewals', params);
+  },
+
+  async getMedicalExamRenewalById(id: string): Promise<WpaPermitMedicalExamRenewalDto> {
+    return api.get<WpaPermitMedicalExamRenewalDto>(`/wpa/medical-exam-renewals/${id}`);
+  },
+
+  async downloadMedicalExamRenewalAttachment(renewalId: string, attachmentId: string): Promise<Blob> {
+    return api.getBlob(`/wpa/medical-exam-renewals/${renewalId}/attachments/${attachmentId}`);
+  },
+
+  async markMedicalExamRenewalUnderReview(id: string): Promise<void> {
+    return api.post<void>(`/wpa/medical-exam-renewals/${id}/mark-under-review`);
+  },
+
+  async approveMedicalExamRenewal(id: string, data?: ApprovePermitMedicalExamRenewalRequest): Promise<void> {
+    return api.post<void>(`/wpa/medical-exam-renewals/${id}/approve`, data ?? {});
+  },
+
+  async rejectMedicalExamRenewal(id: string, data: RejectPermitMedicalExamRenewalRequest): Promise<void> {
+    return api.post<void>(`/wpa/medical-exam-renewals/${id}/reject`, data);
   },
 };

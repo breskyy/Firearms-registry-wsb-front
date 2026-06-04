@@ -4,18 +4,21 @@ import { EmptyStateCard } from "../components/EmptyStateCard";
 import { Tabs, TabsContent } from "../components/ui/tabs";
 import { AppTabsList } from "../components/ui/AppTabsList";
 import { AppTabTrigger } from "../components/ui/AppTabTrigger";
-import { CheckCircle, ChevronRight, Shield, ClipboardList, AlertTriangle } from "lucide-react";
+import { CheckCircle, ChevronRight, Shield, ClipboardList, AlertTriangle, FileUp } from "lucide-react";
+import { Button } from "../components/ui/button";
 import { cn } from "../components/ui/utils";
 import { CitizenNavIconTile } from "../components/citizen/CitizenNavIconTile";
 import { PermitExamStatusRow } from "../components/citizen/PermitExamStatusRow";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS } from "../utils/citizenCardUi";
 import { useNavigate } from "react-router";
 import { citizenService } from "../../services/citizenService";
-import type { CitizenMedicalAlertDto, PermitDto } from "../../types/api";
+import type { CitizenMedicalAlertDto, PermitDto, PermitMedicalExamRenewalDto } from "../../types/api";
+import { findPendingRenewal, renewalStatusLabel } from "../../lib/medicalExamRenewals";
 import {
   filterPermitGroupsNeedingAttention,
   groupEntriesByPermit,
   mapPermitExamEntries,
+  needsExamAttention,
   sortPermitGroupsByAttentionPriority,
   worstExamStatus,
   type PermitExamGroup,
@@ -33,18 +36,25 @@ export function MedicalAlertsView() {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<CitizenMedicalAlertDto[]>([]);
   const [permits, setPermits] = useState<PermitDto[]>([]);
+  const [renewals, setRenewals] = useState<PermitMedicalExamRenewalDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    Promise.all([citizenService.getMedicalAlerts(), citizenService.getPermits()])
-      .then(([alertsRes, permitsRes]) => {
+    Promise.all([
+      citizenService.getMedicalAlerts(),
+      citizenService.getPermits(),
+      citizenService.getMedicalExamRenewals(),
+    ])
+      .then(([alertsRes, permitsRes, renewalsRes]) => {
         setAlerts(alertsRes);
         setPermits(permitsRes);
+        setRenewals(renewalsRes);
       })
       .catch(() => {
         setAlerts([]);
         setPermits([]);
+        setRenewals([]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -60,6 +70,8 @@ export function MedicalAlertsView() {
   const PermitExamGroupCard = ({ group }: { group: PermitExamGroup }) => {
     const permitType = PERMIT_TYPE_LABELS[group.permitTypeName] ?? group.permitTypeName;
     const tone = worstExamStatus(group.exams);
+    const pending = findPendingRenewal(renewals, group.permitId);
+    const showRenewalCta = needsExamAttention(tone) && !pending;
 
     return (
       <Card
@@ -90,9 +102,23 @@ export function MedicalAlertsView() {
 
           <div className="mt-3 pt-3 border-t border-border/80 divide-y divide-border/80">
             {group.exams.map((entry) => (
-              <PermitExamStatusRow key={entry.id} entry={entry} />
+              <PermitExamStatusRow
+                key={entry.id}
+                entry={entry}
+                pendingRenewalLabel={pending ? renewalStatusLabel(pending.status) : null}
+              />
             ))}
           </div>
+
+          {showRenewalCta && (
+            <Button
+              className="w-full mt-3 min-h-[44px] rounded-xl"
+              onClick={() => navigate(`/permits/${group.permitId}/renew-exams`)}
+            >
+              <FileUp className="h-4 w-4 mr-2" aria-hidden />
+              Złóż odnowienie badań
+            </Button>
+          )}
         </CardContent>
       </Card>
     );

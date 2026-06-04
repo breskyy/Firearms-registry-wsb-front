@@ -8,7 +8,13 @@ import { AppTabTrigger } from "../components/ui/AppTabTrigger";
 import { FileText, Clock, CheckCircle, Shield, CreditCard, AlertTriangle, Search, User, CalendarCheck, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { wpaService } from "../../services/wpaService";
-import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, WpaMedicalAlertDto } from "../../types/api";
+import type {
+  WpaPermitApplicationDto,
+  WpaPromiseApplicationDto,
+  WpaMedicalAlertDto,
+  WpaPermitMedicalExamRenewalDto,
+} from "../../types/api";
+import { PENDING_RENEWAL_STATUSES } from "../../lib/medicalExamRenewals";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
 import { StatusBadge } from "../components/StatusBadge";
 import { getApiErrorMessage } from "../../lib/apiErrors";
@@ -73,6 +79,7 @@ export function OfficerDashboard() {
   const [permitApps, setPermitApps] = useState<WpaPermitApplicationDto[]>([]);
   const [promiseApps, setPromiseApps] = useState<WpaPromiseApplicationDto[]>([]);
   const [alerts, setAlerts] = useState<WpaMedicalAlertDto[]>([]);
+  const [examRenewals, setExamRenewals] = useState<WpaPermitMedicalExamRenewalDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [suspendingPermitId, setSuspendingPermitId] = useState<string | null>(null);
 
@@ -91,6 +98,8 @@ export function OfficerDashboard() {
         setPermitApps(pa.items);
         setPromiseApps(pra.items);
         await loadAlerts();
+        const renewals = await wpaService.getMedicalExamRenewals({ page: 1, pageSize: 20 });
+        setExamRenewals(renewals.items);
       } catch {
         // silent
       } finally {
@@ -99,6 +108,11 @@ export function OfficerDashboard() {
     };
     load();
   }, []);
+
+  const findPendingRenewalForPermit = (permitId?: string | null) =>
+    examRenewals.find(
+      (r) => r.permitId === permitId && PENDING_RENEWAL_STATUSES.includes(r.status),
+    );
 
   const handleSuspendPermit = async (alert: WpaMedicalAlertDto) => {
     if (!alert.permitId) {
@@ -169,9 +183,15 @@ export function OfficerDashboard() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
-        <AppTabsList className="grid grid-cols-3">
+        <AppTabsList className="grid grid-cols-2 md:grid-cols-4">
           <AppTabTrigger value="permits" label="Pozwolenia" icon={Shield} count={pendingPermits.length} />
           <AppTabTrigger value="promises" label="Promesy" icon={CreditCard} count={pendingPromises.length} />
+          <AppTabTrigger
+            value="renewals"
+            label="Odnowienia"
+            icon={CalendarCheck}
+            count={examRenewals.length}
+          />
           <AppTabTrigger
             value="alerts"
             label="Alerty"
@@ -202,6 +222,32 @@ export function OfficerDashboard() {
             </div>
           ) : (
             <EmptyStateCard icon={Clock} title="Brak oczekujących wniosków o pozwolenie" />
+          )}
+        </TabsContent>
+
+        <TabsContent value="renewals" className="mt-0 space-y-3">
+          <WpaListSectionHeader
+            title="Odnowienia badań"
+            description="Zgłoszenia obywateli z nowymi zaświadczeniami"
+          />
+          {examRenewals.length > 0 ? (
+            <div className="space-y-3">
+              {examRenewals.map((renewal) => (
+                <ApplicationListTile
+                  key={renewal.id}
+                  icon={<CalendarCheck />}
+                  title={`${renewal.citizenName} — ${renewal.permitNumber}`}
+                  lines={[
+                    `Status: ${renewal.statusName}`,
+                    `Lekarskie do: ${formatMedicalAlertDate(renewal.proposedMedicalExamExpiryDate)}`,
+                  ]}
+                  date={formatDate(renewal.createdAt)}
+                  onClick={() => navigate(`/officer/medical-exam-renewals/${renewal.id}`)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyStateCard icon={CheckCircle} title="Brak oczekujących odnowień badań" />
           )}
         </TabsContent>
 
@@ -257,16 +303,23 @@ export function OfficerDashboard() {
                         <User className="h-4 w-4 mr-2" aria-hidden />
                         Profil
                       </Button>
-                      {alert.permitId && (
-                        <Button
-                          variant="outline"
-                          className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
-                          onClick={() => navigate(`/officer/citizens/${alert.citizenId}?permitId=${alert.permitId}`)}
-                        >
-                          <CalendarCheck className="h-4 w-4 mr-2" aria-hidden />
-                          Aktualizuj badania
-                        </Button>
-                      )}
+                      {alert.permitId && (() => {
+                        const pendingRenewal = findPendingRenewalForPermit(alert.permitId);
+                        return (
+                          <Button
+                            variant="outline"
+                            className="min-h-[44px] rounded-xl text-sm flex-1 sm:flex-none"
+                            onClick={() =>
+                              pendingRenewal
+                                ? navigate(`/officer/medical-exam-renewals/${pendingRenewal.id}`)
+                                : navigate(`/officer/citizens/${alert.citizenId}?permitId=${alert.permitId}`)
+                            }
+                          >
+                            <CalendarCheck className="h-4 w-4 mr-2" aria-hidden />
+                            {pendingRenewal ? "Weryfikuj odnowienie" : "Profil i korekta dat"}
+                          </Button>
+                        );
+                      })()}
                       {alert.permitId && isMedicalAlertExpired(alert.alertTypeName) && (
                         <Button
                           variant="destructive"

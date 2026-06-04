@@ -463,6 +463,56 @@ export interface UpdateMedicalExamsRequest {
 }
 
 // ============================================================================
+// MEDICAL EXAM RENEWALS (permit)
+// ============================================================================
+
+export type PermitMedicalExamRenewalStatus =
+  | 'Submitted'
+  | 'UnderReview'
+  | 'Approved'
+  | 'Rejected';
+
+export interface PermitMedicalExamRenewalAttachmentDto {
+  id: string;
+  attachmentType: string;
+  attachmentTypeName: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
+}
+
+export interface PermitMedicalExamRenewalDto {
+  id: string;
+  permitId: string;
+  permitNumber: string;
+  status: PermitMedicalExamRenewalStatus;
+  statusName: string;
+  proposedMedicalExamExpiryDate: string;
+  proposedPsychologicalExamExpiryDate: string;
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  attachments: PermitMedicalExamRenewalAttachmentDto[];
+}
+
+export interface WpaPermitMedicalExamRenewalDto extends PermitMedicalExamRenewalDto {
+  permitTypeName: string;
+  citizenId: string;
+  citizenName: string;
+  citizenPesel: string;
+}
+
+export interface ApprovePermitMedicalExamRenewalRequest {
+  medicalExamExpiryDate?: string;
+  psychologicalExamExpiryDate?: string;
+}
+
+export interface RejectPermitMedicalExamRenewalRequest {
+  reason: string;
+}
+
+// ============================================================================
 // PAGINATION
 // ============================================================================
 
