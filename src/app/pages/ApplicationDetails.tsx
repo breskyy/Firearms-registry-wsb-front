@@ -228,6 +228,7 @@ export function ApplicationDetails() {
               feeAmount={permitApp.feeAmount}
               paymentStatus={permitApp.paymentStatus}
               paymentStatusName={permitApp.paymentStatusName}
+              paymentRejectionComment={permitApp.paymentRejectionComment}
               onPaymentUpdated={reloadApplication}
             />
           )}
@@ -239,6 +240,7 @@ export function ApplicationDetails() {
               feeAmount={promiseApp.feeAmount}
               paymentStatus={promiseApp.paymentStatus}
               paymentStatusName={promiseApp.paymentStatusName}
+              paymentRejectionComment={promiseApp.paymentRejectionComment}
               onPaymentUpdated={reloadApplication}
             />
           )}

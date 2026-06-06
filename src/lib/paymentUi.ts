@@ -3,6 +3,17 @@ import type { ApplicationPaymentStatus } from '../types/api';
 export const PERMIT_APPLICATION_FEE = 242;
 export const PROMISE_FEE_PER_CERTIFICATE = 17;
 
+export const MOCK_BANK_TRANSFER_DETAILS = {
+  accountNumber: '12 3456 7890 1234 5678 9012 3456',
+  accountHolder: 'Urząd Miasta — Wydział Policji Administracyjnej (WPA)',
+  bankName: 'Bank Demo S.A.',
+} as const;
+
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  OnlineMock: 'ePłatności (mock)',
+  BankTransfer: 'Przelew bankowy',
+};
+
 type PaymentStatusMeta = {
   label: string;
   badgeClassName: string;

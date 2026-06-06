@@ -40,6 +40,33 @@ export type PaymentStatus = 'Pending' | 'Paid' | 'Refunded' | 'Overdue' | 'Faile
 
 export type ApplicationPaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded' | 'Submitted';
 
+export type PaymentMethod = 'OnlineMock' | 'BankTransfer';
+
+export interface BankTransferDetailsDto {
+  accountNumber: string;
+  accountHolder: string;
+  bankName: string;
+  transferTitle: string;
+  amount: number;
+}
+
+export interface ApplicationPaymentDto {
+  applicationId: string;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
+  paymentMethod?: PaymentMethod | null;
+  paymentMethodName?: string | null;
+  paymentReferenceId?: string | null;
+  paymentUrl?: string | null;
+  bankTransferDetails?: BankTransferDetailsDto | null;
+  paymentRejectionComment?: string | null;
+}
+
+export interface RejectPaymentProofRequest {
+  comment: string;
+}
+
 export type FirearmCategory = 'A' | 'B' | 'C';
 
 export type FirearmStatus = 'Registered' | 'Transferred' | 'Lost' | 'Archived';
@@ -142,6 +169,9 @@ export interface PermitApplicationDto {
   feeAmount: number;
   paymentStatus: ApplicationPaymentStatus;
   paymentStatusName: string;
+  paymentMethod?: PaymentMethod | null;
+  paymentMethodName?: string | null;
+  paymentRejectionComment?: string | null;
   attachments: PermitApplicationAttachmentDto[];
 }
 
@@ -183,6 +213,9 @@ export interface PromiseApplicationDto {
   feeAmount: number;
   paymentStatus: ApplicationPaymentStatus;
   paymentStatusName: string;
+  paymentMethod?: PaymentMethod | null;
+  paymentMethodName?: string | null;
+  paymentRejectionComment?: string | null;
   attachments?: PromiseApplicationAttachmentDto[];
 }
 
@@ -194,15 +227,6 @@ export interface PromiseApplicationAttachmentDto {
   contentType: string;
   fileSize: number;
   createdAt: string;
-}
-
-export interface ApplicationPaymentDto {
-  applicationId: string;
-  feeAmount: number;
-  paymentStatus: ApplicationPaymentStatus;
-  paymentStatusName: string;
-  paymentReferenceId: string | null;
-  paymentUrl: string | null;
 }
 
 export interface ConfirmApplicationPaymentRequest {
@@ -410,6 +434,9 @@ export interface WpaPermitApplicationDto {
   feeAmount: number;
   paymentStatus: ApplicationPaymentStatus;
   paymentStatusName: string;
+  paymentMethod?: PaymentMethod | null;
+  paymentMethodName?: string | null;
+  paymentReferenceId?: string | null;
   attachments: WpaPermitApplicationAttachmentDto[];
 }
 
@@ -466,6 +493,9 @@ export interface WpaPromiseApplicationDto {
   feeAmount: number;
   paymentStatus: ApplicationPaymentStatus;
   paymentStatusName: string;
+  paymentMethod?: PaymentMethod | null;
+  paymentMethodName?: string | null;
+  paymentReferenceId?: string | null;
   attachments?: WpaPromiseApplicationAttachmentDto[];
 }
 

@@ -84,6 +84,10 @@ export const wpaService = {
     return api.post<void>(`/wpa/permit-applications/${id}/verify-payment`);
   },
 
+  async rejectPermitApplicationPaymentProof(id: string, data: { comment: string }): Promise<void> {
+    return api.post<void>(`/wpa/permit-applications/${id}/reject-payment-proof`, data);
+  },
+
   async downloadPermitApplicationAttachment(applicationId: string, attachmentId: string): Promise<Blob> {
     return api.getBlob(`/wpa/permit-applications/${applicationId}/attachments/${attachmentId}`);
   },
@@ -117,6 +121,14 @@ export const wpaService = {
 
   async verifyPromiseApplicationPayment(id: string): Promise<void> {
     return api.post<void>(`/wpa/promise-applications/${id}/verify-payment`);
+  },
+
+  async rejectPromiseApplicationPaymentProof(id: string, data: { comment: string }): Promise<void> {
+    return api.post<void>(`/wpa/promise-applications/${id}/reject-payment-proof`, data);
+  },
+
+  async downloadPromiseApplicationAttachment(applicationId: string, attachmentId: string): Promise<Blob> {
+    return api.getBlob(`/wpa/promise-applications/${applicationId}/attachments/${attachmentId}`);
   },
 
   // CITIZENS

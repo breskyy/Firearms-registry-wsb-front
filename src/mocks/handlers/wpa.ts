@@ -119,6 +119,21 @@ export const wpaHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  http.post(`${BASE}/wpa/permit-applications/:id/reject-payment-proof`, async ({ params, request }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot reject payment proof' }, { status: 409 });
+    }
+    const body = await request.json() as { comment?: string };
+    app.paymentStatus = 'Pending';
+    app.paymentStatusName = 'Pending';
+    app.paymentMethodName = undefined;
+    app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post(`${BASE}/wpa/permit-applications/:id/mark-under-review`, async ({ params, request }) => {
     const app = db.permitApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
@@ -228,6 +243,25 @@ export const wpaHandlers = [
     app.statusName = 'Paid';
     return new HttpResponse(null, { status: 204 });
   }),
+
+  http.post(`${BASE}/wpa/promise-applications/:id/reject-payment-proof`, async ({ params, request }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot reject payment proof' }, { status: 409 });
+    }
+    const body = await request.json() as { comment?: string };
+    app.paymentStatus = 'Pending';
+    app.paymentStatusName = 'Pending';
+    app.paymentMethodName = undefined;
+    app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(`${BASE}/wpa/promise-applications/:appId/attachments/:attId`, () =>
+    new HttpResponse(new Blob(['mock pdf content'], { type: 'application/pdf' }))
+  ),
 
   http.post(`${BASE}/wpa/promise-applications/:id/mark-under-review`, ({ params }) => {
     const app = db.promiseApplications.find((a) => a.id === params.id);

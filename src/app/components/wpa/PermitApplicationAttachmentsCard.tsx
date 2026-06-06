@@ -8,6 +8,7 @@ import type { WpaPermitApplicationAttachmentDto } from "../../../types/api";
 const ATTACHMENT_LABELS: Record<string, string> = {
   MedicalCertificate: "Zaświadczenie lekarskie",
   PsychologicalCertificate: "Zaświadczenie psychologiczne",
+  PaymentProof: "Dowód wpłaty",
 };
 
 type Props = {
