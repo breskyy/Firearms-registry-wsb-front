@@ -289,6 +289,9 @@ export const permitApplications: any[] = [
     createdAt: daysAgo(14),
     reviewedAt: null,
     reviewedByOfficerName: null,
+    feeAmount: 242,
+    paymentStatus: 'Pending',
+    paymentStatusName: 'Pending',
     attachments: [
       {
         id: 'att-003',
