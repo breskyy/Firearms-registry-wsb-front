@@ -9,6 +9,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
+import { ApplicationPaymentCard } from "../components/citizen/ApplicationPaymentCard";
 import { citizenService } from "../../services/citizenService";
 import { getApiErrorMessage } from "../../lib/apiErrors";
 import type { PermitApplicationDto, PermitDto, PermitType, PromiseApplicationDto } from "../../types/api";
@@ -37,6 +38,7 @@ export function ApplicationCorrection() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [permitApp, setPermitApp] = useState<PermitApplicationDto | null>(null);
   const [promiseApp, setPromiseApp] = useState<PromiseApplicationDto | null>(null);
   const [permits, setPermits] = useState<PermitDto[]>([]);
@@ -94,7 +96,7 @@ export function ApplicationCorrection() {
       }
     };
     load();
-  }, [id, type]);
+  }, [id, type, reloadKey]);
 
   const app = type === "permit" ? permitApp : promiseApp;
 
@@ -184,6 +186,20 @@ export function ApplicationCorrection() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {app && app.paymentStatusName !== "Paid" && (
+        <div className="mb-4">
+          <ApplicationPaymentCard
+            applicationId={app.id}
+            applicationType={type}
+            feeAmount={app.feeAmount}
+            paymentStatus={app.paymentStatus}
+            paymentStatusName={app.paymentStatusName}
+            paymentRejectionComment={app.paymentRejectionComment}
+            onPaymentUpdated={() => setReloadKey((value) => value + 1)}
+          />
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -179,8 +179,12 @@ export function DecisionPage() {
         await wpaService.rejectPermitApplicationPaymentProof(id, payload);
         setPermitApp((current) => current ? {
           ...current,
+          statusName: "RequiresCorrection",
+          status: "RequiresCorrection",
+          correctionNotes: payload.comment,
           paymentStatusName: "Pending",
           paymentStatus: "Pending",
+          paymentRejectionComment: payload.comment,
           paymentMethodName: undefined,
           paymentReferenceId: undefined,
           attachments: current.attachments?.filter((a) => a.attachmentTypeName !== "PaymentProof") ?? [],
@@ -189,8 +193,12 @@ export function DecisionPage() {
         await wpaService.rejectPromiseApplicationPaymentProof(id, payload);
         setPromiseApp((current) => current ? {
           ...current,
+          statusName: "RequiresCorrection",
+          status: "RequiresCorrection",
+          correctionNotes: payload.comment,
           paymentStatusName: "Pending",
           paymentStatus: "Pending",
+          paymentRejectionComment: payload.comment,
           paymentMethodName: undefined,
           paymentReferenceId: undefined,
           attachments: current.attachments?.filter((a) => a.attachmentTypeName !== "PaymentProof") ?? [],

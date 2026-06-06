@@ -10,6 +10,13 @@ function qp(url: URL, key: string, fallback: number) {
   return v !== null ? Number(v) : fallback;
 }
 
+function isPaymentCorrectionRequested(notes?: string | null) {
+  if (!notes) return false;
+  const normalized = notes.toLowerCase();
+  return ['dowód', 'dowod', 'wpłat', 'wplat', 'opłat', 'oplat', 'płatno', 'platno', 'payment', 'przelew', 'eplatno', 'e-płatno', 'e-platno']
+    .some((keyword) => normalized.includes(keyword));
+}
+
 function getCitizenById(citizenId: string) {
   return db.wpaCitizens.find((c) => c.id === citizenId);
 }
@@ -130,6 +137,9 @@ export const wpaHandlers = [
     app.paymentStatusName = 'Pending';
     app.paymentMethodName = undefined;
     app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.status = 'RequiresCorrection';
+    app.statusName = 'RequiresCorrection';
+    app.correctionNotes = body.comment ?? 'Uzupełnij dowód wpłaty.';
     app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
     return new HttpResponse(null, { status: 204 });
   }),
@@ -201,14 +211,22 @@ export const wpaHandlers = [
     const app = db.permitApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
     const body = await request.json() as any;
+    const reason = body.reason ?? null;
     Object.assign(app, {
       status: 'RequiresCorrection', statusName: 'RequiresCorrection',
-      correctionNotes: body.reason ?? null,
+      correctionNotes: reason,
       medicalExamExpiryDate: body.medicalExamExpiryDate ?? app.medicalExamExpiryDate,
       psychologicalExamExpiryDate: body.psychologicalExamExpiryDate ?? app.psychologicalExamExpiryDate,
       reviewedAt: new Date().toISOString(),
       reviewedByOfficerName: OFFICER_NAME,
     });
+    if (isPaymentCorrectionRequested(reason) && app.paymentStatusName === 'Submitted') {
+      app.paymentStatus = 'Pending';
+      app.paymentStatusName = 'Pending';
+      app.paymentMethodName = undefined;
+      app.paymentRejectionComment = reason;
+      app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -255,6 +273,9 @@ export const wpaHandlers = [
     app.paymentStatusName = 'Pending';
     app.paymentMethodName = undefined;
     app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.status = 'RequiresCorrection';
+    app.statusName = 'RequiresCorrection';
+    app.correctionNotes = body.comment ?? 'Uzupełnij dowód wpłaty.';
     app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
     return new HttpResponse(null, { status: 204 });
   }),
@@ -319,12 +340,20 @@ export const wpaHandlers = [
     const app = db.promiseApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
     const body = await request.json() as any;
+    const reason = body.reason ?? null;
     Object.assign(app, {
       status: 'RequiresCorrection', statusName: 'RequiresCorrection',
-      correctionNotes: body.reason ?? null,
+      correctionNotes: reason,
       reviewedAt: new Date().toISOString(),
       reviewedByOfficerName: OFFICER_NAME,
     });
+    if (isPaymentCorrectionRequested(reason) && app.paymentStatusName === 'Submitted') {
+      app.paymentStatus = 'Pending';
+      app.paymentStatusName = 'Pending';
+      app.paymentMethodName = undefined;
+      app.paymentRejectionComment = reason;
+      app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 
