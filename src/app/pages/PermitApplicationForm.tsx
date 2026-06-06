@@ -8,6 +8,7 @@ import { CITIZEN_LIST_CARD_CONTENT_CLASS, CITIZEN_NAV_ICON_TONE } from "../utils
 import { CertificateUploadRow } from "./permit-application/CertificateUploadRow";
 import { FormActions } from "./permit-application/FormActions";
 import { ApplicationProcessNotice } from "../components/citizen/ApplicationProcessNotice";
+import { PaymentStep } from "../components/citizen/PaymentStep";
 import { PERMIT_APPLICATION_PROCESS_STEPS } from "./permit-application/processNoticeSteps";
 import {
   PERMIT_TYPE_OPTIONS,
@@ -16,7 +17,8 @@ import {
 } from "./permit-application/shared";
 
 export function PermitApplicationForm() {
-  const { formData, setFormData, errors, loading, handleSubmit, navigate } = usePermitApplicationForm();
+  const { formData, setFormData, errors, loading, createdApplication, handleSubmit, finishAfterPayment, navigate } =
+    usePermitApplicationForm();
   const canSubmit = Object.keys(validatePermitApplicationForm(formData)).length === 0;
 
   return (
@@ -148,14 +150,28 @@ export function PermitApplicationForm() {
           </CardContent>
         </Card>
 
-        <ApplicationProcessNotice steps={PERMIT_APPLICATION_PROCESS_STEPS} />
-        {!canSubmit && !loading && (
-          <p className="text-sm text-muted-foreground px-1 text-center">
-            Uzupełnij rodzaj pozwolenia, uzasadnienie (min. 20 znaków), oba zaświadczenia i daty ważności.
-          </p>
+        {!createdApplication && (
+          <>
+            <ApplicationProcessNotice steps={PERMIT_APPLICATION_PROCESS_STEPS} />
+            {!canSubmit && !loading && (
+              <p className="text-sm text-muted-foreground px-1 text-center">
+                Uzupełnij rodzaj pozwolenia, uzasadnienie (min. 20 znaków), oba zaświadczenia i daty ważności.
+              </p>
+            )}
+            <FormActions loading={loading} submitDisabled={!canSubmit} onCancel={() => navigate(-1)} />
+          </>
         )}
-        <FormActions loading={loading} submitDisabled={!canSubmit} onCancel={() => navigate(-1)} />
       </form>
+
+      {createdApplication && (
+        <PaymentStep
+          applicationId={createdApplication.id}
+          feeAmount={createdApplication.feeAmount}
+          kind="permit"
+          initialPaymentStatus={createdApplication.paymentStatus}
+          onCompleted={finishAfterPayment}
+        />
+      )}
     </div>
   );
 }

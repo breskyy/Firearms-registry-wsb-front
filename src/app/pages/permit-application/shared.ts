@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { citizenService } from "../../../services/citizenService";
 import { getApiErrorMessage } from "../../../lib/apiErrors";
+import type { PermitApplicationDto } from "../../../types/api";
 
 export const PERMIT_TYPE_VALUES: Record<string, number> = {
   Sport: 0,
@@ -95,6 +96,7 @@ function toIsoDate(date: string) {
 export function usePermitApplicationForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [createdApplication, setCreatedApplication] = useState<PermitApplicationDto | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<PermitApplicationFormData>({
     requestedPermitType: "",
@@ -147,11 +149,11 @@ export function usePermitApplicationForm() {
         psychologicalExamExpiryDate,
       });
 
-      toast.success("Wniosek o pozwolenie złożony", {
-        description: "Wniosek i załączniki zostały przekazane do urzędu.",
+      setCreatedApplication(application);
+      toast.success("Wniosek zapisany — opłać opłatę skarbową", {
+        description: "Załączniki przesłane. Następny krok: opłata 242 zł.",
         duration: 5000,
       });
-      navigate("/applications");
       return true;
     } catch (err: unknown) {
       toast.error("Błąd podczas składania wniosku", {
@@ -163,13 +165,23 @@ export function usePermitApplicationForm() {
     }
   };
 
+  const finishAfterPayment = () => {
+    toast.success("Wniosek o pozwolenie złożony", {
+      description: "Opłata zarejestrowana — WPA zweryfikuje wpłatę przed rozpatrzeniem.",
+      duration: 5000,
+    });
+    navigate("/applications");
+  };
+
   return {
     formData,
     setFormData,
     errors,
     setErrors,
     loading,
+    createdApplication,
     handleSubmit,
+    finishAfterPayment,
     navigate,
   };
 }

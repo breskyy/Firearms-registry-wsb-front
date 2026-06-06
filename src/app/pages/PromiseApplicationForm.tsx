@@ -16,6 +16,8 @@ import { cn } from "../components/ui/utils";
 import { CITIZEN_LIST_CARD_CONTENT_CLASS, CITIZEN_NAV_ICON_TONE } from "../utils/citizenCardUi";
 import { FormActions } from "./permit-application/FormActions";
 import { ApplicationProcessNotice } from "../components/citizen/ApplicationProcessNotice";
+import { PaymentStep } from "../components/citizen/PaymentStep";
+import type { PromiseApplicationDto } from "../../types/api";
 import { PROMISE_APPLICATION_PROCESS_STEPS } from "./permit-application/processNoticeSteps";
 import type { PermitDto } from "../../types/api";
 
@@ -25,6 +27,7 @@ export function PromiseApplicationForm() {
   const [permitsLoading, setPermitsLoading] = useState(true);
   const [permits, setPermits] = useState<PermitDto[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [createdApplication, setCreatedApplication] = useState<PromiseApplicationDto | null>(null);
   const [formData, setFormData] = useState({
     permitId: "",
     requestedWeaponType: "",
@@ -64,17 +67,17 @@ export function PromiseApplicationForm() {
 
     setLoading(true);
     try {
-      await citizenService.createPromiseApplication({
+      const application = await citizenService.createPromiseApplication({
         permitId: formData.permitId,
         requestedWeaponType: formData.requestedWeaponType,
         requestedQuantity: formData.requestedQuantity,
       });
 
-      toast.success("Wniosek o e-Promesę złożony", {
-        description: "Wniosek przekazany do urzędu. Śledź status w zakładce Moje wnioski.",
+      setCreatedApplication(application);
+      toast.success("Wniosek zapisany — opłać opłatę skarbową", {
+        description: `Następny krok: opłata ${application.feeAmount} zł (17 zł × ${formData.requestedQuantity}).`,
         duration: 5000,
       });
-      navigate("/applications");
     } catch (err: unknown) {
       toast.error("Błąd podczas składania wniosku", {
         description: getApiErrorMessage(err) || "Spróbuj ponownie",
@@ -221,7 +224,7 @@ export function PromiseApplicationForm() {
             </Card>
           )}
 
-          {showForm && (
+          {showForm && !createdApplication && (
             <>
               <ApplicationProcessNotice steps={PROMISE_APPLICATION_PROCESS_STEPS} />
               <FormActions
@@ -232,6 +235,22 @@ export function PromiseApplicationForm() {
             </>
           )}
         </form>
+      )}
+
+      {createdApplication && (
+        <PaymentStep
+          applicationId={createdApplication.id}
+          feeAmount={createdApplication.feeAmount}
+          kind="promise"
+          initialPaymentStatus={createdApplication.paymentStatus}
+          onCompleted={() => {
+            toast.success("Wniosek o e-Promesę złożony", {
+              description: "Opłata zarejestrowana — WPA zweryfikuje wpłatę przed wydaniem promesy.",
+              duration: 5000,
+            });
+            navigate("/applications");
+          }}
+        />
       )}
     </div>
   );

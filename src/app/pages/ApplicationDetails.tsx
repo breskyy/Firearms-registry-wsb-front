@@ -11,6 +11,8 @@ import { PermitApplicationAttachmentsCard } from "../components/wpa/PermitApplic
 import { ReviewCollapsibleCard } from "../components/wpa/ReviewCollapsibleCard";
 import { ApplicationDetailField, applicationSectionIcon } from "../components/wpa/ApplicationDetailField";
 import { PromiseQrModal } from "../components/citizen/PromiseQrModal";
+import { ApplicationPaymentCard } from "../components/citizen/ApplicationPaymentCard";
+import { formatPlnAmount, getApplicationPaymentStatusMeta } from "../../lib/paymentUi";
 import { formatApplicationId } from "../../lib/registryNumbers";
 import { getPromiseQrMatchResult, getPromiseQrUnavailableMessage } from "../../lib/promiseQrAvailability";
 import { getApplicationStatusMeta } from "../../lib/statusUi";
@@ -52,6 +54,9 @@ export function ApplicationDetails() {
   const [issuedPromises, setIssuedPromises] = useState<PromiseDto[]>([]);
   const [selectedPromiseId, setSelectedPromiseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reloadApplication = () => setReloadKey((value) => value + 1);
 
   useEffect(() => {
     if (!id) return;
@@ -100,7 +105,7 @@ export function ApplicationDetails() {
     };
 
     load();
-  }, [id, type, isOfficer]);
+  }, [id, type, isOfficer, reloadKey]);
 
   useEffect(() => {
     if (isOfficer) return;
@@ -214,6 +219,28 @@ export function ApplicationDetails() {
                 </ApplicationDetailField>
               </div>
             </ReviewCollapsibleCard>
+          )}
+
+          {!isOfficer && permitApp && permitApp.paymentStatusName !== "Paid" && (
+            <ApplicationPaymentCard
+              applicationId={permitApp.id}
+              applicationType="permit"
+              feeAmount={permitApp.feeAmount}
+              paymentStatus={permitApp.paymentStatus}
+              paymentStatusName={permitApp.paymentStatusName}
+              onPaymentUpdated={reloadApplication}
+            />
+          )}
+
+          {!isOfficer && promiseApp && promiseApp.paymentStatusName !== "Paid" && (
+            <ApplicationPaymentCard
+              applicationId={promiseApp.id}
+              applicationType="promise"
+              feeAmount={promiseApp.feeAmount}
+              paymentStatus={promiseApp.paymentStatus}
+              paymentStatusName={promiseApp.paymentStatusName}
+              onPaymentUpdated={reloadApplication}
+            />
           )}
 
           {permitApp && (
@@ -349,6 +376,19 @@ export function ApplicationDetails() {
               <ApplicationDetailField label="Aktualny status">
                 <div className="mt-0.5">{getStatusBadge(app.statusName)}</div>
               </ApplicationDetailField>
+              {"feeAmount" in app && (
+                <>
+                  <Separator className="bg-border" />
+                  <ApplicationDetailField label="Opłata skarbowa">
+                    {formatPlnAmount(app.feeAmount)}
+                  </ApplicationDetailField>
+                  <ApplicationDetailField label="Status płatności">
+                    <span className={getApplicationPaymentStatusMeta(app.paymentStatusName)?.badgeClassName}>
+                      {getApplicationPaymentStatusMeta(app.paymentStatusName)?.label ?? app.paymentStatusName}
+                    </span>
+                  </ApplicationDetailField>
+                </>
+              )}
               <Separator className="bg-border" />
               <ApplicationDetailField label="Data złożenia">{formatDateTime(app.createdAt)}</ApplicationDetailField>
               {app.reviewedAt && (

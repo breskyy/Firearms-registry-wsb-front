@@ -108,9 +108,23 @@ export const wpaHandlers = [
     return HttpResponse.json(app);
   }),
 
+  http.post(`${BASE}/wpa/permit-applications/:id/verify-payment`, ({ params }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot verify payment' }, { status: 409 });
+    }
+    app.paymentStatus = 'Paid';
+    app.paymentStatusName = 'Paid';
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post(`${BASE}/wpa/permit-applications/:id/mark-under-review`, async ({ params, request }) => {
     const app = db.permitApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Paid') {
+      return HttpResponse.json({ message: 'Payment must be verified first' }, { status: 409 });
+    }
     const body = (await request.json().catch(() => ({}))) as {
       medicalExamExpiryDate?: string;
       psychologicalExamExpiryDate?: string;
@@ -202,9 +216,27 @@ export const wpaHandlers = [
     return HttpResponse.json(app);
   }),
 
+  http.post(`${BASE}/wpa/promise-applications/:id/verify-payment`, ({ params }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot verify payment' }, { status: 409 });
+    }
+    app.paymentStatus = 'Paid';
+    app.paymentStatusName = 'Paid';
+    app.status = 'Paid';
+    app.statusName = 'Paid';
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post(`${BASE}/wpa/promise-applications/:id/mark-under-review`, ({ params }) => {
     const app = db.promiseApplications.find((a) => a.id === params.id);
-    if (app) { app.status = 'UnderReview'; app.statusName = 'UnderReview'; }
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Paid') {
+      return HttpResponse.json({ message: 'Payment must be verified first' }, { status: 409 });
+    }
+    app.status = 'UnderReview';
+    app.statusName = 'UnderReview';
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -225,7 +257,7 @@ export const wpaHandlers = [
       remainingQuantity: app.requestedQuantity,
       status: 'Active',
       statusName: 'Active',
-      feeAmount: 17.00,
+      feeAmount: app.feeAmount ?? 17.00,
       paymentStatus: 'Paid',
       paymentStatusName: 'Paid',
       qrToken: `QR-${db.uid().toUpperCase()}`,

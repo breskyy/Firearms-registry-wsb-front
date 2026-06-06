@@ -36,7 +36,9 @@ export type PromiseStatus =
   | 'Used'
   | 'Expired';
 
-export type PaymentStatus = 'Pending' | 'Paid' | 'Refunded' | 'Overdue';
+export type PaymentStatus = 'Pending' | 'Paid' | 'Refunded' | 'Overdue' | 'Failed' | 'Submitted';
+
+export type ApplicationPaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded' | 'Submitted';
 
 export type FirearmCategory = 'A' | 'B' | 'C';
 
@@ -137,6 +139,9 @@ export interface PermitApplicationDto {
   correctionNotes: string | null;
   createdAt: string;
   reviewedAt: string | null;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
   attachments: PermitApplicationAttachmentDto[];
 }
 
@@ -175,6 +180,33 @@ export interface PromiseApplicationDto {
   correctionNotes: string | null;
   createdAt: string;
   reviewedAt: string | null;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
+  attachments?: PromiseApplicationAttachmentDto[];
+}
+
+export interface PromiseApplicationAttachmentDto {
+  id: string;
+  attachmentType: string;
+  attachmentTypeName: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
+}
+
+export interface ApplicationPaymentDto {
+  applicationId: string;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
+  paymentReferenceId: string | null;
+  paymentUrl: string | null;
+}
+
+export interface ConfirmApplicationPaymentRequest {
+  paymentId: string;
 }
 
 export interface CreatePromiseApplicationRequest {
@@ -375,6 +407,9 @@ export interface WpaPermitApplicationDto {
   createdAt: string;
   reviewedAt: string | null;
   reviewedByOfficerName: string | null;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
   attachments: WpaPermitApplicationAttachmentDto[];
 }
 
@@ -428,6 +463,20 @@ export interface WpaPromiseApplicationDto {
   createdAt: string;
   reviewedAt: string | null;
   reviewedByOfficerName: string | null;
+  feeAmount: number;
+  paymentStatus: ApplicationPaymentStatus;
+  paymentStatusName: string;
+  attachments?: WpaPromiseApplicationAttachmentDto[];
+}
+
+export interface WpaPromiseApplicationAttachmentDto {
+  id: string;
+  attachmentType: string;
+  attachmentTypeName: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  createdAt: string;
 }
 
 export interface WpaMedicalAlertDto {

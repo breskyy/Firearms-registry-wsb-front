@@ -248,6 +248,9 @@ export const permitApplications: any[] = [
     createdAt: daysAgo(400),
     reviewedAt: daysAgo(370),
     reviewedByOfficerName: 'sgt. Mariusz Nowak',
+    feeAmount: 242,
+    paymentStatus: 'Paid',
+    paymentStatusName: 'Paid',
     attachments: [
       {
         id: 'att-001',
@@ -320,6 +323,10 @@ export const promiseApplications: any[] = [
     createdAt: daysAgo(25),
     reviewedAt: daysAgo(15),
     reviewedByOfficerName: 'sgt. Mariusz Nowak',
+    feeAmount: 34,
+    paymentStatus: 'Paid',
+    paymentStatusName: 'Paid',
+    attachments: [],
   },
   {
     id: IDS.promiseApp2,
@@ -338,6 +345,10 @@ export const promiseApplications: any[] = [
     createdAt: daysAgo(3),
     reviewedAt: null,
     reviewedByOfficerName: null,
+    feeAmount: 17,
+    paymentStatus: 'Pending',
+    paymentStatusName: 'Pending',
+    attachments: [],
   },
 ];
 

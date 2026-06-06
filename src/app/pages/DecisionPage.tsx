@@ -25,6 +25,7 @@ import { applicationSectionIcon } from "../components/wpa/ApplicationDetailField
 import { PermitApplicationAttachmentsCard } from "../components/wpa/PermitApplicationAttachmentsCard";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, PermitDto } from "../../types/api";
 import { getApplicationStatusMeta, getPermitStatusMeta, UNKNOWN_STATUS_LABEL } from "../../lib/statusUi";
+import { formatPlnAmount, getApplicationPaymentStatusMeta } from "../../lib/paymentUi";
 import { getApiErrorMessage } from "../../lib/apiErrors";
 import { StatusBadge } from "../components/StatusBadge";
 
@@ -68,6 +69,7 @@ export function DecisionPage() {
   const [psychologicalExpiry, setPsychologicalExpiry] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -101,10 +103,14 @@ export function DecisionPage() {
     }
   }, [permitApp]);
 
+  const paymentStatusName = app && "paymentStatusName" in app ? app.paymentStatusName : "Paid";
+  const paymentVerified = paymentStatusName === "Paid";
+  const canVerifyPayment = app ? paymentStatusName === "Submitted" : false;
+
   const canMarkUnderReview = app
-    ? type === "permit"
+    ? paymentVerified && (type === "permit"
       ? REVIEWABLE_PERMIT_STATUSES.includes(app.statusName)
-      : REVIEWABLE_PROMISE_STATUSES.includes(app.statusName)
+      : REVIEWABLE_PROMISE_STATUSES.includes(app.statusName))
     : false;
 
   const canApprove = app
@@ -116,6 +122,31 @@ export function DecisionPage() {
   const canRequireCorrection = app ? CORRECTABLE_STATUSES.includes(app.statusName) : false;
   const canReject = app ? !FINAL_STATUSES.includes(app.statusName) : false;
   const isReadOnly = app ? FINAL_STATUSES.includes(app.statusName) : false;
+
+  const handleVerifyPayment = async () => {
+    if (!id || !canVerifyPayment) return;
+    setVerifyingPayment(true);
+    try {
+      if (type === "permit") {
+        await wpaService.verifyPermitApplicationPayment(id);
+        setPermitApp((current) => current ? { ...current, paymentStatusName: "Paid", paymentStatus: "Paid" } : current);
+      } else {
+        await wpaService.verifyPromiseApplicationPayment(id);
+        setPromiseApp((current) => current ? {
+          ...current,
+          paymentStatusName: "Paid",
+          paymentStatus: "Paid",
+          statusName: "Paid",
+          status: "Paid",
+        } : current);
+      }
+      toast.success("Opłata zweryfikowana", { description: "Możesz przejść do rozpatrzenia wniosku." });
+    } catch (err: unknown) {
+      toast.error("Nie udało się zweryfikować opłaty", { description: getApiErrorMessage(err) });
+    } finally {
+      setVerifyingPayment(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,13 +287,48 @@ export function DecisionPage() {
               </ReviewCollapsibleCard>
             )}
 
+            {"feeAmount" in app && (
+              <ReviewCollapsibleCard
+                title="Opłata skarbowa"
+                description="Weryfikacja wpłaty przed rozpatrzeniem wniosku"
+                icon={applicationSectionIcon(<Clock className="h-5 w-5" />)}
+                defaultOpen
+                priority
+                className="order-1"
+              >
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-base font-semibold">{formatPlnAmount(app.feeAmount)}</span>
+                    <span className={getApplicationPaymentStatusMeta(app.paymentStatusName)?.badgeClassName}>
+                      {getApplicationPaymentStatusMeta(app.paymentStatusName)?.label ?? app.paymentStatusName}
+                    </span>
+                  </div>
+                  {!paymentVerified && !isReadOnly && (
+                    <p className="text-xs text-muted-foreground">
+                      Obywatel musi zgłosić opłatę, zanim wniosek trafi do rozpatrzenia.
+                    </p>
+                  )}
+                  {canVerifyPayment && !isReadOnly && (
+                    <Button
+                      type="button"
+                      className="rounded-xl min-h-[44px]"
+                      onClick={() => void handleVerifyPayment()}
+                      disabled={verifyingPayment}
+                    >
+                      {verifyingPayment ? "Weryfikacja…" : "Potwierdź opłatę (WPA)"}
+                    </Button>
+                  )}
+                </div>
+              </ReviewCollapsibleCard>
+            )}
+
             <ReviewCollapsibleCard
               title={isReadOnly ? "Podgląd decyzji" : "Decyzja"}
               description={isReadOnly ? "Status końcowy wniosku" : "Wybierz akcję i podaj uzasadnienie"}
               icon={applicationSectionIcon(<Scale className="h-5 w-5" />)}
               defaultOpen
               priority
-              className="order-1 lg:order-6"
+              className="order-2 lg:order-6"
             >
               {isReadOnly ? (
                 <div className="space-y-4">

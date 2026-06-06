@@ -3,6 +3,19 @@ import * as db from '../db';
 
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
+const mockPayments = new Map<string, { amount: number; status: string }>();
+
+function buildPaymentResponse(app: { id: string; feeAmount: number; paymentStatus: string; paymentStatusName: string; paymentReferenceId?: string | null }, paymentUrl?: string | null) {
+  return {
+    applicationId: app.id,
+    feeAmount: app.feeAmount,
+    paymentStatus: app.paymentStatus,
+    paymentStatusName: app.paymentStatusName,
+    paymentReferenceId: app.paymentReferenceId ?? null,
+    paymentUrl: paymentUrl ?? null,
+  };
+}
+
 export const citizenHandlers = [
   // ── Profile ────────────────────────────────────────────────────────────────
   http.get(`${BASE}/citizen/me`, () =>
@@ -54,6 +67,10 @@ export const citizenHandlers = [
       createdAt: new Date().toISOString(),
       reviewedAt: null,
       reviewedByOfficerName: null,
+      feeAmount: 242,
+      paymentStatus: 'Pending',
+      paymentStatusName: 'Pending',
+      paymentReferenceId: null,
       attachments: [],
     };
     db.permitApplications.push(app);
@@ -160,6 +177,50 @@ export const citizenHandlers = [
     return HttpResponse.json(app.attachments, { status: 200 });
   }),
 
+  http.post(`${BASE}/citizen/me/permit-applications/:id/payment/initiate`, ({ params }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const paymentId = `PAY-${db.uid().slice(0, 12).toUpperCase()}`;
+    app.paymentReferenceId = paymentId;
+    mockPayments.set(paymentId, { amount: app.feeAmount ?? 242, status: 'Pending' });
+    return HttpResponse.json(buildPaymentResponse(app, `https://mock-payment.example.com/pay/${paymentId}`));
+  }),
+
+  http.post(`${BASE}/citizen/me/permit-applications/:id/payment/confirm`, async ({ params, request }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const body = await request.json() as { paymentId?: string };
+    if (!body.paymentId || app.paymentReferenceId !== body.paymentId) {
+      return HttpResponse.json({ message: 'Payment reference does not match this application' }, { status: 409 });
+    }
+    mockPayments.set(body.paymentId, { amount: app.feeAmount ?? 242, status: 'Completed' });
+    app.paymentStatus = 'Submitted';
+    app.paymentStatusName = 'Submitted';
+    return HttpResponse.json(buildPaymentResponse(app));
+  }),
+
+  http.post(`${BASE}/citizen/me/permit-applications/:id/payment-proof`, async ({ params, request }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const formData = await request.formData();
+    const file = formData.get('paymentProof');
+    const fileName = file instanceof File ? file.name : 'dowod-wplaty.pdf';
+    app.attachments = app.attachments.filter((a: { attachmentType: string }) => a.attachmentType !== 'PaymentProof');
+    const att = {
+      id: db.uid(),
+      attachmentType: 'PaymentProof',
+      attachmentTypeName: 'PaymentProof',
+      fileName,
+      contentType: 'application/pdf',
+      fileSize: file instanceof File ? file.size : 1024,
+      createdAt: new Date().toISOString(),
+    };
+    app.attachments.push(att);
+    app.paymentStatus = 'Submitted';
+    app.paymentStatusName = 'Submitted';
+    return HttpResponse.json(att);
+  }),
+
   // ── Promise applications ───────────────────────────────────────────────────
   http.get(`${BASE}/citizen/me/promise-applications`, () =>
     HttpResponse.json(db.promiseApplications.map(({ citizenId, citizenName, citizenPesel, reviewedByOfficerName, ...rest }) => rest))
@@ -185,6 +246,11 @@ export const citizenHandlers = [
       createdAt: new Date().toISOString(),
       reviewedAt: null,
       reviewedByOfficerName: null,
+      feeAmount: (body.requestedQuantity ?? 1) * 17,
+      paymentStatus: 'Pending',
+      paymentStatusName: 'Pending',
+      paymentReferenceId: null,
+      attachments: [],
     };
     db.promiseApplications.push(app);
     return HttpResponse.json(app, { status: 201 });
@@ -202,6 +268,49 @@ export const citizenHandlers = [
       correctionNotes: null,
     });
     return HttpResponse.json(app);
+  }),
+
+  http.post(`${BASE}/citizen/me/promise-applications/:id/payment/initiate`, ({ params }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const paymentId = `PAY-${db.uid().slice(0, 12).toUpperCase()}`;
+    app.paymentReferenceId = paymentId;
+    mockPayments.set(paymentId, { amount: app.feeAmount ?? 17, status: 'Pending' });
+    return HttpResponse.json(buildPaymentResponse(app, `https://mock-payment.example.com/pay/${paymentId}`));
+  }),
+
+  http.post(`${BASE}/citizen/me/promise-applications/:id/payment/confirm`, async ({ params, request }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const body = await request.json() as { paymentId?: string };
+    if (!body.paymentId || app.paymentReferenceId !== body.paymentId) {
+      return HttpResponse.json({ message: 'Payment reference does not match this application' }, { status: 409 });
+    }
+    app.paymentStatus = 'Submitted';
+    app.paymentStatusName = 'Submitted';
+    return HttpResponse.json(buildPaymentResponse(app));
+  }),
+
+  http.post(`${BASE}/citizen/me/promise-applications/:id/payment-proof`, async ({ params, request }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    const formData = await request.formData();
+    const file = formData.get('paymentProof');
+    const fileName = file instanceof File ? file.name : 'dowod-wplaty.pdf';
+    app.attachments = (app.attachments ?? []).filter((a: { attachmentType: string }) => a.attachmentType !== 'PaymentProof');
+    const att = {
+      id: db.uid(),
+      attachmentType: 'PaymentProof',
+      attachmentTypeName: 'PaymentProof',
+      fileName,
+      contentType: 'application/pdf',
+      fileSize: file instanceof File ? file.size : 1024,
+      createdAt: new Date().toISOString(),
+    };
+    app.attachments.push(att);
+    app.paymentStatus = 'Submitted';
+    app.paymentStatusName = 'Submitted';
+    return HttpResponse.json(att);
   }),
 
   // ── Promises ───────────────────────────────────────────────────────────────
