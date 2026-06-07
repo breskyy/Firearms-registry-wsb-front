@@ -132,7 +132,7 @@ Szczegółowa dokumentacja architektury: [`docs/architecture.md`](docs/architect
 
 - **Node.js** 18 lub nowszy
 - **pnpm** (zalecany menedżer pakietów projektu)
-- **Backend EWeaponRegistry** — repozytorium `Firearms-registery-WSB`, domyślnie `http://localhost:5000`
+- **Backend EWeaponRegistry** — repozytorium [`Firearms-registery-wsb-back`](https://github.com/norbertturek/Firearms-registery-wsb-back), domyślnie `http://localhost:5000`
 
 ---
 
@@ -242,16 +242,18 @@ Ekran wyboru typu (`/application/new`) jest **osobną trasą** — po kliknięci
 | `/applications` | Przegląd wniosków w systemie (lista wspólna, widok oficerski) |
 | `/applications/:id` | Szczegóły wniosku do rozpatrzenia |
 | `/decision/:id` | Formularz decyzji (zatwierdzenie / odrzucenie / korekta) |
-| `/wpa/search` | Wyszukiwarka obywateli i broni |
-| `/wpa/citizens/:id` | Profil obywatela z perspektywy WPA |
+| `/officer/search` | Wyszukiwarka obywateli i broni |
+| `/officer/citizens/:id` | Profil obywatela z perspektywy WPA |
+| `/officer/medical-exam-renewals/:id` | Rozpatrywanie wniosku o odnowienie badań |
 | `/weapons` | Rejestr broni (widok oficerski) |
 
 ### Sklep
 
 | Trasa | Opis |
 |-------|------|
-| `/shop/verify` | Weryfikacja promesy i uprawnień nabywcy |
-| `/shop/sale` | Rejestracja sprzedaży broni |
+| `/shop/sale` | Weryfikacja promesy (QR) i rejestracja sprzedaży broni |
+
+> Trasy legacy `/wpa/*` i `/shop/verify` przekierowują odpowiednio na `/officer/*` i `/shop/sale`.
 
 ### Nawigacja mobilna (obywatel)
 
@@ -271,10 +273,11 @@ Dane seedowane przez backend w środowisku **Development** (Docker):
 | Rola | Email | Hasło | Uwagi |
 |------|-------|-------|-------|
 | Obywatel | `citizen@example.com` | `Citizen123!` | Konto z przykładowymi danymi (pozwolenie, broń, promesa) |
-| Obywatel (puste) | `joanna.dymna@example.com` | `Citizen123!` | Puste konto do testów „od zera” |
-| Urzędnik WPA | `officer@example.com` | `Officer123!` | Rozpatrywanie wniosków |
-| Sklep | `shop@example.com` | `Shop123!` | Weryfikacja i sprzedaż |
-| Admin | `admin@example.com` | `Admin123!` | Konto administracyjne |
+| Urzędnik WPA | `officer@example.com` | `Officer123!` | Rozpatrywanie wniosków i weryfikacja opłat |
+| Sklep | `shop@example.com` | `Shop123!` | Weryfikacja promesy i sprzedaż |
+| Admin | `admin@example.com` | `Admin123!` | Konto administracyjne (brak panelu w SPA) |
+
+Konta seedowane w `SeedData.cs` backendu — **4 użytkowników** (bez dodatkowych kont testowych).
 
 Przy `VITE_SHOW_QUICK_LOGIN=true` na stronie logowania dostępne są skróty do wybranych kont testowych.
 
@@ -326,7 +329,7 @@ Szczegółowe materiały w katalogu `docs/`:
 
 | Repozytorium | Opis |
 |--------------|------|
-| **Firearms-registery-WSB** | Backend .NET 8, PostgreSQL, Docker Compose, seed danych testowych |
+| [**Firearms-registery-wsb-back**](https://github.com/norbertturek/Firearms-registery-wsb-back) | Backend .NET 8, PostgreSQL, Docker Compose, seed danych testowych |
 
 ---
 

@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 
 # Build output
@@ -37,3 +37,11 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# AI / agent tooling (local only)
+.cursor/
+.claude/
+.codex/
+openspec/
+AGENTS.md
+.env.mobile
