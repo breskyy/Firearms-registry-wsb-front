@@ -10,6 +10,13 @@ function qp(url: URL, key: string, fallback: number) {
   return v !== null ? Number(v) : fallback;
 }
 
+function isPaymentCorrectionRequested(notes?: string | null) {
+  if (!notes) return false;
+  const normalized = notes.toLowerCase();
+  return ['dowód', 'dowod', 'wpłat', 'wplat', 'opłat', 'oplat', 'płatno', 'platno', 'payment', 'przelew', 'eplatno', 'e-płatno', 'e-platno']
+    .some((keyword) => normalized.includes(keyword));
+}
+
 function getCitizenById(citizenId: string) {
   return db.wpaCitizens.find((c) => c.id === citizenId);
 }
@@ -108,9 +115,41 @@ export const wpaHandlers = [
     return HttpResponse.json(app);
   }),
 
+  http.post(`${BASE}/wpa/permit-applications/:id/verify-payment`, ({ params }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot verify payment' }, { status: 409 });
+    }
+    app.paymentStatus = 'Paid';
+    app.paymentStatusName = 'Paid';
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${BASE}/wpa/permit-applications/:id/reject-payment-proof`, async ({ params, request }) => {
+    const app = db.permitApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot reject payment proof' }, { status: 409 });
+    }
+    const body = await request.json() as { comment?: string };
+    app.paymentStatus = 'Pending';
+    app.paymentStatusName = 'Pending';
+    app.paymentMethodName = undefined;
+    app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.status = 'RequiresCorrection';
+    app.statusName = 'RequiresCorrection';
+    app.correctionNotes = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post(`${BASE}/wpa/permit-applications/:id/mark-under-review`, async ({ params, request }) => {
     const app = db.permitApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Paid') {
+      return HttpResponse.json({ message: 'Payment must be verified first' }, { status: 409 });
+    }
     const body = (await request.json().catch(() => ({}))) as {
       medicalExamExpiryDate?: string;
       psychologicalExamExpiryDate?: string;
@@ -172,14 +211,22 @@ export const wpaHandlers = [
     const app = db.permitApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
     const body = await request.json() as any;
+    const reason = body.reason ?? null;
     Object.assign(app, {
       status: 'RequiresCorrection', statusName: 'RequiresCorrection',
-      correctionNotes: body.reason ?? null,
+      correctionNotes: reason,
       medicalExamExpiryDate: body.medicalExamExpiryDate ?? app.medicalExamExpiryDate,
       psychologicalExamExpiryDate: body.psychologicalExamExpiryDate ?? app.psychologicalExamExpiryDate,
       reviewedAt: new Date().toISOString(),
       reviewedByOfficerName: OFFICER_NAME,
     });
+    if (isPaymentCorrectionRequested(reason) && app.paymentStatusName === 'Submitted') {
+      app.paymentStatus = 'Pending';
+      app.paymentStatusName = 'Pending';
+      app.paymentMethodName = undefined;
+      app.paymentRejectionComment = reason;
+      app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -202,9 +249,49 @@ export const wpaHandlers = [
     return HttpResponse.json(app);
   }),
 
+  http.post(`${BASE}/wpa/promise-applications/:id/verify-payment`, ({ params }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot verify payment' }, { status: 409 });
+    }
+    app.paymentStatus = 'Paid';
+    app.paymentStatusName = 'Paid';
+    app.status = 'Paid';
+    app.statusName = 'Paid';
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${BASE}/wpa/promise-applications/:id/reject-payment-proof`, async ({ params, request }) => {
+    const app = db.promiseApplications.find((a) => a.id === params.id);
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Submitted') {
+      return HttpResponse.json({ message: 'Cannot reject payment proof' }, { status: 409 });
+    }
+    const body = await request.json() as { comment?: string };
+    app.paymentStatus = 'Pending';
+    app.paymentStatusName = 'Pending';
+    app.paymentMethodName = undefined;
+    app.paymentRejectionComment = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.status = 'RequiresCorrection';
+    app.statusName = 'RequiresCorrection';
+    app.correctionNotes = body.comment ?? 'Uzupełnij dowód wpłaty.';
+    app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(`${BASE}/wpa/promise-applications/:appId/attachments/:attId`, () =>
+    new HttpResponse(new Blob(['mock pdf content'], { type: 'application/pdf' }))
+  ),
+
   http.post(`${BASE}/wpa/promise-applications/:id/mark-under-review`, ({ params }) => {
     const app = db.promiseApplications.find((a) => a.id === params.id);
-    if (app) { app.status = 'UnderReview'; app.statusName = 'UnderReview'; }
+    if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    if (app.paymentStatusName !== 'Paid') {
+      return HttpResponse.json({ message: 'Payment must be verified first' }, { status: 409 });
+    }
+    app.status = 'UnderReview';
+    app.statusName = 'UnderReview';
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -225,7 +312,7 @@ export const wpaHandlers = [
       remainingQuantity: app.requestedQuantity,
       status: 'Active',
       statusName: 'Active',
-      feeAmount: 17.00,
+      feeAmount: app.feeAmount ?? 17.00,
       paymentStatus: 'Paid',
       paymentStatusName: 'Paid',
       qrToken: `QR-${db.uid().toUpperCase()}`,
@@ -253,12 +340,20 @@ export const wpaHandlers = [
     const app = db.promiseApplications.find((a) => a.id === params.id);
     if (!app) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
     const body = await request.json() as any;
+    const reason = body.reason ?? null;
     Object.assign(app, {
       status: 'RequiresCorrection', statusName: 'RequiresCorrection',
-      correctionNotes: body.reason ?? null,
+      correctionNotes: reason,
       reviewedAt: new Date().toISOString(),
       reviewedByOfficerName: OFFICER_NAME,
     });
+    if (isPaymentCorrectionRequested(reason) && app.paymentStatusName === 'Submitted') {
+      app.paymentStatus = 'Pending';
+      app.paymentStatusName = 'Pending';
+      app.paymentMethodName = undefined;
+      app.paymentRejectionComment = reason;
+      app.attachments = app.attachments?.filter((a) => a.attachmentTypeName !== 'PaymentProof') ?? [];
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 

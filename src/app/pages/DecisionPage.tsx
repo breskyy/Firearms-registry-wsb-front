@@ -25,8 +25,19 @@ import { applicationSectionIcon } from "../components/wpa/ApplicationDetailField
 import { PermitApplicationAttachmentsCard } from "../components/wpa/PermitApplicationAttachmentsCard";
 import type { WpaPermitApplicationDto, WpaPromiseApplicationDto, PermitDto } from "../../types/api";
 import { getApplicationStatusMeta, getPermitStatusMeta, UNKNOWN_STATUS_LABEL } from "../../lib/statusUi";
+import { formatPlnAmount, getApplicationPaymentStatusMeta, PAYMENT_METHOD_LABELS } from "../../lib/paymentUi";
 import { getApiErrorMessage } from "../../lib/apiErrors";
 import { StatusBadge } from "../components/StatusBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import { AttachmentPreviewDialog } from "../components/wpa/AttachmentPreviewDialog";
+import type { WpaPermitApplicationAttachmentDto, WpaPromiseApplicationAttachmentDto } from "../../types/api";
 
 const PERMIT_TYPE_LABELS: Record<string, string> = {
   Sport: "Sportowe",
@@ -68,6 +79,15 @@ export function DecisionPage() {
   const [psychologicalExpiry, setPsychologicalExpiry] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [rejectPaymentOpen, setRejectPaymentOpen] = useState(false);
+  const [rejectPaymentComment, setRejectPaymentComment] = useState("");
+  const [rejectingPayment, setRejectingPayment] = useState(false);
+  const [previewPaymentProof, setPreviewPaymentProof] = useState<{
+    id: string;
+    fileName: string;
+    contentType: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -101,10 +121,18 @@ export function DecisionPage() {
     }
   }, [permitApp]);
 
+  const paymentStatusName = app && "paymentStatusName" in app ? app.paymentStatusName : "Paid";
+  const paymentVerified = paymentStatusName === "Paid";
+  const canVerifyPayment = app ? paymentStatusName === "Submitted" : false;
+  const paymentMethodName = app && "paymentMethodName" in app ? app.paymentMethodName : null;
+  const paymentProofAttachment = app?.attachments?.find(
+    (a) => a.attachmentTypeName === "PaymentProof" || a.attachmentType === "PaymentProof",
+  ) as WpaPermitApplicationAttachmentDto | WpaPromiseApplicationAttachmentDto | undefined;
+
   const canMarkUnderReview = app
-    ? type === "permit"
+    ? paymentVerified && (type === "permit"
       ? REVIEWABLE_PERMIT_STATUSES.includes(app.statusName)
-      : REVIEWABLE_PROMISE_STATUSES.includes(app.statusName)
+      : REVIEWABLE_PROMISE_STATUSES.includes(app.statusName))
     : false;
 
   const canApprove = app
@@ -116,6 +144,77 @@ export function DecisionPage() {
   const canRequireCorrection = app ? CORRECTABLE_STATUSES.includes(app.statusName) : false;
   const canReject = app ? !FINAL_STATUSES.includes(app.statusName) : false;
   const isReadOnly = app ? FINAL_STATUSES.includes(app.statusName) : false;
+
+  const handleVerifyPayment = async () => {
+    if (!id || !canVerifyPayment) return;
+    setVerifyingPayment(true);
+    try {
+      if (type === "permit") {
+        await wpaService.verifyPermitApplicationPayment(id);
+        setPermitApp((current) => current ? { ...current, paymentStatusName: "Paid", paymentStatus: "Paid" } : current);
+      } else {
+        await wpaService.verifyPromiseApplicationPayment(id);
+        setPromiseApp((current) => current ? {
+          ...current,
+          paymentStatusName: "Paid",
+          paymentStatus: "Paid",
+          statusName: "Paid",
+          status: "Paid",
+        } : current);
+      }
+      toast.success("Opłata zweryfikowana", { description: "Możesz przejść do rozpatrzenia wniosku." });
+    } catch (err: unknown) {
+      toast.error("Nie udało się zweryfikować opłaty", { description: getApiErrorMessage(err) });
+    } finally {
+      setVerifyingPayment(false);
+    }
+  };
+
+  const handleRejectPaymentProof = async () => {
+    if (!id || !canVerifyPayment || rejectPaymentComment.trim().length < 10) return;
+    setRejectingPayment(true);
+    try {
+      const payload = { comment: rejectPaymentComment.trim() };
+      if (type === "permit") {
+        await wpaService.rejectPermitApplicationPaymentProof(id, payload);
+        setPermitApp((current) => current ? {
+          ...current,
+          statusName: "RequiresCorrection",
+          status: "RequiresCorrection",
+          correctionNotes: payload.comment,
+          paymentStatusName: "Pending",
+          paymentStatus: "Pending",
+          paymentRejectionComment: payload.comment,
+          paymentMethodName: undefined,
+          paymentReferenceId: undefined,
+          attachments: current.attachments?.filter((a) => a.attachmentTypeName !== "PaymentProof") ?? [],
+        } : current);
+      } else {
+        await wpaService.rejectPromiseApplicationPaymentProof(id, payload);
+        setPromiseApp((current) => current ? {
+          ...current,
+          statusName: "RequiresCorrection",
+          status: "RequiresCorrection",
+          correctionNotes: payload.comment,
+          paymentStatusName: "Pending",
+          paymentStatus: "Pending",
+          paymentRejectionComment: payload.comment,
+          paymentMethodName: undefined,
+          paymentReferenceId: undefined,
+          attachments: current.attachments?.filter((a) => a.attachmentTypeName !== "PaymentProof") ?? [],
+        } : current);
+      }
+      setRejectPaymentOpen(false);
+      setRejectPaymentComment("");
+      toast.success("Wezwanie do uzupełnienia opłaty wysłane", {
+        description: "Obywatel zobaczy komentarz i będzie mógł ponownie zgłosić wpłatę.",
+      });
+    } catch (err: unknown) {
+      toast.error("Nie udało się odrzucić dowodu wpłaty", { description: getApiErrorMessage(err) });
+    } finally {
+      setRejectingPayment(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,13 +355,90 @@ export function DecisionPage() {
               </ReviewCollapsibleCard>
             )}
 
+            {"feeAmount" in app && (
+              <ReviewCollapsibleCard
+                title="Opłata skarbowa"
+                description="Weryfikacja wpłaty przed rozpatrzeniem wniosku"
+                icon={applicationSectionIcon(<Clock className="h-5 w-5" />)}
+                defaultOpen
+                priority
+                className="order-1"
+              >
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-base font-semibold">{formatPlnAmount(app.feeAmount)}</span>
+                    <span className={getApplicationPaymentStatusMeta(app.paymentStatusName)?.badgeClassName}>
+                      {getApplicationPaymentStatusMeta(app.paymentStatusName)?.label ?? app.paymentStatusName}
+                    </span>
+                  </div>
+
+                  {paymentMethodName && (
+                    <p className="text-xs text-muted-foreground">
+                      Metoda płatności:{" "}
+                      <span className="font-medium text-foreground">
+                        {PAYMENT_METHOD_LABELS[paymentMethodName] ?? paymentMethodName}
+                      </span>
+                      {paymentMethodName === "OnlineMock" && "paymentReferenceId" in app && app.paymentReferenceId && (
+                        <span className="block mt-1 font-mono text-[11px]">Ref: {app.paymentReferenceId}</span>
+                      )}
+                    </p>
+                  )}
+
+                  {paymentProofAttachment && id && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPaymentProof({
+                        id: paymentProofAttachment.id,
+                        fileName: paymentProofAttachment.fileName,
+                        contentType: paymentProofAttachment.contentType,
+                      })}
+                      className="w-full flex items-center justify-between gap-2 rounded-xl border bg-muted/30 px-3 py-2.5 text-left text-xs hover:bg-muted/50"
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <Paperclip className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        <span className="truncate font-medium">{paymentProofAttachment.fileName}</span>
+                      </span>
+                      <span className="text-primary font-medium shrink-0">Podgląd dowodu</span>
+                    </button>
+                  )}
+
+                  {!paymentVerified && !isReadOnly && (
+                    <p className="text-xs text-muted-foreground">
+                      Sprawdź dowód wpłaty lub potwierdzenie ePłatności, następnie zatwierdź opłatę albo wezwij obywatela do uzupełnienia.
+                    </p>
+                  )}
+                  {canVerifyPayment && !isReadOnly && (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        type="button"
+                        className="rounded-xl min-h-[44px] flex-1"
+                        onClick={() => void handleVerifyPayment()}
+                        disabled={verifyingPayment || rejectingPayment}
+                      >
+                        {verifyingPayment ? "Weryfikacja…" : "Zatwierdź opłatę"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-xl min-h-[44px] flex-1 border-orange-200 text-orange-900 hover:bg-orange-50"
+                        onClick={() => setRejectPaymentOpen(true)}
+                        disabled={verifyingPayment || rejectingPayment}
+                      >
+                        Wezwij do uzupełnienia
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </ReviewCollapsibleCard>
+            )}
+
             <ReviewCollapsibleCard
               title={isReadOnly ? "Podgląd decyzji" : "Decyzja"}
               description={isReadOnly ? "Status końcowy wniosku" : "Wybierz akcję i podaj uzasadnienie"}
               icon={applicationSectionIcon(<Scale className="h-5 w-5" />)}
               defaultOpen
               priority
-              className="order-1 lg:order-6"
+              className="order-2 lg:order-6"
             >
               {isReadOnly ? (
                 <div className="space-y-4">
@@ -594,6 +770,51 @@ export function DecisionPage() {
         </div>
         )}
       </div>
+
+      <Dialog open={rejectPaymentOpen} onOpenChange={setRejectPaymentOpen}>
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Wezwanie do uzupełnienia opłaty</DialogTitle>
+            <DialogDescription>
+              Opisz, co jest nie tak z dowodem wpłaty. Obywatel zobaczy ten komentarz i będzie mógł ponownie zgłosić opłatę.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectPaymentComment}
+            onChange={(e) => setRejectPaymentComment(e.target.value)}
+            placeholder="Np. kwota wpłaty nie zgadza się z wymaganą opłatą skarbową…"
+            className="min-h-[120px] rounded-xl"
+          />
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setRejectPaymentOpen(false)}>
+              Anuluj
+            </Button>
+            <Button
+              type="button"
+              className="rounded-xl"
+              disabled={rejectingPayment || rejectPaymentComment.trim().length < 10}
+              onClick={() => void handleRejectPaymentProof()}
+            >
+              {rejectingPayment ? "Wysyłanie…" : "Wyślij wezwanie"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {previewPaymentProof && id && (
+        <AttachmentPreviewDialog
+          open={!!previewPaymentProof}
+          onOpenChange={(open) => !open && setPreviewPaymentProof(null)}
+          fileName={previewPaymentProof.fileName}
+          contentType={previewPaymentProof.contentType}
+          viewUrl={`/officer/attachments/${id}/${previewPaymentProof.id}?name=${encodeURIComponent(previewPaymentProof.fileName)}`}
+          fetchBlob={() =>
+            type === "permit"
+              ? wpaService.downloadPermitApplicationAttachment(id, previewPaymentProof.id)
+              : wpaService.downloadPromiseApplicationAttachment(id, previewPaymentProof.id)
+          }
+        />
+      )}
     </div>
   );
 }

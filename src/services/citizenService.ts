@@ -17,6 +17,8 @@ import type {
   CreateTransferRequestRequest,
   CitizenMedicalAlertDto,
   PermitMedicalExamRenewalDto,
+  ApplicationPaymentDto,
+  PromiseApplicationAttachmentDto,
 } from '../types/api';
 
 const TRANSFER_TYPE_VALUES: Record<string, number> = {
@@ -60,6 +62,34 @@ export const citizenService = {
 
   async updatePermitApplicationCorrection(id: string, data: UpdatePermitApplicationCorrectionRequest): Promise<PermitApplicationDto> {
     return api.put<PermitApplicationDto>(`/citizen/me/permit-applications/${id}/correction`, data);
+  },
+
+  async initiatePermitApplicationPayment(id: string): Promise<ApplicationPaymentDto> {
+    return api.post<ApplicationPaymentDto>(`/citizen/me/permit-applications/${id}/payment/initiate`);
+  },
+
+  async confirmPermitApplicationPayment(id: string, paymentId: string): Promise<ApplicationPaymentDto> {
+    return api.post<ApplicationPaymentDto>(`/citizen/me/permit-applications/${id}/payment/confirm`, { paymentId });
+  },
+
+  async uploadPermitApplicationPaymentProof(id: string, file: File): Promise<PermitApplicationAttachmentDto> {
+    const formData = new FormData();
+    formData.append('paymentProof', file);
+    return api.postForm<PermitApplicationAttachmentDto>(`/citizen/me/permit-applications/${id}/payment-proof`, formData);
+  },
+
+  async initiatePromiseApplicationPayment(id: string): Promise<ApplicationPaymentDto> {
+    return api.post<ApplicationPaymentDto>(`/citizen/me/promise-applications/${id}/payment/initiate`);
+  },
+
+  async confirmPromiseApplicationPayment(id: string, paymentId: string): Promise<ApplicationPaymentDto> {
+    return api.post<ApplicationPaymentDto>(`/citizen/me/promise-applications/${id}/payment/confirm`, { paymentId });
+  },
+
+  async uploadPromiseApplicationPaymentProof(id: string, file: File): Promise<PromiseApplicationAttachmentDto> {
+    const formData = new FormData();
+    formData.append('paymentProof', file);
+    return api.postForm<PromiseApplicationAttachmentDto>(`/citizen/me/promise-applications/${id}/payment-proof`, formData);
   },
 
   async uploadPermitApplicationAttachments(
